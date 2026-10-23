@@ -275,7 +275,7 @@ export const Counter = defineComponent("Counter", {
     from: num({ default: 0 }),
     to: num({ default: 100 }),
     delay: time({ default: 0, unit: "s" }),
-    duration: time({ default: 1.2, unit: "s" }),
+    over: time({ default: 1.2, unit: "s", description: "How long the count takes (not the layer duration)." }),
     ease: text({ default: "expo.out" }),
     decimals: int({ min: 0, max: 8, default: 0 }),
     group: bool({ default: true, description: "Thousands separators." }),
@@ -291,7 +291,7 @@ export const Counter = defineComponent("Counter", {
   render: (p, rc) => {
     const fmt = (v: number) => formatNumber(v, { decimals: p.decimals, group: p.group, prefix: p.prefix, suffix: p.suffix });
     const delay = typeof p.delay === "number" ? p.delay : parseFloat(String(p.delay));
-    const dur = typeof p.duration === "number" ? p.duration : parseFloat(String(p.duration));
+    const dur = typeof p.over === "number" ? p.over : parseFloat(String(p.over));
     const a = rc.node.start + delay;
     const e = parseEase(p.ease);
     const val = (t: number) => p.from + (p.to - p.from) * e(Math.min(1, Math.max(0, (t - a) / Math.max(1e-6, dur))));

@@ -34,8 +34,6 @@ export interface ResolveOptions {
   assignIds?: boolean;
 }
 
-const TIMING_PROPS = new Set(["start", "duration", "end"]);
-
 interface Env {
   fps: number;
   opts: ResolveOptions;
@@ -596,7 +594,6 @@ function resolveProps(env: Env, n: RNode): void {
 
   const out: Record<string, any> = {};
   for (const [k, c] of Object.entries(def.controls)) {
-    if (TIMING_PROPS.has(k) && (def.traits.includes("visual") || def.traits.includes("timed") || def.kind === "effect")) continue;
     let v = raw[k];
     if (v === undefined) v = c.opts.default;
     if (v === undefined) {

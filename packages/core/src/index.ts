@@ -26,3 +26,4 @@ export * from "./ast/ids.js";
 export * from "./resolve/resolve.js";
 export * from "./compile/index.js";
 export { z } from "zod";
+export * from "./ledger.js";

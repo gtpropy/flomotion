@@ -10,6 +10,7 @@ export interface FontDecl {
   variable?: boolean;
   axes?: Record<string, [number, number]>;
   subsets?: string[];
+  unicodeRange?: string;
   license?: string;
   fallback?: string[];
 }
