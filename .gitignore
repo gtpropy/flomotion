@@ -8,3 +8,4 @@ renders/
 .hyperframes/
 coverage/
 .vitest/
+tests/.tmp/

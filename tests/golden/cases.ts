@@ -226,3 +226,54 @@ export const CASES: GoldenCase[] = [
     ]),
   },
 ];
+
+const box = (id: string, fx: CCNode[], props: Record<string, unknown> = {}) =>
+  el("RoundRect", { id, width: 300, height: 300, radius: 50, fill: { type: "linear", angle: 135, stops: [[0, "#ff3366"], [1, "#ffe14d"]] }, ...props }, fx);
+
+CASES.push(
+  {
+    name: "layer-styles",
+    fonts: true,
+    times: [0.3],
+    covers: ["DropShadow, Glow, Blur, Stroke (layer), Vignette, Grain"],
+    node: comp("g-styles", 1, [
+      scene("s", 0, 1, [
+        el("Rect", { id: "bg", width: 1080, height: 1920, fill: "#2a2f45" }),
+        box("b1", [el("DropShadow", { id: "e1", y: 30, blur: 40, opacity: 0.8 })], { at: [90, 150] }),
+        box("b2", [el("Glow", { id: "e2", color: "#27e0ff", radius: 40, intensity: 2 })], { at: [480, 150] }),
+        box("b3", [el("Blur", { id: "e3", radius: 14 })], { at: [90, 560] }),
+        box("b4", [el("Stroke", { id: "e4", width: 14, color: "#ffffff" })], { at: [480, 560] }),
+        el("Group", { id: "grp" }, [box("b5", [], { at: [90, 970] }), el("Vignette", { id: "e5", amount: 0.9, size: 0.3, softness: 0.6 })]),
+        el("Group", { id: "grp2" }, [box("b6", [], { at: [480, 970] }), el("Grain", { id: "e6", amount: 0.9, size: 2 })]),
+      ]),
+    ]),
+  },
+  {
+    name: "motion-enter-exit-animate-split",
+    fonts: true,
+    times: [0.35, 0.8, 1.6],
+    covers: ["Enter, Exit, Animate, SplitText, Sequence, Stagger, Group, Keyframes"],
+    node: comp("g-motion", 2, [
+      scene("s", 0, 2, [
+        el("Rect", { id: "bg", width: 1080, height: 1920, fill: "#10121a" }),
+        box("en", [el("Enter", { id: "x1", from: "w", distance: 500, duration: "0.6s", blur: 12 }), el("Exit", { id: "x2", to: "e", distance: 500, duration: "0.5s" })], { at: [90, 150] }),
+        box("an", [el("Animate", { id: "x3", prop: "scale", from: 0.3, to: 1, duration: "0.8s" })], { at: [480, 150] }),
+        el("SplitText", { id: "sp", text: "Split text rises word by word", font: "display", size: 100, at: [60, 600], maxWidth: 900, align: "left", preset: "rise", stagger: 0.12 }),
+        el("Stagger", { id: "st", each: 0.25 }, [0, 1, 2].map((i) => el("Circle", { id: `sc${i}`, width: 200, fill: ["#ff3366", "#27e0ff", "#ffe14d"][i], at: [90 + i * 300, 1000], enter: { from: "s", distance: 200, duration: 0.5 } }))),
+        el("Rect", { id: "kf", width: 300, height: 120, fill: "#35d0a5", at: [90, 1400] }, [el("Keyframes", { prop: "position", values: [[0, [0, 0]], [1.2, [600, 0], "expo.inOut"]] })]),
+      ]),
+    ]),
+  },
+  {
+    name: "captions",
+    fonts: true,
+    times: [0.6, 1.3, 2.4],
+    covers: ["Captions (karaoke), Voiceover word timings", "SplitText"],
+    node: comp("g-caps", 3, [
+      scene("s", 0, 3, [
+        el("Rect", { id: "bg", width: 1080, height: 1920, fill: "#1a1030" }),
+        el("SafeArea", { id: "sa", preset: "reels" }, [el("Captions", { id: "cap", voice: "#vo", captionStyle: "karaoke", at: "bottom", size: 72, maxChars: 18, maxWords: 3, font: "display" })]),
+      ]),
+    ], [el("Voiceover", { id: "vo", src: "./vo.wav" })]),
+  },
+);

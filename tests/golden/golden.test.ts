@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -17,9 +18,12 @@ const update = !!process.env.UPDATE_GOLDEN;
 const online = await fetch("https://fonts.googleapis.com/css2?family=Inter", { signal: AbortSignal.timeout(8000) }).then((r) => r.ok, () => false);
 const baselines: Record<string, string> = existsSync(BASELINES) ? JSON.parse(readFileSync(BASELINES, "utf8")) : {};
 
-// one project root shared by all cases so fonts sync once (cached across runs in node_modules/.cache)
+// one project root shared by all cases so fonts sync once
 const root = join(here, ".root");
 mkdirSync(root, { recursive: true });
+// a silent voiceover and its (hand-written) word timings, for the captions case
+if (!existsSync(join(root, "vo.wav"))) execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono", "-t", "3", join(root, "vo.wav")]);
+writeFileSync(join(root, "vo.words.json"), JSON.stringify([{ w: "Ship", start: 0.4, end: 0.8 }, { w: "videos", start: 0.9, end: 1.4 }, { w: "as", start: 1.5, end: 1.7 }, { w: "code", start: 1.8, end: 2.4 }, { w: "today", start: 2.5, end: 2.9 }]));
 
 describe("golden frames (perceptual hash, tolerance " + TOLERANCE + "/256 bits)", () => {
   let synced = false;
