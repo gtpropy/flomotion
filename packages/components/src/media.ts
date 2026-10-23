@@ -294,7 +294,7 @@ export const Captions = defineComponent("Captions", {
     const style = (t.html.match(/<div id="[^"]+-text"[^>]*style="([^"]*)"/)?.[1] ?? "").replace(/position:relative;?/, "");
     return {
       html: `<div id="${rc.sub("text")}" style="${style};position:relative;min-height:${round(rc.at<number>("size", rc.node.start) * rc.at<number>("leading", rc.node.start))}px">${html}</div>`,
-      box: { ...boxCss, width: boxCss.width ?? "max-content" },
+      box: { ...boxCss, width: `${round(rc.px((rc.node.props.maxWidth as number | string) ?? "92%", "x"))}px` },
       statics: t.statics,
       channels: [...(t.channels ?? []), ...channels],
       issues: t.issues,

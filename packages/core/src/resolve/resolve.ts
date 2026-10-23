@@ -452,7 +452,7 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
     n.start = start;
     n.end = Math.max(end, start);
     n.duration = snapToFrame(n.end - start, fps);
-    if (n.end > parent.end + 1e-6 && n.def.kind !== "effect" && parent.name !== "Composition") {
+    if (n.end > parent.end + 1e-6 && n.def.kind !== "effect" && parent.name !== "Composition" && n.def.traits.includes("visual")) {
       err(env, {
         severity: "warning",
         rule: "child-outside-parent",

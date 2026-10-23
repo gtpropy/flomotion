@@ -113,8 +113,8 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
       if (c.def.stub) {
         issues.push({ severity: "warning", rule: "stub-not-rendered", message: `<${c.name}> is a typed stub and is not rendered yet`, id: c.id });
       }
-      const cl = layerFor(c);
-      if (cl.kind !== "hidden") childLayers.push(cl);
+      // hidden layers stay in the tree (their audio and sound cues still count) but emit no markup
+      childLayers.push(layerFor(c));
     });
     layer.children = childLayers;
 
@@ -234,6 +234,7 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
   // resolve html with children
   const render = (n: RNode): string => {
     const layer = layers.get(n.id)!;
+    if (layer.kind === "hidden" && n !== rootNode) return "";
     const kids = n.children.map(render).join("");
     let html = layer.html;
     if (html.includes("{{children}}")) html = html.replace("{{children}}", kids);

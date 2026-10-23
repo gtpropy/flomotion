@@ -188,8 +188,9 @@ function resolveFontId(ref: string, comp: ResolvedProject["comp"]): string | und
   return ref;
 }
 
+/** Text inside these containers is placed in local coordinates, so frame-level checks do not apply. */
 const insideSafeArea = (n: RNode) => {
-  for (let c = n.parent; c; c = c.parent) if (c.name === "SafeArea") return true;
+  for (let c = n.parent; c; c = c.parent) if (["SafeArea", "UIMock", "Card", "GlassCard"].includes(c.name)) return true;
   return false;
 };
 
@@ -225,6 +226,7 @@ function textBounds(n: RNode, text: string, size: number, measure?: TextMeasurer
 
 function backgroundFor(n: RNode, compBg: string): string | undefined {
   for (let c = n.parent; c; c = c.parent) {
+    if (c.name === "UIMock" && typeof c.props.screenColor === "string") return c.props.screenColor;
     if (["Card", "Rect", "RoundRect"].includes(c.name)) {
       const f = c.props.fill;
       if (typeof f === "string") return f;
