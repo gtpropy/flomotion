@@ -9,7 +9,7 @@ import {
 import { parseLength, resolveLength } from "../src/values/length.js";
 import { parseAngle } from "../src/values/angle.js";
 import { parseColor, toHex, contrastRatio } from "../src/values/color.js";
-import { ease, parseEase, springSettleTime, springValue, toGsapEase } from "../src/values/ease.js";
+import { evalEase as ease, parseEase, springSettleTime, springValue, toGsapEase } from "../src/values/ease.js";
 import { mulberry32, noise1D, noise2D } from "../src/values/noise.js";
 import { CodeCutError } from "../src/errors.js";
 

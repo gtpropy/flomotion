@@ -106,7 +106,7 @@ export function parseEase(spec: Ease): EaseFn {
 }
 
 /** Evaluate an ease at progress p (clamped to 0..1). */
-export const ease = (spec: Ease, p: number): number => parseEase(spec)(clamp01(p));
+export const evalEase = (spec: Ease, p: number): number => parseEase(spec)(clamp01(p));
 
 function badEase(spec: string): never {
   throw new CodeCutError("invalid_value", `Unknown ease: ${JSON.stringify(spec)}`, {

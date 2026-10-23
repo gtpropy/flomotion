@@ -177,3 +177,23 @@ export const Font = defineComponent("Font", {
     license: text({ description: "SPDX-ish licence id; required for path and URL sources." }),
   },
 });
+
+export const Keyframes = defineComponent("Keyframes", {
+  category: "motion",
+  description:
+    "Element form of keyframes: animates `prop` of its parent. Same as writing the prop as a keyframe array.",
+  traits: [],
+  children: "none",
+  controls: {
+    id: text(),
+    prop: text({ required: true, description: "Parent prop name, e.g. position." }),
+    values: json<unknown[]>({}, undefined),
+    keys: text({ description: 'Sidecar reference, e.g. "./promo.keys.json#t1.position".' }),
+    mode: enumOf(["linear", "hold", "bezier", "auto", "continuous", "ease"]),
+    spatial: enumOf(["linear", "bezier", "auto"]),
+    orient: enumOf(["path"]),
+    separate: bool({ default: false }),
+    loop: json<"cycle" | "pingpong" | number>({}, undefined),
+  },
+  render: () => ({ html: "", visual: false }),
+});

@@ -17,6 +17,10 @@ export type Signal<T = any> =
       exprBase: number;
       ctx: CtxBase;
       keys?: { track: NormTrack<T>; keyBase: number };
+      /** Absolute interval over which the expression can differ from a constant. */
+      span?: [number, number];
+      /** Compiler-built composite: `fn` takes only t and needs no Ctx. */
+      direct?: boolean;
     }
   | { kind: "sep"; parts: Array<Signal<number> | undefined>; fallback: number[] };
 
@@ -29,6 +33,7 @@ export function evalSignal<T>(sig: Signal<T>, tAbs: number): T {
     case "track":
       return evalTrack(sig.track, tAbs - sig.keyBase, sig.vk);
     case "expr": {
+      if (sig.direct) return (sig.fn as (t: number) => T)(tAbs - sig.exprBase);
       const keyed = sig.keys ? evalTrack(sig.keys.track, tAbs - sig.keys.keyBase, sig.vk) : undefined;
       const t = tAbs - sig.exprBase;
       return sig.fn(t, makeCtx(sig.ctx, t, keyed)) as T;
@@ -53,7 +58,7 @@ export function signalSpan(sig: Signal, elementSpan: [number, number]): [number,
       return [a, b];
     }
     case "expr":
-      return elementSpan;
+      return sig.span ?? elementSpan;
     case "sep": {
       let lo = Infinity;
       let hi = -Infinity;
@@ -86,4 +91,24 @@ export function buildSignal<T>(raw: unknown, o: BuildSignalOpts): Signal<T> {
     return { kind: "track", track, vk: o.vk, keyBase: o.keyBase };
   }
   return { kind: "const", v: raw as T };
+}
+
+const SIGNAL_KINDS = new Set(["const", "track", "expr", "sep"]);
+export const isSignal = (v: unknown): v is Signal =>
+  typeof v === "object" && v !== null && !Array.isArray(v) && SIGNAL_KINDS.has((v as { kind?: string }).kind ?? "") &&
+  ("v" in (v as object) || "track" in (v as object) || "fn" in (v as object) || "parts" in (v as object));
+
+/** Evaluate a resolved prop (Signal, group of Signals, array or plain value) at absolute time t. */
+export function evalProp<T = any>(v: unknown, t: number): T {
+  if (isSignal(v)) return evalSignal(v, t) as T;
+  if (Array.isArray(v)) return v.map((x) => evalProp(x, t)) as T;
+  if (v && typeof v === "object") {
+    return Object.fromEntries(Object.entries(v as object).map(([k, x]) => [k, evalProp(x, t)])) as T;
+  }
+  return v as T;
+}
+
+/** A pure expression Signal in absolute time (for compiler-built composites). */
+export function exprSignal<T>(fn: (tAbs: number) => T, vk: "number" | "vec" | "color" | "discrete", span?: [number, number]): Signal<T> {
+  return { kind: "expr", fn: (t) => fn(t), vk, exprBase: 0, ctx: { fps: 30 }, span, direct: true };
 }

@@ -80,7 +80,7 @@ export interface RNode {
   depth: number;
 }
 
-export interface Marker {
+export interface TimelineMarker {
   at: number;
   label?: string;
   color?: string;
@@ -101,7 +101,7 @@ export interface ResolvedProject {
   root: RNode;
   /** All nodes by id. */
   byId: Map<string, RNode>;
-  markers: Marker[];
+  markers: TimelineMarker[];
   issues: ResolveIssue[];
   /** Tracks in declaration order. */
   tracks: Array<{ id: string; kind: string; locked: boolean; muted: boolean; solo: boolean }>;

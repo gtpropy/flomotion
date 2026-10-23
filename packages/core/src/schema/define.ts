@@ -4,6 +4,7 @@ import { CodeCutError } from "../errors.js";
 import {
   angle,
   bool,
+  ease,
   enumOf,
   group,
   length,
@@ -27,7 +28,7 @@ export type ResolvedProps<C extends Controls> = {
   [K in keyof C]: C[K]["animatable"] extends true ? Signal<any> : any;
 };
 
-export interface ComponentSpec<C extends Controls> {
+export interface ComponentSpec<C extends Controls, T extends readonly Trait[] = readonly Trait[]> {
   category: string;
   description?: string;
   controls: C;
@@ -35,7 +36,7 @@ export interface ComponentSpec<C extends Controls> {
    * `visual` adds the transform stack and timing; `container` allows child layers;
    * `timed` adds only timing (audio, markers). Default: ["visual"].
    */
-  traits?: Trait[];
+  traits?: T;
   /** Which children are allowed: "any" (default for containers), "none", "effects", or names. */
   children?: "any" | "none" | "effects" | readonly string[];
   render?: (props: ResolvedProps<C>, rc: RenderCtx) => RenderOutput;
@@ -68,8 +69,8 @@ export interface ComponentDef<C extends Controls = Controls> {
   readonly sound?: string;
   readonly stub: boolean;
   readonly textChildren?: string;
-  readonly render?: ComponentSpec<C>["render"];
-  readonly apply?: EffectSpec<C>["apply"];
+  readonly render?: (props: any, rc: RenderCtx) => RenderOutput;
+  readonly apply?: (props: any, rc: RenderCtx) => EffectOutput;
   /** Zod object for the authoring form (expressions allowed). */
   readonly zod: z.ZodObject<any>;
   /** Zod object for the JSON wire form (MCP). */
@@ -77,6 +78,11 @@ export interface ComponentDef<C extends Controls = Controls> {
 }
 
 export type CommonProps = { children?: unknown; key?: string };
+
+type VisualMixin = ReturnType<typeof timingControls> & ReturnType<typeof transformControls>;
+type TimedMixin = ReturnType<typeof timingControls>;
+type Mix<T extends readonly Trait[]> = "visual" extends T[number] ? VisualMixin : "timed" extends T[number] ? TimedMixin : {};
+type EffectMixin = ReturnType<typeof effectCommon>;
 export type Tag<C extends Controls> = ((props: PropsOf<C> & CommonProps) => CCNode) & { def: ComponentDef<C> };
 
 // ---------- registry ----------
@@ -138,6 +144,7 @@ export const timingControls = () => ({
   duration: time({ label: "Duration", unit: "s", description: "Defaults to the rest of the parent." }),
   end: time({ label: "End", unit: "s", description: "Alternative to duration." }),
   hidden: bool({ default: false, label: "Hidden" }),
+  link: text({ description: "Link group id: linked clips move, trim and split together." }),
 });
 
 /** The transform stack every visual layer carries. All animatable. */
@@ -167,7 +174,27 @@ export const transformControls = () => ({
   blend: enumOf(BLEND_MODES, { default: "normal", ui: "dropdown" }),
   perspective: num({ animatable: true, min: 0, default: 0, unit: "px" }),
   z: num({ default: 0, step: 1, description: "Stacking override among siblings." }),
+  enter: group(motionFields(), { label: "Enter", description: "Entrance motion at the start of the layer." }),
+  exit: group(motionFields(), { label: "Exit", description: "Exit motion ending at the end of the layer." }),
 });
+
+export const MOTION_DIRECTIONS = ["n", "ne", "e", "se", "s", "sw", "w", "nw", "center", "z+", "z-"] as const;
+
+/** Fields shared by the `enter`/`exit` props and the Enter/Exit effects. */
+export function motionFields() {
+  return {
+    from: enumOf(MOTION_DIRECTIONS, { default: "s", description: "Direction the layer comes from (enter)." }),
+    to: enumOf(MOTION_DIRECTIONS, { default: "s", description: "Direction the layer leaves toward (exit)." }),
+    distance: length({ default: 120, description: "Travel distance in px (or vw/vh/%)." }),
+    ease: ease({ default: "expo.out" }),
+    duration: time({ default: 0.6, unit: "s" }),
+    delay: time({ default: 0, unit: "s" }),
+    fade: bool({ default: true }),
+    blur: num({ min: 0, max: 200, default: 0, unit: "px" }),
+    scale: num({ min: 0, max: 10, default: 1, description: "Scale at the start of an enter / end of an exit." }),
+    rotate: angle({ default: 0 }),
+  };
+}
 
 export const AT_PRESETS = [
   "center",
@@ -219,8 +246,8 @@ function makeDef<C extends Controls>(
     sound?: string;
     stub?: boolean;
     textChildren?: string;
-    render?: ComponentSpec<C>["render"];
-    apply?: EffectSpec<C>["apply"];
+    render?: (props: any, rc: RenderCtx) => RenderOutput;
+    apply?: (props: any, rc: RenderCtx) => EffectOutput;
   },
 ): ComponentDef<C> {
   if (!/^[A-Z][A-Za-z0-9]*$/.test(name)) {
@@ -265,8 +292,11 @@ function makeTag<C extends Controls>(def: ComponentDef<C>): Tag<C> {
 // ---------- public API ----------
 
 /** The only way to add a component. Components without controls are rejected. */
-export function defineComponent<C extends Controls>(name: string, spec: ComponentSpec<C>): Tag<C> {
-  const traits = spec.traits ?? ["visual"];
+export function defineComponent<C extends Controls, const T extends readonly Trait[] = readonly ["visual"]>(
+  name: string,
+  spec: ComponentSpec<C, T>,
+): Tag<C & Mix<T>> {
+  const traits: Trait[] = [...(spec.traits ?? ["visual"])];
   const mixins: Controls[] = [];
   if (traits.includes("visual") || traits.includes("timed")) mixins.push(timingControls());
   if (traits.includes("visual")) mixins.push(transformControls());
@@ -280,13 +310,13 @@ export function defineComponent<C extends Controls>(name: string, spec: Componen
     children,
     stub: spec.stub,
     textChildren: spec.textChildren,
-    render: spec.render,
+    render: spec.render as any,
   });
-  return makeTag(def);
+  return makeTag(def) as unknown as Tag<C & Mix<T>>;
 }
 
 /** Effects apply to their parent layer in source order. */
-export function defineEffect<C extends Controls>(name: string, spec: EffectSpec<C>): Tag<C> {
+export function defineEffect<C extends Controls>(name: string, spec: EffectSpec<C>): Tag<C & EffectMixin> {
   const def = makeDef("effect", name, {
     category: spec.category,
     description: spec.description,
@@ -296,9 +326,9 @@ export function defineEffect<C extends Controls>(name: string, spec: EffectSpec<
     children: "none",
     sound: spec.sound,
     stub: spec.stub,
-    apply: spec.apply,
+    apply: spec.apply as any,
   });
-  return makeTag(def);
+  return makeTag(def) as unknown as Tag<C & EffectMixin>;
 }
 
 /** Built-in fragment tag (no schema; flattened by the runtime). */

@@ -21,3 +21,6 @@ export * from "./fonts/measure.js";
 export * from "./theme.js";
 export * from "./structure.js";
 export { jsx, jsxs, jsxDEV } from "./jsx/runtime.js";
+export * from "./ast/ids.js";
+export * from "./resolve/resolve.js";
+export * from "./compile/index.js";

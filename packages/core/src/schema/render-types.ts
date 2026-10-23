@@ -62,8 +62,10 @@ export interface RenderOutput {
   html: string;
   css?: string;
   channels?: Channel[];
-  /** Host box style overrides (width/height/etc. in px or css). */
+  /** Style for the layer's transform wrapper: left/top/width/height etc. Absent = full-bleed. */
   box?: Record<string, string>;
+  /** Static GSAP props applied once to the wrapper (xPercent, yPercent, ...). */
+  statics?: Record<string, number | string>;
   /** `false` hides the generic transform wrapper (non-visual elements). */
   visual?: boolean;
   /** Extra head/body markup (e.g. <audio>). */
