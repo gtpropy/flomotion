@@ -9,3 +9,4 @@ renders/
 coverage/
 .vitest/
 tests/.tmp/
+.publish/
