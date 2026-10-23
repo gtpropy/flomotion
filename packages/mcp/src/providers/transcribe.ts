@@ -56,7 +56,7 @@ export class HyperframesTranscriber implements Transcriber {
           "missing_dependency",
           `Transcription failed: ${j?.error ?? stripAnsi(r.stderr).split("\n").filter(Boolean).slice(-1)[0] ?? "unknown error"}`,
           {
-            fix: "Install whisper.cpp (macOS: `brew install whisper-cpp`), then run `npx hyperframes doctor`. Or supply the timings yourself as <audio>.words.json ([{w,start,end}]).",
+            fix: "Ask the person to run `flomotion setup whisper` (it installs whisper.cpp and the speech model with their OK). Or use transcript_import with a transcript or captions they already have.",
           },
         );
       }

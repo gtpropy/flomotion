@@ -213,8 +213,11 @@ export async function checkKey(
 
 // ---------- what is available on this machine ----------
 
-const onPath = (bin: string, env: NodeJS.ProcessEnv = process.env): string | undefined => {
-  for (const dir of (env.PATH ?? "").split(delimiter)) {
+/** Directories a GUI-launched or minimal-PATH process may lack but where Homebrew puts tools. */
+const COMMON_BIN_DIRS = ["/opt/homebrew/bin", "/usr/local/bin"];
+
+export const onPath = (bin: string, env: NodeJS.ProcessEnv = process.env): string | undefined => {
+  for (const dir of [...(env.PATH ?? "").split(delimiter), ...COMMON_BIN_DIRS]) {
     const p = join(dir, bin);
     if (dir && existsSync(p)) return p;
   }
@@ -289,6 +292,7 @@ export function setupStatus(
       }
     })(),
     whisper: !!(
+      baseEnv.HYPERFRAMES_WHISPER_PATH ||
       onPath("whisper-cli", baseEnv) ||
       onPath("whisper-cpp", baseEnv) ||
       onPath("whisper", baseEnv)

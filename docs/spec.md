@@ -169,7 +169,7 @@ localhost (no DNS rebinding); the page loads nothing from the network.
 - **Restore:** `POST /api/restore {id}` (requires a custom header so other sites cannot call it) restores a snapshot
   and is logged and undoable like any write.
 
-It is a viewer with undo, not an editor: edits are made by the agent (or by hand in the file).
+A link can open a tab and a time: `http://127.0.0.1:4317/#tab=review&t=2.4` (tabs: outline, code, review, assets, renders, history). It is a viewer with undo, not an editor: edits are made by the agent (or by hand in the file).
 
 ## 10. Setup, the person's own material, and assets
 

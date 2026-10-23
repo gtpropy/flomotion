@@ -37,6 +37,7 @@ import {
   addKeyInteractive,
   checkAll,
   importFromEnv,
+  installWhisper,
   registerWithClaude,
   runWizard,
   summary,
@@ -573,6 +574,30 @@ const setupSounds = defineCommand({
   },
 });
 
+const setupWhisper = defineCommand({
+  meta: {
+    name: "whisper",
+    description:
+      "Install local Whisper (whisper.cpp and the speech model) for transcribing recordings",
+  },
+  async run() {
+    const io = terminalIO();
+    try {
+      const ok = await installWhisper(io, { env: process.env });
+      if (ok) {
+        const cfg = readConfig();
+        cfg.preferences.transcript = "whisper";
+        writeConfig(cfg);
+        io.say("Saved: word timings from Whisper. `transcribe` is ready.");
+      } else process.exitCode = 1;
+    } catch (e) {
+      fail(e);
+    } finally {
+      io.close();
+    }
+  },
+});
+
 const setup = defineCommand({
   meta: {
     name: "setup",
@@ -593,10 +618,12 @@ const setup = defineCommand({
     set: setupSet,
     unset: setupUnset,
     sounds: setupSounds,
+    whisper: setupWhisper,
   },
   async run({ args, rawArgs }) {
     // a subcommand name was given: citty already ran it
-    if (rawArgs.some((a) => ["show", "check", "set", "unset", "sounds"].includes(a))) return;
+    if (rawArgs.some((a) => ["show", "check", "set", "unset", "sounds", "whisper"].includes(a)))
+      return;
     const io = terminalIO();
     const ctx = {
       env: process.env,

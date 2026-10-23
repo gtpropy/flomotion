@@ -6,9 +6,11 @@ import { configPath, readConfig, writeConfig, libraryIndexPath } from "../src/co
 import {
   checkAll,
   importFromEnv,
+  installWhisper,
   runWizard,
   type SetupContext,
   type SetupIO,
+  type WhisperInstaller,
 } from "../../cli/src/setup.js";
 import { cleanup, makeSound, REPO, tmpProject } from "./harness.js";
 // @ts-expect-error plain ESM script without types
@@ -342,5 +344,108 @@ describe("the flomotion setup subcommands (the bundled CLI)", () => {
       transcript: "own",
       sounds: "freesound",
     });
+  });
+});
+
+/** A Whisper installer that records what it was asked to do and never touches the machine. */
+function fakeWhisper(
+  o: { present?: boolean; brew?: boolean; brewOk?: boolean; modelOk?: boolean } = {},
+) {
+  const did: string[] = [];
+  let present = !!o.present;
+  const w: WhisperInstaller = {
+    find: () => (present ? "/opt/homebrew/bin/whisper-cli" : undefined),
+    hasBrew: () => o.brew ?? true,
+    brewInstall: () => {
+      did.push("brew install whisper-cpp");
+      if (o.brewOk === false) return { ok: false, detail: "brew exited with 1" };
+      present = true;
+      return { ok: true, detail: "installed" };
+    },
+    ensureModel: async () => {
+      did.push("model");
+      return o.modelOk === false
+        ? { ok: false, detail: "download failed (offline?)" }
+        : { ok: true, detail: "the speech model is ready" };
+    },
+  };
+  return { w, did };
+}
+
+describe("installing Whisper from setup", () => {
+  it("installs whisper.cpp with Homebrew and fetches the model, each after a yes", async () => {
+    fresh("whisper-yes");
+    const f = fakeWhisper();
+    const s = scripted(["y", "y"]);
+    expect(await installWhisper(s.io, ctx({ whisper: f.w }))).toBe(true);
+    expect(f.did).toEqual(["brew install whisper-cpp", "model"]);
+    expect(s.asked[0]).toContain("brew install whisper-cpp");
+    expect(s.asked[1]).toContain("470 MB");
+    expect(s.text()).toContain("whisper.cpp installed");
+    expect(s.text()).toContain("the speech model is ready");
+  });
+  it("does nothing the person did not agree to", async () => {
+    fresh("whisper-no");
+    let f = fakeWhisper();
+    let s = scripted(["n"]);
+    expect(await installWhisper(s.io, ctx({ whisper: f.w }))).toBe(false);
+    expect(f.did).toEqual([]);
+    expect(s.text()).toContain("transcript or captions file instead");
+    // installed already, model download declined: nothing runs
+    f = fakeWhisper({ present: true });
+    s = scripted(["n"]);
+    expect(await installWhisper(s.io, ctx({ whisper: f.w }))).toBe(true);
+    expect(f.did).toEqual([]);
+    expect(s.text()).toContain("whisper.cpp is installed");
+  });
+  it("skips the install and only checks the model when Whisper is already there", async () => {
+    fresh("whisper-have");
+    const f = fakeWhisper({ present: true });
+    const s = scripted(["y"]);
+    expect(await installWhisper(s.io, ctx({ whisper: f.w }))).toBe(true);
+    expect(f.did).toEqual(["model"]);
+  });
+  it("without Homebrew it says exactly what to do and runs nothing", async () => {
+    fresh("whisper-nobrew");
+    const f = fakeWhisper({ brew: false });
+    const s = scripted([]);
+    expect(await installWhisper(s.io, ctx({ whisper: f.w }))).toBe(false);
+    expect(f.did).toEqual([]);
+    expect(s.text()).toContain("https://brew.sh");
+    expect(s.text()).toContain("whisper-cli");
+    expect(s.text()).toContain("transcript or captions file");
+  });
+  it("reports a failed install or a failed model download", async () => {
+    fresh("whisper-fail");
+    let s = scripted(["y"]);
+    expect(await installWhisper(s.io, ctx({ whisper: fakeWhisper({ brewOk: false }).w }))).toBe(
+      false,
+    );
+    expect(s.text()).toContain("brew exited with 1");
+    expect(s.text()).toContain("flomotion setup whisper");
+    s = scripted(["y"]);
+    expect(
+      await installWhisper(
+        s.io,
+        ctx({ whisper: fakeWhisper({ present: true, modelOk: false }).w }),
+      ),
+    ).toBe(false);
+    expect(s.text()).toContain("download failed (offline?)");
+  });
+  it("is offered by the wizard when word timings come from Whisper", async () => {
+    fresh("whisper-wizard");
+    const f = fakeWhisper();
+    // voice default, word timings = Whisper, then the install and model questions, sounds=own, no folder, no extra keys, no installs
+    const s = scripted(["", "2", "y", "y", "2", "", "n", "n", "n", "n"]);
+    const cfg = await runWizard(s.io, ctx({ whisper: f.w }));
+    expect(cfg.preferences.transcript).toBe("whisper");
+    expect(f.did).toEqual(["brew install whisper-cpp", "model"]);
+  });
+  it("is not offered when the person brings their own transcript", async () => {
+    fresh("whisper-skip");
+    const f = fakeWhisper();
+    const s = scripted(["", "1", "2", "", "n", "n", "n", "n"]);
+    await runWizard(s.io, ctx({ whisper: f.w }));
+    expect(f.did).toEqual([]);
   });
 });

@@ -1,11 +1,14 @@
 import { spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
-import { resolve } from "node:path";
+import { runHyperframes, stripAnsi } from "@codecut/render";
 import {
   KEYS,
   KEY_NAMES,
   checkKey,
+  onPath,
   configPath,
   indexSoundLibrary,
   libraryIndexPath,
@@ -34,6 +37,19 @@ export interface SetupContext {
   installSkill?: () => void;
   /** Register the MCP server with Claude Code. Returns what happened. */
   registerMcp?: () => { ok: boolean; message: string };
+  /** Whisper installation steps (the real ones by default; tests pass fakes). */
+  whisper?: WhisperInstaller;
+}
+
+/** What it takes to get a working local Whisper. */
+export interface WhisperInstaller {
+  /** Path of whisper-cli when present. */
+  find(): string | undefined;
+  hasBrew(): boolean;
+  /** `brew install whisper-cpp`, output shown to the person. */
+  brewInstall(): { ok: boolean; detail: string };
+  /** Make sure the speech model is on disk (a one-off download); true when a transcription can run. */
+  ensureModel(): Promise<{ ok: boolean; detail: string }>;
 }
 
 const yes = (s: string, def: boolean) => (s.trim() === "" ? def : /^y(es)?$/i.test(s.trim()));
@@ -86,6 +102,111 @@ export async function addKey(
     }
     if (!yes(await io.ask("Try another key?", "y"), true)) return false;
   }
+}
+
+export const realWhisper = (env: NodeJS.ProcessEnv): WhisperInstaller => ({
+  find: () =>
+    env.HYPERFRAMES_WHISPER_PATH || onPath("whisper-cli", env) || onPath("whisper-cpp", env),
+  hasBrew: () => !!onPath("brew", env),
+  brewInstall: () => {
+    const r = spawnSync("brew", ["install", "whisper-cpp"], {
+      stdio: "inherit",
+      env: { ...env, HOMEBREW_NO_AUTO_UPDATE: "1" },
+    });
+    return r.status === 0
+      ? { ok: true, detail: "installed" }
+      : { ok: false, detail: `brew exited with ${r.status ?? r.error?.message}` };
+  },
+  ensureModel: async () => {
+    // a short tone through the same path transcribe uses: downloads the model once if it is missing
+    const dir = mkdtempSync(join(tmpdir(), "flomotion-whisper-"));
+    try {
+      const wav = join(dir, "tone.wav");
+      const ff = spawnSync(
+        "ffmpeg",
+        ["-y", "-v", "error", "-f", "lavfi", "-i", "sine=f=220:d=1.5:r=16000", wav],
+        { encoding: "utf8" },
+      );
+      if (ff.status !== 0)
+        return { ok: false, detail: "FFmpeg is needed for the check: brew install ffmpeg" };
+      const r = await runHyperframes(
+        ["transcribe", wav, "-d", dir, "--json", "--no-runtime-install"],
+        { cwd: dir, timeoutMs: 20 * 60_000 },
+      );
+      const line = stripAnsi(r.stdout)
+        .split("\n")
+        .reverse()
+        .find((l) => l.trim().startsWith("{"));
+      const j = line ? (JSON.parse(line) as { ok?: boolean; error?: string }) : undefined;
+      // a tone has no speech: "ok with zero words" and "no speech found" both prove the model loaded
+      if (j?.ok || /no speech|no words|empty/i.test(j?.error ?? ""))
+        return { ok: true, detail: "the speech model is ready" };
+      return {
+        ok: false,
+        detail:
+          j?.error ??
+          stripAnsi(r.stderr).split("\n").filter(Boolean).slice(-1)[0] ??
+          "transcribe failed",
+      };
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+});
+
+/** Install whisper.cpp (with Homebrew) and fetch the speech model, each only after the person says yes. */
+export async function installWhisper(io: SetupIO, ctx: SetupContext): Promise<boolean> {
+  const w = ctx.whisper ?? realWhisper(ctx.env);
+  const have = w.find();
+  if (have) io.say(`✔ whisper.cpp is installed (${have}).`);
+  else {
+    if (!w.hasBrew()) {
+      io.say("whisper.cpp is not installed, and Homebrew was not found to install it.");
+      io.say(
+        "  macOS: install Homebrew (https://brew.sh), then run `flomotion setup whisper` again.",
+      );
+      io.say(
+        "  Linux or Windows: build whisper.cpp (https://github.com/ggml-org/whisper.cpp) and put `whisper-cli` on your PATH.",
+      );
+      io.say(
+        "  Or skip Whisper: give me a transcript or captions file (SRT, VTT, JSON) and I will use that.",
+      );
+      return false;
+    }
+    if (
+      !yes(
+        await io.ask(
+          "Install whisper.cpp now with Homebrew (`brew install whisper-cpp`, a small download)?",
+          "y",
+        ),
+        true,
+      )
+    ) {
+      io.say("Skipped. You can still give me a transcript or captions file instead.");
+      return false;
+    }
+    const r = w.brewInstall();
+    if (!r.ok) {
+      io.say(
+        `✖ ${r.detail}. Run \`brew install whisper-cpp\` yourself and then \`flomotion setup whisper\`.`,
+      );
+      return false;
+    }
+    io.say("✔ whisper.cpp installed.");
+  }
+  if (
+    !yes(
+      await io.ask("Download the English speech model now (about 470 MB, once) and test it?", "y"),
+      true,
+    )
+  ) {
+    io.say("Skipped. The model downloads the first time `transcribe` runs.");
+    return true;
+  }
+  io.say("Downloading and testing the model (this can take a few minutes)…");
+  const m = await w.ensureModel();
+  io.say(m.ok ? `✔ ${m.detail}.` : `✖ ${m.detail}`);
+  return m.ok;
 }
 
 /** The guided setup: how you want to supply voice, transcript, sounds and assets, and the keys that go with it. */
@@ -152,6 +273,7 @@ export async function runWizard(io: SetupIO, ctx: SetupContext): Promise<Flomoti
     ],
     cfg.preferences.transcript ?? (cfg.preferences.voice === "elevenlabs" ? "elevenlabs" : "own"),
   )) as FlomotionConfig["preferences"]["transcript"];
+  if (cfg.preferences.transcript === "whisper") await installWhisper(io, ctx);
   io.say();
 
   // 3. sound effects
