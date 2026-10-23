@@ -129,4 +129,8 @@ export interface RenderCtx {
   measure?: import("../fonts/measure.js").TextMeasurer;
   /** Escape text for HTML. */
   esc(s: string): string;
+  /** Word timings of a Voiceover (from voice.words.json), when loaded. */
+  words(voiceId: string): Array<{ w: string; start: number; end: number }> | undefined;
+  /** Render context for another node (used by parents rendering inline children). */
+  ctxFor(node: RNode): RenderCtx;
 }

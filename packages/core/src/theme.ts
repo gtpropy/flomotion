@@ -15,7 +15,7 @@ export interface FontDecl {
 }
 
 /** A Look is data: palette, fonts, type scale, easing, signature transition, texture, sounds. */
-export interface Look {
+export interface LookSpec {
   id: string;
   name: string;
   description?: string;
@@ -33,11 +33,11 @@ export interface Look {
   background?: string;
 }
 
-const looks = new Map<string, Look>();
+const looks = new Map<string, LookSpec>();
 
-export function defineLook(look: Look): Look {
+export function defineLook(look: LookSpec): LookSpec {
   looks.set(look.id, look);
   return look;
 }
-export const getLook = (id: string): Look | undefined => looks.get(id);
-export const listLooks = (): Look[] => [...looks.values()];
+export const getLook = (id: string): LookSpec | undefined => looks.get(id);
+export const listLooks = (): LookSpec[] => [...looks.values()];

@@ -14,6 +14,7 @@ import {
   length,
 } from "./schema/controls.js";
 import { defineComponent } from "./schema/define.js";
+import { resolveLength } from "./values/length.js";
 
 export const TRANSITION_TYPES = [
   "cut",
@@ -112,7 +113,23 @@ export const Group = defineComponent("Group", {
     width: length({ description: "Optional explicit box; defaults to the parent box." }),
     height: length(),
   },
-  render: () => ({ html: "{{children}}" }),
+  childBox: (raw, comp, parent) => {
+    const px = (v: unknown, base: number, vw: number) => {
+      if (v === undefined) return base;
+      try {
+        return resolveLength(v as number | string, { parent: base, vw: comp.width, vh: comp.height });
+      } catch {
+        return vw;
+      }
+    };
+    return [px(raw.width, parent[0], parent[0]), px(raw.height, parent[1], parent[1])];
+  },
+  render: (p, rc) => {
+    if (p.width === undefined && p.height === undefined) return { html: "{{children}}" };
+    const w = p.width === undefined ? rc.node.box[0] : rc.px(p.width, "x");
+    const h = p.height === undefined ? rc.node.box[1] : rc.px(p.height, "y");
+    return { html: "{{children}}", box: { left: "0px", top: "0px", width: `${w}px`, height: `${h}px` } };
+  },
 });
 
 export const Marker = defineComponent("Marker", {
@@ -196,4 +213,17 @@ export const Keyframes = defineComponent("Keyframes", {
     loop: json<"cycle" | "pingpong" | number>({}, undefined),
   },
   render: () => ({ html: "", visual: false }),
+});
+
+export const Stagger = defineComponent("Stagger", {
+  category: "motion",
+  description:
+    "Offsets each child's start by `each` seconds in order (or from the end / center / edges). Children keep their own durations.",
+  traits: ["visual", "container"],
+  children: "any",
+  controls: {
+    each: time({ unit: "s", default: 0.08 }),
+    from: enumOf(["start", "end", "center", "edges"], { default: "start" }),
+  },
+  render: () => ({ html: "{{children}}" }),
 });

@@ -61,6 +61,8 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
       assetPath,
       measure: opts.measure,
       esc,
+      words: (id) => opts.words?.(id),
+      ctxFor: (n) => makeCtx(n),
     };
   };
 
@@ -89,6 +91,8 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
       defs: [],
       overlays: [],
       visual: def.traits.includes("visual"),
+      flow: false,
+      inFlow: false,
       sounds: [],
       audio: [],
       source: { id: node.id },
@@ -118,12 +122,15 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
       const out = def.render(node.props as any, rc);
       if (out.visual === false) layer.visual = false;
       layer.html = out.html;
+      layer.flow = !!out.flow;
+      for (const cl of childLayers) cl.inFlow = layer.flow;
       layer.css = out.css ?? "";
       layer.xfStyle = { ...(out.box ?? {}) };
       layer.statics = { ...(out.statics ?? {}) };
       layer.channels.push(...(out.channels ?? []));
       layer.sounds.push(...(out.sounds ?? []));
       layer.audio.push(...(out.extra?.audio ?? []));
+      for (const m of out.issues ?? []) issues.push({ severity: "warning", rule: "option-ignored", message: `${node.name}#${node.id}: ${m}`, id: node.id });
     } else {
       layer.html = ["Track", "Scene", "Sequence", "Composition"].includes(node.name) ? "{{children}}" : "";
     }
@@ -141,7 +148,8 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
       layer.offsets.push(...(out.offsets ?? []));
       layer.filters.push(...(out.filters ?? []));
       layer.channels.push(...(out.channels ?? []));
-      if (out.style) Object.assign(layer.xfStyle, out.style);
+      if (out.style) mergeStyle(layer.xfStyle, out.style);
+      for (const m of out.issues ?? []) issues.push({ severity: "warning", rule: "effect-option-ignored", message: `${eff.name}#${eff.id}: ${m}`, id: eff.id });
       if (out.defs) layer.defs.push(out.defs);
       if (out.css) layer.css += out.css;
       if (out.overlay) {
@@ -150,6 +158,12 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
         layer.channels.push(...(out.overlay.channels ?? []));
       }
       layer.sounds.push(...(out.sounds ?? []));
+      if (out.timeRemap) {
+        const prev = layer.remap;
+        layer.remap = prev
+          ? { map: (t) => out.timeRemap!.map(prev.map(t)), unmap: (t) => prev.unmap(out.timeRemap!.unmap(t)) }
+          : out.timeRemap;
+      }
     }
     if (layer.visual) {
       const basis = { parent: Math.max(node.box[0], node.box[1]), vw: comp.width, vh: comp.height };
@@ -247,6 +261,8 @@ const num3 = (v: unknown, d: number[]): number[] => (Array.isArray(v) ? [v[0] ??
 
 function finalizeLayer(node: RNode, layer: IRLayer, hz: number, fps: number): void {
   const span: [number, number] = [node.start, node.end];
+  const rm = layer.remap;
+  const ev = <T,>(sig: Signal<T>, t: number): T => evalSignal(sig, rm ? rm.map(t) : t);
   const xf = `#${node.id}-xf`;
   if (layer.visual) {
     const P = node.props;
@@ -278,22 +294,22 @@ function finalizeLayer(node: RNode, layer: IRLayer, hz: number, fps: number): vo
       const sig = exprSignal(
         (t) => {
           let v = base(t);
-          for (const a of addSigs) v += evalSignal(a, t) as number;
-          for (const m of mulSigs) v *= evalSignal(m, t) as number;
+          for (const a of addSigs) v += ev(a, t) as number;
+          for (const m of mulSigs) v *= ev(m, t) as number;
           return v;
         },
         "number",
-        unionSpan([...baseSigs, ...addSigs, ...mulSigs], span),
+        unionSpan(rm, [...baseSigs, ...addSigs, ...mulSigs], span),
       );
       pushChannel(layer, xf, prop, sig, span, hz);
     };
 
-    const P3 = (s: Signal | undefined, d: number[]) => (t: number) => (s ? num3(evalSignal(s, t), d) : d);
+    const P3 = (s: Signal | undefined, d: number[]) => (t: number) => (s ? num3(ev(s, t), d) : d);
     const posAt = P3(pos, [0, 0, 0]);
     const rotAt = P3(rot, [0, 0, 0]);
     const sclAt = P3(scl, [1, 1, 1]);
     const skwAt = (t: number) => {
-      const v = skw ? (evalSignal(skw, t) as number[]) : [0, 0];
+      const v = skw ? (ev(skw, t) as number[]) : [0, 0];
       return [v[0] ?? 0, v[1] ?? 0];
     };
     compose("x", (t) => posAt(t)[0]!, [pos], adds("x"), [], 0);
@@ -307,21 +323,21 @@ function finalizeLayer(node: RNode, layer: IRLayer, hz: number, fps: number): vo
     compose("skewX", (t) => skwAt(t)[0]!, [skw], adds("skewX"), [], 0);
     compose("skewY", (t) => skwAt(t)[1]!, [skw], adds("skewY"), [], 0);
     const op = sigOf(P.opacity);
-    compose("opacity", (t) => (op ? (evalSignal(op, t) as number) : 1), [op], adds("opacity"), muls("opacity"), 1);
+    compose("opacity", (t) => (op ? (ev(op, t) as number) : 1), [op], adds("opacity"), muls("opacity"), 1);
 
     // anchor → transform-origin
     const anc = sigOf(P.anchor);
     if (anc) {
       const fmt = (t: number) => {
-        const a = num3(evalSignal(anc, t), [50, 50, 0]);
+        const a = num3(ev(anc, t), [50, 50, 0]);
         return `${a[0]}% ${a[1]}% ${a[2]}px`;
       };
       if (anc.kind === "const") layer.statics["transformOrigin"] = fmt(span[0]);
-      else pushChannel(layer, xf, "transformOrigin", exprSignal(fmt, "discrete", unionSpan([anc], span)), span, hz, (v) => String(v));
+      else pushChannel(layer, xf, "transformOrigin", exprSignal(fmt, "discrete", unionSpan(rm, [anc], span)), span, hz, (v) => String(v));
     }
     const per = sigOf(P.perspective);
     if (per) {
-      const v = evalSignal(per, span[0]) as number;
+      const v = ev(per, span[0]) as number;
       if (per.kind !== "const") pushChannel(layer, xf, "transformPerspective", per, span, hz);
       else if (v > 0) layer.statics["transformPerspective"] = v;
     }
@@ -330,13 +346,13 @@ function finalizeLayer(node: RNode, layer: IRLayer, hz: number, fps: number): vo
     if (crop && Object.keys(crop).length) {
       const side = (k: string, t: number): string => {
         const v = crop[k];
-        const x = isSignal(v) ? evalSignal(v, t) : v ?? 0;
+        const x = isSignal(v) ? ev(v, t) : v ?? 0;
         return typeof x === "number" ? `${Math.round(x * 100) / 100}px` : String(x);
       };
       const sigs = Object.values(crop).filter(isSignal);
       const fmt = (t: number) => `inset(${side("top", t)} ${side("right", t)} ${side("bottom", t)} ${side("left", t)})`;
       const animated = sigs.some((s) => s.kind !== "const");
-      if (animated) pushChannel(layer, xf, "clipPath", exprSignal(fmt, "discrete", unionSpan(sigs, span)), span, hz, (v) => String(v));
+      if (animated) pushChannel(layer, xf, "clipPath", exprSignal(fmt, "discrete", unionSpan(rm, sigs, span)), span, hz, (v) => String(v));
       else {
         const v = fmt(span[0]);
         if (v !== "inset(0px 0px 0px 0px)") layer.statics["clipPath"] = v;
@@ -349,22 +365,28 @@ function finalizeLayer(node: RNode, layer: IRLayer, hz: number, fps: number): vo
 
   // filters (effects + enter/exit + renderer-provided)
   if (layer.filters.length) {
-    const fmt = (t: number) => layer.filters.map((f) => evalSignal(f, t)).filter(Boolean).join(" ");
+    const fmt = (t: number) => layer.filters.map((f) => ev(f, t)).filter(Boolean).join(" ");
     const animated = layer.filters.some((f) => f.kind !== "const");
-    if (animated) pushChannel(layer, xf, "filter", exprSignal(fmt, "discrete", unionSpan(layer.filters, span)), span, hz, (v) => String(v));
+    if (animated) pushChannel(layer, xf, "filter", exprSignal(fmt, "discrete", unionSpan(rm, layer.filters, span)), span, hz, (v) => String(v));
     else layer.statics["filter"] = fmt(span[0]);
   }
 
   // channels contributed by the renderer / effects
   const hzNow = hz;
   for (const ch of layer.channels) {
-    pushChannel(layer, ch.target, ch.prop, ch.signal, ch.span ?? span, hzNow, ch.format, ch.unit);
+    const chSpan = ch.span ?? span;
+    const sig = rm ? exprSignal((t) => evalSignal(ch.signal, rm.map(t)), ch.signal.kind === "const" ? "discrete" : (ch.signal as { vk?: "number" | "vec" | "color" | "discrete" }).vk ?? "discrete", [rm.unmap(chSpan[0]), rm.unmap(chSpan[1])]) : ch.signal;
+    pushChannel(layer, ch.target, ch.prop, sig, rm ? [rm.unmap(chSpan[0]), rm.unmap(chSpan[1])] : chSpan, hzNow, ch.format, ch.unit);
   }
   layer.channels = [];
   void fps;
 }
 
-function unionSpan(sigs: Array<Signal | undefined>, elementSpan: [number, number]): [number, number] {
+function unionSpan(
+  rm: IRLayer["remap"],
+  sigs: Array<Signal | undefined>,
+  elementSpan: [number, number],
+): [number, number] {
   let lo = Infinity;
   let hi = -Infinity;
   for (const s of sigs) {
@@ -375,7 +397,8 @@ function unionSpan(sigs: Array<Signal | undefined>, elementSpan: [number, number
       hi = Math.max(hi, sp[1]);
     }
   }
-  return lo === Infinity ? elementSpan : [lo, hi];
+  if (lo === Infinity) return elementSpan;
+  return rm ? [rm.unmap(lo), rm.unmap(hi)] : [lo, hi];
 }
 import { signalSpan as signalSpanOf } from "../anim/signal.js";
 
@@ -394,6 +417,17 @@ function pushChannel(
   if (out.static) layer.statics2.push(out.static);
 }
 
+/** Merge effect styles; masks stack with intersect, filters never come through here. */
+function mergeStyle(into: Record<string, string>, add: Record<string, string>): void {
+  for (const [k, v] of Object.entries(add)) {
+    if ((k === "mask" || k === "-webkit-mask") && into[k]) {
+      into[k] = `${into[k]}, ${v}`;
+      into["mask-composite"] = "intersect";
+      into["-webkit-mask-composite"] = "source-in";
+    } else into[k] = v;
+  }
+}
+
 function styleAttr(style: Record<string, string>): string {
   return Object.entries(style)
     .map(([k, v]) => `${k}:${v}`)
@@ -403,14 +437,22 @@ function styleAttr(style: Record<string, string>): string {
 function hostHtml(layer: IRLayer, node: RNode): string {
   const dur = Math.max(0, layer.end - layer.start);
   const z = layer.z;
-  const host = styleAttr({ position: "absolute", inset: "0", "z-index": String(z), ...layer.hostStyle });
+  const host = styleAttr(
+    layer.inFlow
+      ? { position: "relative", "z-index": String(z), ...layer.hostStyle }
+      : { position: "absolute", inset: "0", "z-index": String(z), ...layer.hostStyle },
+  );
   const attrs = `id="${node.id}" class="clip cc-l cc-${node.name.toLowerCase()}" data-start="${layer.start}" data-duration="${Math.round(dur * 1e6) / 1e6}"${
     layer.trackIndex !== undefined ? ` data-track-index="${layer.trackIndex}"` : ""
   } data-cc="${node.name}"`;
   if (!layer.visual) {
     return `<div ${attrs} style="${host}">${layer.html}${layer.overlays.join("")}</div>`;
   }
-  const xfBase: Record<string, string> = layer.xfStyle["left"] || layer.xfStyle["top"] || layer.xfStyle["width"] ? { position: "absolute" } : { position: "absolute", inset: "0" };
+  const xfBase: Record<string, string> = layer.inFlow
+    ? { position: "relative" }
+    : layer.xfStyle["left"] || layer.xfStyle["top"] || layer.xfStyle["width"]
+      ? { position: "absolute" }
+      : { position: "absolute", inset: "0" };
   const xf = styleAttr({ ...xfBase, ...layer.xfStyle });
   return `<div ${attrs} style="${host}"><div id="${node.id}-xf" class="cc-xf" style="${xf}">${layer.html}${layer.overlays.join("")}</div></div>`;
 }

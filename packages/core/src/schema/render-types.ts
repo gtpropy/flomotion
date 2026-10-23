@@ -46,6 +46,10 @@ export interface EffectOutput {
   css?: string;
   /** Sound events this effect wants (autoSound). */
   sounds?: SoundCue[];
+  /** Non-fatal problems to surface as lint warnings (e.g. an unsupported option was ignored). */
+  issues?: string[];
+  /** Remaps the layer's own animation clock (Hitstop). `unmap` is the inverse, used for baking spans. */
+  timeRemap?: { map: (t: number) => number; unmap: (t: number) => number };
 }
 
 export interface SoundCue {
@@ -68,9 +72,12 @@ export interface RenderOutput {
   statics?: Record<string, number | string>;
   /** `false` hides the generic transform wrapper (non-visual elements). */
   visual?: boolean;
+  /** Children lay out in normal flow (Stack/Grid) instead of being absolutely positioned. */
+  flow?: boolean;
   /** Extra head/body markup (e.g. <audio>). */
   extra?: { audio?: AudioEvent[] };
   sounds?: SoundCue[];
+  issues?: string[];
 }
 
 export interface AudioEvent {
@@ -85,6 +92,13 @@ export interface AudioEvent {
   bus: "voice" | "music" | "sfx";
   /** Playback rate for Clip speed. */
   rate?: number;
+  /** Sound whose loudest moment must land on `start`: seconds, or a named peak from the ledger/sidecar. */
+  peak?: number | string;
+  /** Fade in/out in seconds. */
+  fadeIn?: number;
+  fadeOut?: number;
+  /** For video clips with their own audio track. */
+  fromVideo?: boolean;
 }
 
 /** Resolved node as seen by renderers. Defined in resolve/types; re-exported for components. */

@@ -21,7 +21,7 @@ import type { EffectOutput, RenderOutput } from "./render-types.js";
 import type { RenderCtx } from "../resolve/types.js";
 import type { Signal } from "../anim/signal.js";
 
-export type Trait = "visual" | "container" | "timed";
+export type Trait = "visual" | "container" | "timed" | "inline";
 export type Kind = "component" | "effect";
 
 export type ResolvedProps<C extends Controls> = {
@@ -44,6 +44,8 @@ export interface ComponentSpec<C extends Controls, T extends readonly Trait[] = 
   stub?: boolean;
   /** Which text slot receives plain-string children (e.g. "text"). */
   textChildren?: string;
+  /** Box (px) children resolve `%` lengths against. Defaults to this node's own box. */
+  childBox?: (raw: Record<string, unknown>, comp: { width: number; height: number }, parentBox: [number, number]) => [number, number];
 }
 
 export interface EffectSpec<C extends Controls> {
@@ -69,6 +71,7 @@ export interface ComponentDef<C extends Controls = Controls> {
   readonly sound?: string;
   readonly stub: boolean;
   readonly textChildren?: string;
+  readonly childBox?: ComponentSpec<any>["childBox"];
   readonly render?: (props: any, rc: RenderCtx) => RenderOutput;
   readonly apply?: (props: any, rc: RenderCtx) => EffectOutput;
   /** Zod object for the authoring form (expressions allowed). */
@@ -246,6 +249,7 @@ function makeDef<C extends Controls>(
     sound?: string;
     stub?: boolean;
     textChildren?: string;
+    childBox?: ComponentSpec<any>["childBox"];
     render?: (props: any, rc: RenderCtx) => RenderOutput;
     apply?: (props: any, rc: RenderCtx) => EffectOutput;
   },
@@ -259,6 +263,7 @@ function makeDef<C extends Controls>(
     });
   }
   const controls = mergeControls(base.own, base.mixins);
+  if (!controls.id) controls.id = text({ label: "Id", description: "Stable unique id. Written back as cc_… when missing." });
   const def: ComponentDef<C> = {
     kind,
     name,
@@ -271,6 +276,7 @@ function makeDef<C extends Controls>(
     sound: base.sound,
     stub: base.stub ?? false,
     textChildren: base.textChildren,
+    childBox: base.childBox,
     render: base.render,
     apply: base.apply,
     zod: z.object(zodShape(controls, "prop")).strict(),
@@ -310,6 +316,7 @@ export function defineComponent<C extends Controls, const T extends readonly Tra
     children,
     stub: spec.stub,
     textChildren: spec.textChildren,
+    childBox: spec.childBox,
     render: spec.render as any,
   });
   return makeTag(def) as unknown as Tag<C & Mix<T>>;

@@ -13,6 +13,8 @@ export interface CompileOptions {
   assetPath?: (src: string) => string;
   /** Path of the vendored GSAP file relative to index.html. */
   gsapPath?: string;
+  /** Word timings for a Voiceover id. */
+  words?: (voiceId: string) => Array<{ w: string; start: number; end: number }> | undefined;
   /** Pre-mixed audio to embed as a single <audio id="cc-mix">. */
   mix?: { src: string; duration?: number };
 }
@@ -42,6 +44,12 @@ export interface IRLayer {
   overlays: string[];
   /** True when this layer gets the generic transform stack. */
   visual: boolean;
+  /** Children of this layer lay out in normal flow. */
+  flow: boolean;
+  /** True when this layer itself sits in a parent's normal flow. */
+  inFlow: boolean;
+  /** Hitstop-style time remap applied to every signal of this layer. */
+  remap?: { map: (t: number) => number; unmap: (t: number) => number };
   sounds: SoundCue[];
   audio: AudioEvent[];
   /** Node reference data for debugging / outlines. */

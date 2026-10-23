@@ -171,7 +171,9 @@ function build(env: Env, node: CCNode, parent: RNode | null, depth: number, gene
     const child = build(env, c, r, depth + 1, generatedIds);
     r.content.push(child);
     if (child.def.kind === "effect") r.effects.push(child);
-    else {
+    else if (child.def.traits.includes("inline")) {
+      // inline spans live only in the parent's rich-text content, never as layers
+    } else {
       child.z = ++layerIndex;
       r.children.push(child);
     }
@@ -415,7 +417,14 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
     if (n.def.kind === "effect") {
       start = startSpec ? toAbs(startSpec) : parent.start;
     } else if (startSpec) start = toAbs(startSpec);
-    else if (parent.name === "Sequence") {
+    else if (parent.name === "Stagger") {
+      const sibs = parent.children;
+      const i = sibs.indexOf(n);
+      const each = parent.raw.each === undefined ? 0.08 : parseTimeLiteral(parent.raw.each as Time, fps);
+      const order = String(parent.raw.from ?? "start");
+      const k = order === "end" ? sibs.length - 1 - i : order === "center" ? Math.abs(i - (sibs.length - 1) / 2) : order === "edges" ? (sibs.length - 1) / 2 - Math.abs(i - (sibs.length - 1) / 2) : i;
+      start = parent.start + k * each;
+    } else if (parent.name === "Sequence") {
       const prev = parent.children[parent.children.indexOf(n) - 1];
       const gap = typeof parent.raw.gap === "undefined" ? 0 : parseTimeLiteral(parent.raw.gap as Time, fps);
       if (prev) timeNode(env, prev, visiting);
@@ -469,12 +478,10 @@ function mediaTrim(p: Record<string, unknown>): { in: number; out?: number } {
 }
 
 function assignBoxes(env: Env, n: RNode): void {
+  const comp = env.comp!;
+  const childBox = n.def.childBox?.(n.raw, comp, n.box) ?? n.box;
   for (const c of n.children) {
-    const w = c.raw.width as Length | undefined;
-    const h = c.raw.height as Length | undefined;
-    c.box = n.box;
-    void w;
-    void h;
+    c.box = childBox;
     assignBoxes(env, c);
   }
   for (const e of n.effects) e.box = n.box;
