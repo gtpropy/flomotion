@@ -90,7 +90,8 @@ export type Controls = Record<string, AnyControl>;
 
 type IsAnim<O> = O extends { animatable: true } ? true : false;
 
-export type PropOf<C> = C extends Control<infer T, infer A> ? (A extends true ? Animatable<T> : T) : never;
+export type PropOf<C> =
+  C extends Control<infer T, infer A> ? (A extends true ? Animatable<T> : T) : never;
 export type PropsOf<Cs extends Controls> = { [K in keyof Cs]?: PropOf<Cs[K]> };
 
 // ---------- shared zod pieces ----------
@@ -110,7 +111,11 @@ function keyframesSchema(value: z.ZodType): z.ZodType {
     hold: z.boolean().optional(),
     label: z.string().optional(),
   });
-  const key = z.union([z.tuple([timeSchema, value]), z.tuple([timeSchema, value, z.string()]), keyObj]);
+  const key = z.union([
+    z.tuple([timeSchema, value]),
+    z.tuple([timeSchema, value, z.string()]),
+    keyObj,
+  ]);
   const list = z.array(key).min(1);
   const track = z.object({
     keys: list,
@@ -185,14 +190,16 @@ export function int<const O extends NumOpts>(o: O = {} as O): Control<number, Is
   return build("int", o, { valueKind: "number", tsType: "number", value: numSchema(o, true) });
 }
 
-export function bool<const O extends ControlOpts<boolean>>(o: O = {} as O): Control<boolean, IsAnim<O>> {
+export function bool<const O extends ControlOpts<boolean>>(
+  o: O = {} as O,
+): Control<boolean, IsAnim<O>> {
   return build("bool", o, { valueKind: "discrete", tsType: "boolean", value: z.boolean() });
 }
 
-export function enumOf<const V extends readonly [string, ...string[]], const O extends ControlOpts<V[number]>>(
-  values: V,
-  o: O = {} as O,
-): Control<V[number], IsAnim<O>> {
+export function enumOf<
+  const V extends readonly [string, ...string[]],
+  const O extends ControlOpts<V[number]>,
+>(values: V, o: O = {} as O): Control<V[number], IsAnim<O>> {
   return build("enum", o, {
     valueKind: "discrete",
     tsType: values.map((v) => JSON.stringify(v)).join(" | "),
@@ -208,24 +215,37 @@ export function text<const O extends ControlOpts<string> & { multiline?: boolean
   return build("text", o, { valueKind: "discrete", tsType: "string", value: z.string() });
 }
 
-export function richText<const O extends ControlOpts<string>>(o: O = {} as O): Control<string, IsAnim<O>> {
+export function richText<const O extends ControlOpts<string>>(
+  o: O = {} as O,
+): Control<string, IsAnim<O>> {
   return build("richText", o, { valueKind: "discrete", tsType: "string", value: z.string() });
 }
 
-const colorRe = /^(#[0-9a-fA-F]{3,8}|rgba?\(.+\)|oklch\(.+\)|\$[\w.-]+|transparent|currentColor|[a-zA-Z]+)$/;
+const colorRe =
+  /^(#[0-9a-fA-F]{3,8}|rgba?\(.+\)|oklch\(.+\)|\$[\w.-]+|transparent|currentColor|[a-zA-Z]+)$/;
 export type ColorValue = string;
 
-export function color<const O extends ControlOpts<ColorValue>>(o: O = {} as O): Control<ColorValue, IsAnim<O>> {
+export function color<const O extends ControlOpts<ColorValue>>(
+  o: O = {} as O,
+): Control<ColorValue, IsAnim<O>> {
   return build("color", o, {
     valueKind: "color",
     tsType: "Color",
-    value: z.string().regex(colorRe, { message: 'expected a color: "#rrggbb", "oklch(L C H)" or "$token"' }),
+    value: z
+      .string()
+      .regex(colorRe, { message: 'expected a color: "#rrggbb", "oklch(L C H)" or "$token"' }),
   });
 }
 
 const rgbVec = z.tuple([z.number(), z.number(), z.number()]);
-export function color3<const O extends ControlOpts<Vec3>>(o: O = {} as O): Control<Vec3, IsAnim<O>> {
-  return build("color3", o, { valueKind: "vec", tsType: "Vec3", value: rgbVec as unknown as z.ZodType<Vec3> });
+export function color3<const O extends ControlOpts<Vec3>>(
+  o: O = {} as O,
+): Control<Vec3, IsAnim<O>> {
+  return build("color3", o, {
+    valueKind: "vec",
+    tsType: "Vec3",
+    value: rgbVec as unknown as z.ZodType<Vec3>,
+  });
 }
 
 function vecNormalizer(len: 2 | 3, def?: readonly number[]) {
@@ -244,12 +264,21 @@ const vecComponents = (len: 2 | 3, o: { min?: number; max?: number }) => {
   return len === 2 ? z.union([n, full]) : z.union([n, short, full]);
 };
 
-export function vec2<const O extends ControlOpts<Vec2 | number>>(o: O = {} as O): Control<Vec2 | number, IsAnim<O>> {
+export function vec2<const O extends ControlOpts<Vec2 | number>>(
+  o: O = {} as O,
+): Control<Vec2 | number, IsAnim<O>> {
   return build("vec2", o, {
     valueKind: "vec",
     tsType: "number | Vec2",
     value: vecComponents(2, o) as unknown as z.ZodType<Vec2 | number>,
-    normalize: vecNormalizer(2, o.default === undefined ? undefined : (Array.isArray(o.default) ? o.default : [o.default, o.default])) as any,
+    normalize: vecNormalizer(
+      2,
+      o.default === undefined
+        ? undefined
+        : Array.isArray(o.default)
+          ? o.default
+          : [o.default, o.default],
+    ) as any,
     wireExtra: [z.object({ x: z.any().optional(), y: z.any().optional() })],
   });
 }
@@ -261,7 +290,14 @@ export function vec3<const O extends ControlOpts<Vec3 | Vec2 | number>>(
     valueKind: "vec",
     tsType: "number | Vec2 | Vec3",
     value: vecComponents(3, o) as unknown as z.ZodType<Vec3 | Vec2 | number>,
-    normalize: vecNormalizer(3, o.default === undefined ? undefined : (Array.isArray(o.default) ? o.default : [o.default, o.default, o.default])) as any,
+    normalize: vecNormalizer(
+      3,
+      o.default === undefined
+        ? undefined
+        : Array.isArray(o.default)
+          ? o.default
+          : [o.default, o.default, o.default],
+    ) as any,
     wireExtra: [z.object({ x: z.any().optional(), y: z.any().optional(), z: z.any().optional() })],
   });
 }
@@ -292,7 +328,9 @@ const curvePoint = z.object({
   out: z.tuple([z.number(), z.number()]).optional(),
 });
 
-export function curve<const O extends ControlOpts<CurvePoint[]>>(o: O = {} as O): Control<CurvePoint[], IsAnim<O>> {
+export function curve<const O extends ControlOpts<CurvePoint[]>>(
+  o: O = {} as O,
+): Control<CurvePoint[], IsAnim<O>> {
   return build("curve", o, {
     valueKind: "discrete",
     tsType: "CurvePoint[]",
@@ -302,18 +340,24 @@ export function curve<const O extends ControlOpts<CurvePoint[]>>(o: O = {} as O)
 
 export type CurveChannel = "rgb" | "r" | "g" | "b" | "luma";
 export function curves<
-  const O extends ControlOpts<Partial<Record<CurveChannel, CurvePoint[]>>> & { channels?: readonly CurveChannel[] },
+  const O extends ControlOpts<Partial<Record<CurveChannel, CurvePoint[]>>> & {
+    channels?: readonly CurveChannel[];
+  },
 >(o: O = {} as O): Control<Partial<Record<CurveChannel, CurvePoint[]>>, IsAnim<O>> {
   const ch = (o.channels ?? ["rgb", "r", "g", "b", "luma"]) as readonly CurveChannel[];
   const shape = Object.fromEntries(ch.map((c) => [c, z.array(curvePoint).min(2).optional()]));
   return build("curves", o, {
     valueKind: "discrete",
     tsType: "Partial<Record<CurveChannel, CurvePoint[]>>",
-    value: z.object(shape).strict() as unknown as z.ZodType<Partial<Record<CurveChannel, CurvePoint[]>>>,
+    value: z.object(shape).strict() as unknown as z.ZodType<
+      Partial<Record<CurveChannel, CurvePoint[]>>
+    >,
   });
 }
 
-export function ease<const O extends ControlOpts<string>>(o: O = {} as O): Control<string, IsAnim<O>> {
+export function ease<const O extends ControlOpts<string>>(
+  o: O = {} as O,
+): Control<string, IsAnim<O>> {
   return build("ease", o, {
     valueKind: "discrete",
     tsType: "Ease",
@@ -326,7 +370,10 @@ export function ease<const O extends ControlOpts<string>>(o: O = {} as O): Contr
           return false;
         }
       },
-      { message: 'unknown ease; try "expo.out", "back.out(1.7)", "bezier(.2,.8,.2,1)" or "spring(180,18)"' },
+      {
+        message:
+          'unknown ease; try "expo.out", "back.out(1.7)", "bezier(.2,.8,.2,1)" or "spring(180,18)"',
+      },
     ),
   });
 }
@@ -338,28 +385,38 @@ export function file<const O extends ControlOpts<string> & { accept?: readonly s
   return build("file", o, {
     valueKind: "discrete",
     tsType: "string",
-    value: z.string().refine((s) => !accept || accept.some((ext) => s.toLowerCase().endsWith(ext)), {
-      message: `expected a file with extension ${accept?.join(", ")}`,
-    }),
+    value: z
+      .string()
+      .refine((s) => !accept || accept.some((ext) => s.toLowerCase().endsWith(ext)), {
+        message: `expected a file with extension ${accept?.join(", ")}`,
+      }),
   });
 }
 
 const assetRe = /^(\.{0,2}\/|assets\/|fonts\/)[^\s]*$|^[a-z]+:[^\s]+$|^[\w.-]+\.[a-z0-9]+$/i;
-export function asset<const O extends ControlOpts<string> & { kinds?: readonly ("video" | "audio" | "image" | "font" | "model")[] }>(
-  o: O = {} as O,
-): Control<string, IsAnim<O>> {
+export function asset<
+  const O extends ControlOpts<string> & {
+    kinds?: readonly ("video" | "audio" | "image" | "font" | "model")[];
+  },
+>(o: O = {} as O): Control<string, IsAnim<O>> {
   return build("asset", o, {
     valueKind: "discrete",
     tsType: "Asset",
-    value: z.string().regex(assetRe, { message: 'expected an asset: "./clip.mp4", "freesound:12345" or "model:poly:abc"' }),
+    value: z.string().regex(assetRe, {
+      message: 'expected an asset: "./clip.mp4", "freesound:12345" or "model:poly:abc"',
+    }),
   });
 }
 
-export function ref<const O extends ControlOpts<string>>(o: O = {} as O): Control<string, IsAnim<O>> {
+export function ref<const O extends ControlOpts<string>>(
+  o: O = {} as O,
+): Control<string, IsAnim<O>> {
   return build("ref", o, {
     valueKind: "discrete",
     tsType: "Ref",
-    value: z.string().regex(/^#[\w-]+(\.[\w.-]+)?$/, { message: 'expected a ref like "#hero" or "#hero.opacity"' }),
+    value: z.string().regex(/^#[\w-]+(\.[\w.-]+)?$/, {
+      message: 'expected a ref like "#hero" or "#hero.opacity"',
+    }),
   });
 }
 
@@ -379,7 +436,10 @@ export function time<const O extends ControlOpts<number | string>>(
           return false;
         }
       },
-      { message: 'expected a Time: 1.5, "1.5s", "36f", "00:00:01:12", "@12s", "#id.end+0.2" or "@marker:name"' },
+      {
+        message:
+          'expected a Time: 1.5, "1.5s", "36f", "00:00:01:12", "@12s", "#id.end+0.2" or "@marker:name"',
+      },
     ) as unknown as z.ZodType<number | string>,
   });
 }
@@ -415,14 +475,22 @@ export type Fill =
 const stops = z.array(z.tuple([z.number().min(0).max(1), z.string()])).min(2);
 const fillSchema = z.union([
   z.string().regex(colorRe),
-  z.object({ type: z.literal("linear"), angle: z.union([z.number(), z.string()]).optional(), stops }),
+  z.object({
+    type: z.literal("linear"),
+    angle: z.union([z.number(), z.string()]).optional(),
+    stops,
+  }),
   z.object({
     type: z.literal("radial"),
     center: z.tuple([z.number(), z.number()]).optional(),
     radius: z.union([z.number(), z.string()]).optional(),
     stops,
   }),
-  z.object({ type: z.literal("image"), src: z.string(), fit: z.enum(["cover", "contain"]).optional() }),
+  z.object({
+    type: z.literal("image"),
+    src: z.string(),
+    fit: z.enum(["cover", "contain"]).optional(),
+  }),
   z.object({
     type: z.literal("video"),
     src: z.string(),
@@ -431,14 +499,22 @@ const fillSchema = z.union([
   }),
 ]);
 export function fill<const O extends ControlOpts<Fill>>(o: O = {} as O): Control<Fill, IsAnim<O>> {
-  return build("fill", o, { valueKind: "discrete", tsType: "Fill", value: fillSchema as unknown as z.ZodType<Fill> });
+  return build("fill", o, {
+    valueKind: "discrete",
+    tsType: "Fill",
+    value: fillSchema as unknown as z.ZodType<Fill>,
+  });
 }
 
 export function json<T = unknown, const O extends ControlOpts<T> = ControlOpts<T>>(
   o: O = {} as O,
   schema?: z.ZodType<T>,
 ): Control<T, IsAnim<O>> {
-  return build("json", o, { valueKind: "discrete", tsType: "unknown", value: (schema ?? z.any()) as z.ZodType<T> });
+  return build("json", o, {
+    valueKind: "discrete",
+    tsType: "unknown",
+    value: (schema ?? z.any()) as z.ZodType<T>,
+  });
 }
 
 export function list<T, const O extends ControlOpts<T[]>>(
@@ -461,7 +537,9 @@ export function group<F extends Controls, const O extends ControlOpts<GroupValue
 ): Control<GroupValue<F>, IsAnim<O>> {
   // Fields may themselves be animatable, so the group accepts each field's full prop form.
   const shape = Object.fromEntries(Object.entries(fields).map(([k, c]) => [k, c.prop.optional()]));
-  const wireShape = Object.fromEntries(Object.entries(fields).map(([k, c]) => [k, c.wire.optional()]));
+  const wireShape = Object.fromEntries(
+    Object.entries(fields).map(([k, c]) => [k, c.wire.optional()]),
+  );
   return build("group", o, {
     valueKind: "discrete",
     tsType: `{ ${Object.entries(fields)
@@ -477,7 +555,10 @@ export function group<F extends Controls, const O extends ControlOpts<GroupValue
 export function parseControlValue<T>(c: Control<T, any>, v: unknown, name = "value"): T {
   const r = c.prop.safeParse(v);
   if (!r.success) {
-    throw new CodeCutError("schema_violation", `${name}: ${r.error.issues.map((i) => i.message).join("; ")}`);
+    throw new CodeCutError(
+      "schema_violation",
+      `${name}: ${r.error.issues.map((i) => i.message).join("; ")}`,
+    );
   }
   return v as T;
 }

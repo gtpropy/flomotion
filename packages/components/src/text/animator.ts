@@ -80,7 +80,9 @@ export function staggerOrder(order: Order, i: number, n: number, seed = 1): numb
     case "edges":
       return (n - 1) / 2 - Math.abs(i - (n - 1) / 2);
     case "random": {
-      const keys = Array.from({ length: n }, (_, k) => [k, hashSeed(`${seed}:${k}`)] as const).sort((a, b) => a[1] - b[1]);
+      const keys = Array.from({ length: n }, (_, k) => [k, hashSeed(`${seed}:${k}`)] as const).sort(
+        (a, b) => a[1] - b[1],
+      );
       return keys.findIndex(([k]) => k === i);
     }
     default:
@@ -121,16 +123,81 @@ export interface PresetSpec {
 }
 
 export const PRESETS: Record<string, PresetSpec> = {
-  typewriter: { by: "char", props: { opacity: 0 }, stagger: 0.045, unitDuration: 0.001, ease: "linear" },
-  wave: { by: "char", props: { y: -26 }, stagger: 0, unitDuration: 0, ease: "sine.inOut", wave: { period: 1.0, phase: 0.1, shape: "wave" } },
-  scramble: { by: "char", props: {}, stagger: 0.04, unitDuration: 0.001, ease: "linear", scramble: { window: 0.35 } },
-  rise: { by: "word", props: { y: 44, opacity: 0 }, stagger: 0.08, unitDuration: 0.55, ease: "expo.out" },
-  slam: { by: "word", props: { scale: 2.4, opacity: 0 }, stagger: 0.11, unitDuration: 0.38, ease: "back.out(1.6)" },
-  "blur-in": { by: "word", props: { blur: 16, opacity: 0 }, stagger: 0.06, unitDuration: 0.6, ease: "expo.out" },
-  "mask-reveal": { by: "line", props: { yPercent: 108 }, stagger: 0.12, unitDuration: 0.7, ease: "expo.out", mask: true },
-  "weight-pulse": { by: "char", props: { weight: 850 }, stagger: 0, unitDuration: 0, ease: "sine.inOut", wave: { period: 1.4, phase: 0.08, shape: "triangle" } },
-  "tracking-in": { by: "line", props: { tracking: 260, opacity: 0 }, stagger: 0.1, unitDuration: 0.9, ease: "expo.out" },
-  counter: { by: "word", props: {}, stagger: 0, unitDuration: 1.2, ease: "expo.out", counter: true },
+  typewriter: {
+    by: "char",
+    props: { opacity: 0 },
+    stagger: 0.045,
+    unitDuration: 0.001,
+    ease: "linear",
+  },
+  wave: {
+    by: "char",
+    props: { y: -26 },
+    stagger: 0,
+    unitDuration: 0,
+    ease: "sine.inOut",
+    wave: { period: 1.0, phase: 0.1, shape: "wave" },
+  },
+  scramble: {
+    by: "char",
+    props: {},
+    stagger: 0.04,
+    unitDuration: 0.001,
+    ease: "linear",
+    scramble: { window: 0.35 },
+  },
+  rise: {
+    by: "word",
+    props: { y: 44, opacity: 0 },
+    stagger: 0.08,
+    unitDuration: 0.55,
+    ease: "expo.out",
+  },
+  slam: {
+    by: "word",
+    props: { scale: 2.4, opacity: 0 },
+    stagger: 0.11,
+    unitDuration: 0.38,
+    ease: "back.out(1.6)",
+  },
+  "blur-in": {
+    by: "word",
+    props: { blur: 16, opacity: 0 },
+    stagger: 0.06,
+    unitDuration: 0.6,
+    ease: "expo.out",
+  },
+  "mask-reveal": {
+    by: "line",
+    props: { yPercent: 108 },
+    stagger: 0.12,
+    unitDuration: 0.7,
+    ease: "expo.out",
+    mask: true,
+  },
+  "weight-pulse": {
+    by: "char",
+    props: { weight: 850 },
+    stagger: 0,
+    unitDuration: 0,
+    ease: "sine.inOut",
+    wave: { period: 1.4, phase: 0.08, shape: "triangle" },
+  },
+  "tracking-in": {
+    by: "line",
+    props: { tracking: 260, opacity: 0 },
+    stagger: 0.1,
+    unitDuration: 0.9,
+    ease: "expo.out",
+  },
+  counter: {
+    by: "word",
+    props: {},
+    stagger: 0,
+    unitDuration: 1.2,
+    ease: "expo.out",
+    counter: true,
+  },
 };
 
 const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#%&*+=<>?/";
@@ -161,24 +228,59 @@ export function unitChannels(
   const fillFrom = base.fill ? safeParse(base.fill) : undefined;
   targets.forEach((target, i) => {
     const infl = (t: number) => influence(i, n, t);
-    const add = (prop: string, fn: (k: number) => number | string, vk: "number" | "discrete" = "number", extra: Partial<Channel> = {}) =>
-      out.push({ target: `#${target}`, prop, signal: exprSignal((t) => fn(infl(t)), vk, span), span, ...extra });
+    const add = (
+      prop: string,
+      fn: (k: number) => number | string,
+      vk: "number" | "discrete" = "number",
+      extra: Partial<Channel> = {},
+    ) =>
+      out.push({
+        target: `#${target}`,
+        prop,
+        signal: exprSignal((t) => fn(infl(t)), vk, span),
+        span,
+        ...extra,
+      });
     const lerp = (a: number, b: number) => (k: number) => round(a + (b - a) * k, 4);
-    if (props.opacity !== undefined) add("opacity", (k) => round(Math.min(1, Math.max(0, 1 + (props.opacity! - 1) * k)), 4));
+    if (props.opacity !== undefined)
+      add("opacity", (k) => round(Math.min(1, Math.max(0, 1 + (props.opacity! - 1) * k)), 4));
     if (props.x !== undefined) add("x", lerp(0, props.x));
     if (props.y !== undefined) add("y", lerp(0, props.y));
     if (props.yPercent !== undefined) add("yPercent", lerp(0, props.yPercent));
     if (props.scale !== undefined) add("scale", lerp(1, props.scale));
     if (props.rotation !== undefined) add("rotation", lerp(0, props.rotation));
     if (props.skew !== undefined) add("skewX", lerp(0, props.skew));
-    if (props.blur !== undefined) add("filter", (k) => (props.blur! * k > 0.05 ? `blur(${round(props.blur! * k, 2)}px)` : "none"), "discrete", { format: (v) => String(v) });
-    if (props.tracking !== undefined) add("letterSpacing", (k) => round((base.tracking + (props.tracking! - base.tracking) * k) / 1000, 5), "number", { unit: "em" });
-    if (props.weight !== undefined) add("fontWeight", (k) => round(base.weight + (props.weight! - base.weight) * k, 1));
-    if (fillTo && fillFrom) add("color", (k) => toCss(lerpColor(fillFrom, fillTo, k)), "discrete", { format: (v) => String(v) });
-    if (props.strokeWidth !== undefined) add("webkitTextStrokeWidth", lerp(0, props.strokeWidth), "number", { unit: "px" });
+    if (props.blur !== undefined)
+      add(
+        "filter",
+        (k) => (props.blur! * k > 0.05 ? `blur(${round(props.blur! * k, 2)}px)` : "none"),
+        "discrete",
+        { format: (v) => String(v) },
+      );
+    if (props.tracking !== undefined)
+      add(
+        "letterSpacing",
+        (k) => round((base.tracking + (props.tracking! - base.tracking) * k) / 1000, 5),
+        "number",
+        { unit: "em" },
+      );
+    if (props.weight !== undefined)
+      add("fontWeight", (k) => round(base.weight + (props.weight! - base.weight) * k, 1));
+    if (fillTo && fillFrom)
+      add("color", (k) => toCss(lerpColor(fillFrom, fillTo, k)), "discrete", {
+        format: (v) => String(v),
+      });
+    if (props.strokeWidth !== undefined)
+      add("webkitTextStrokeWidth", lerp(0, props.strokeWidth), "number", { unit: "px" });
     if (props.shadow) {
       const s = props.shadow;
-      add("textShadow", (k) => `${round((s.x ?? 0) * k)}px ${round((s.y ?? 0) * k)}px ${round((s.blur ?? 0) * k)}px ${s.color ?? "rgba(0,0,0,.5)"}`, "discrete", { format: (v) => String(v) });
+      add(
+        "textShadow",
+        (k) =>
+          `${round((s.x ?? 0) * k)}px ${round((s.y ?? 0) * k)}px ${round((s.blur ?? 0) * k)}px ${s.color ?? "rgba(0,0,0,.5)"}`,
+        "discrete",
+        { format: (v) => String(v) },
+      );
     }
   });
   return out;
@@ -193,7 +295,10 @@ const safeParse = (c: string) => {
 };
 
 /** Normalised stagger influence: 1 before a unit starts, easing to 0 over `unitDuration`. */
-export function staggerInfluence(spec: { stagger: number; unitDuration: number; ease: string; order: Order; seed: number }, a: number): InfluenceFn {
+export function staggerInfluence(
+  spec: { stagger: number; unitDuration: number; ease: string; order: Order; seed: number },
+  a: number,
+): InfluenceFn {
   const e = parseEase(spec.ease);
   return (i, n, t) => {
     const delay = staggerOrder(spec.order, i, n, spec.seed) * spec.stagger;
@@ -209,14 +314,37 @@ export const TextAnimator = defineEffect("TextAnimator", {
     "After Effects style text animator. A selector gives each character, word or line an influence from 0 to 1 over time; the `props` interpolate from the base value to the given value by that influence. Pure functions of time; randomness is seeded.",
   controls: {
     by: enumOf(["char", "word", "line"], { default: "char" }),
-    preset: enumOf(["none", "typewriter", "wave", "scramble", "rise", "slam", "blur-in", "mask-reveal", "weight-pulse", "tracking-in", "counter"], { default: "none" }),
+    preset: enumOf(
+      [
+        "none",
+        "typewriter",
+        "wave",
+        "scramble",
+        "rise",
+        "slam",
+        "blur-in",
+        "mask-reveal",
+        "weight-pulse",
+        "tracking-in",
+        "counter",
+      ],
+      { default: "none" },
+    ),
     selector: group(
       {
         start: num({ default: 0, step: 0.01 }),
         end: num({ default: 1, step: 0.01 }),
-        offset: num({ animatable: true, default: 0, step: 0.01, description: "Slides the selector window along the text; keyframe it to sweep." }),
+        offset: num({
+          animatable: true,
+          default: 0,
+          step: 0.01,
+          description: "Slides the selector window along the text; keyframe it to sweep.",
+        }),
         shape: enumOf(["square", "ramp", "triangle", "smooth", "wave"], { default: "smooth" }),
-        randomize: group({ seed: int({ default: 1 }), amount: num({ min: 0, max: 1, default: 0, step: 0.01 }) }),
+        randomize: group({
+          seed: int({ default: 1 }),
+          amount: num({ min: 0, max: 1, default: 0, step: 0.01 }),
+        }),
       },
       { description: "Range selector. Omit to use `stagger` timing instead." },
     ),
@@ -238,7 +366,11 @@ export const TextAnimator = defineEffect("TextAnimator", {
       },
       { description: "Values at full influence (influence 1). Base values are the Text's own." },
     ),
-    stagger: time({ min: 0, unit: "s", description: "Seconds between units (stagger timing mode)." }),
+    stagger: time({
+      min: 0,
+      unit: "s",
+      description: "Seconds between units (stagger timing mode).",
+    }),
     unitDuration: time({ min: 0, unit: "s", description: "Seconds each unit takes to settle." }),
     ease: text({ description: "Ease of each unit's settle (default per preset)." }),
     order: enumOf(["forward", "backward", "center", "edges", "random"], { default: "forward" }),
@@ -248,7 +380,8 @@ export const TextAnimator = defineEffect("TextAnimator", {
   apply: (p, rc) => {
     const parent = rc.node.parent;
     const table = parent ? getUnitTable(parent) : undefined;
-    if (!parent || !table) return { issues: ["TextAnimator must be a child of Text/Title with text content"] };
+    if (!parent || !table)
+      return { issues: ["TextAnimator must be a child of Text/Title with text content"] };
     const r = animatorChannels(
       {
         by: rc.node.raw.by !== undefined ? (p.by as By) : undefined,
@@ -284,13 +417,24 @@ export interface AnimCfg {
 }
 
 /** Shared by the TextAnimator effect and SplitText: per-unit channels for one animator. */
-export function animatorChannels(cfg: AnimCfg, table: UnitTable, a: number, b: number, fps: number): { channels: Channel[]; issues: string[] } {
+export function animatorChannels(
+  cfg: AnimCfg,
+  table: UnitTable,
+  a: number,
+  b: number,
+  fps: number,
+): { channels: Channel[]; issues: string[] } {
   const preset = cfg.preset !== "none" ? PRESETS[cfg.preset] : undefined;
   const by: By = cfg.by ?? preset?.by ?? "char";
   const targets = table.target[by];
-  if (!targets?.length) return { channels: [], issues: [`no ${by} units to animate (empty text?)`] };
+  if (!targets?.length)
+    return { channels: [], issues: [`no ${by} units to animate (empty text?)`] };
   const props: AnimProps = { ...(preset?.props ?? {}), ...cfg.props };
-  const base: Base = { weight: table.base.weight, tracking: table.base.tracking, fill: table.base.fill };
+  const base: Base = {
+    weight: table.base.weight,
+    tracking: table.base.tracking,
+    fill: table.base.fill,
+  };
   const stagger = cfg.stagger ?? preset?.stagger ?? 0.06;
   const unitDuration = cfg.unitDuration ?? preset?.unitDuration ?? 0.5;
   const ease = cfg.ease || preset?.ease || "expo.out";
@@ -307,12 +451,22 @@ export function animatorChannels(cfg: AnimCfg, table: UnitTable, a: number, b: n
     targets.forEach((target, i) => {
       const reveal = a + staggerOrder(cfg.order, i, targets.length, cfg.seed) * st + win;
       const real = table.charText[i] ?? "";
-      const fmt = (t: number) => (t >= reveal || /^\s*$/.test(real) ? real : scrambleChar(cfg.seed, i, Math.floor(((t - a) * fps) / 2)));
-      channels.push({ target: `#${target}`, prop: "text", signal: exprSignal(fmt, "discrete", span), span, format: (v) => String(v) });
+      const fmt = (t: number) =>
+        t >= reveal || /^\s*$/.test(real)
+          ? real
+          : scrambleChar(cfg.seed, i, Math.floor(((t - a) * fps) / 2));
+      channels.push({
+        target: `#${target}`,
+        prop: "text",
+        signal: exprSignal(fmt, "discrete", span),
+        span,
+        format: (v) => String(v),
+      });
     });
     return { channels, issues: [] };
   }
-  if (preset?.counter) return { channels: counterChannels(table, a, unitDuration, ease), issues: [] };
+  if (preset?.counter)
+    return { channels: counterChannels(table, a, unitDuration, ease), issues: [] };
   if (preset?.wave) {
     const w = preset.wave;
     influence = (i, n, t) => {
@@ -321,7 +475,13 @@ export function animatorChannels(cfg: AnimCfg, table: UnitTable, a: number, b: n
     };
   } else if (hasSelector) {
     const offsetSig = sel!.offset as Signal<number> | undefined;
-    const selector: Selector = { start: sel!.start ?? 0, end: sel!.end ?? 1, shape: (sel!.shape as Shape) ?? "smooth", seed: sel!.randomize?.seed ?? 1, amount: sel!.randomize?.amount ?? 0 };
+    const selector: Selector = {
+      start: sel!.start ?? 0,
+      end: sel!.end ?? 1,
+      shape: (sel!.shape as Shape) ?? "smooth",
+      seed: sel!.randomize?.seed ?? 1,
+      amount: sel!.randomize?.amount ?? 0,
+    };
     const offAt = (t: number) => (offsetSig ? (evalSignal(offsetSig, t) as number) : 0);
     const sp = offsetSig ? signalSpan(offsetSig, [a, b]) : null;
     span = sp ?? [a, b];
@@ -329,7 +489,10 @@ export function animatorChannels(cfg: AnimCfg, table: UnitTable, a: number, b: n
   } else {
     const total = (targets.length - 1) * stagger + unitDuration;
     span = [a, Math.min(b, a + total + 0.05)];
-    influence = staggerInfluence({ stagger, unitDuration, ease, order: cfg.order, seed: cfg.seed }, a);
+    influence = staggerInfluence(
+      { stagger, unitDuration, ease, order: cfg.order, seed: cfg.seed },
+      a,
+    );
   }
   channels.push(...unitChannels(targets, influence, props, base, span));
   return { channels, issues: [] };
@@ -363,7 +526,11 @@ function counterChannels(table: UnitTable, a: number, dur: number, ease: string)
     out.push({
       target: `#${wid}`,
       prop: "text",
-      signal: exprSignal((t) => fmt(num * e(clamp01((t - a) / Math.max(1e-6, dur)))), "discrete", span),
+      signal: exprSignal(
+        (t) => fmt(num * e(clamp01((t - a) / Math.max(1e-6, dur)))),
+        "discrete",
+        span,
+      ),
       span,
       format: (v) => String(v),
     });

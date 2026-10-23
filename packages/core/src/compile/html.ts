@@ -17,7 +17,9 @@ function fontFaceCss(fonts: ResolvedFont[]): string {
   for (const f of fonts) {
     if (f.source === "system") continue;
     for (const file of f.files) {
-      const w = Array.isArray(file.weight) ? `${file.weight[0]} ${file.weight[1]}` : String(file.weight ?? 400);
+      const w = Array.isArray(file.weight)
+        ? `${file.weight[0]} ${file.weight[1]}`
+        : String(file.weight ?? 400);
       rules.push(
         `@font-face{font-family:${JSON.stringify(f.family)};src:url(${JSON.stringify(file.path)}) format(${JSON.stringify(file.format)});font-weight:${w};font-style:${file.style ?? "normal"};font-display:block${
           file.unicodeRange ? `;unicode-range:${file.unicodeRange}` : ""
@@ -30,7 +32,18 @@ function fontFaceCss(fonts: ResolvedFont[]): string {
 
 const numFmt = (n: number) => String(Math.round(n * 10000) / 10000);
 
-function collect(layer: IRLayer, acc: { css: string[]; defs: string[]; baked: BakedChannel[]; statics: StaticValue[]; sounds: SoundCue[]; audio: AudioEvent[]; ids: string[] }) {
+function collect(
+  layer: IRLayer,
+  acc: {
+    css: string[];
+    defs: string[];
+    baked: BakedChannel[];
+    statics: StaticValue[];
+    sounds: SoundCue[];
+    audio: AudioEvent[];
+    ids: string[];
+  },
+) {
   if (layer.css) acc.css.push(layer.css);
   acc.defs.push(...layer.defs);
   acc.baked.push(...layer.baked);
@@ -89,14 +102,23 @@ const RUNTIME = `(function(){
 export function compileProject(project: ResolvedProject, opts: CompileOptions = {}): CompileResult {
   const { root, issues, fontsUsed } = buildIR(project, opts);
   const comp = project.comp;
-  const acc = { css: [] as string[], defs: [] as string[], baked: [] as BakedChannel[], statics: [] as StaticValue[], sounds: [] as SoundCue[], audio: [] as AudioEvent[], ids: [] as string[] };
+  const acc = {
+    css: [] as string[],
+    defs: [] as string[],
+    baked: [] as BakedChannel[],
+    statics: [] as StaticValue[],
+    sounds: [] as SoundCue[],
+    audio: [] as AudioEvent[],
+    ids: [] as string[],
+  };
   const all: IRLayer[] = [];
   walkAll(root, (l) => all.push(l));
   for (const l of all) {
     if (l.css) acc.css.push(l.css);
     acc.defs.push(...l.defs);
     acc.baked.push(...l.baked);
-    for (const [prop, value] of Object.entries(l.statics)) acc.statics.push({ target: `#${l.id}-xf`, prop, value });
+    for (const [prop, value] of Object.entries(l.statics))
+      acc.statics.push({ target: `#${l.id}-xf`, prop, value });
     acc.statics.push(...l.statics2);
     acc.sounds.push(...l.sounds);
     acc.audio.push(...l.audio);
@@ -106,11 +128,14 @@ export function compileProject(project: ResolvedProject, opts: CompileOptions = 
   const staticRows = acc.statics.map((s) => [s.target, s.prop, s.value, s.unit ?? ""]);
   const bakedRows = acc.baked.map((b) => [b.target, b.prop, b.t0, b.hz, b.samples, b.unit ?? ""]);
   const gsap = opts.gsapPath ?? "vendor/gsap.min.js";
-  const res = comp.width >= comp.height ? (comp.width === comp.height ? "square" : "landscape") : "portrait";
+  const res =
+    comp.width >= comp.height ? (comp.width === comp.height ? "square" : "landscape") : "portrait";
   const mix = opts.mix
     ? `<audio id="cc-mix" src="${opts.mix.src}" data-start="0" data-duration="${numFmt(opts.mix.duration ?? comp.duration)}" data-volume="1"></audio>`
     : "";
-  const defs = acc.defs.length ? `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${acc.defs.join("")}</defs></svg>` : "";
+  const defs = acc.defs.length
+    ? `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${acc.defs.join("")}</defs></svg>`
+    : "";
 
   const html = `<!doctype html>
 <html lang="en" data-resolution="${res}" data-generator="${CODECUT_NAME}">
@@ -166,7 +191,10 @@ function outlineOf(l: IRLayer): unknown {
     end: l.end,
     z: l.z,
     statics: l.statics,
-    animated: [...l.baked.map((b) => `${b.target} ${b.prop} @${b.t0} x${b.samples.length}`), ...l.statics2.map((s) => `${s.target} ${s.prop}=${s.value}`)],
+    animated: [
+      ...l.baked.map((b) => `${b.target} ${b.prop} @${b.t0} x${b.samples.length}`),
+      ...l.statics2.map((s) => `${s.target} ${s.prop}=${s.value}`),
+    ],
     children: l.children.map(outlineOf),
   };
 }

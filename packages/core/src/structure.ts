@@ -43,10 +43,15 @@ const transition = () =>
       intensity: num({ min: 0, max: 1, default: 1 }),
       name: text({ description: "shader(name): typed stub, later tier" }),
     },
-    { label: "Transition into this scene", description: "Overlaps the end of the previous scene by `duration`." },
+    {
+      label: "Transition into this scene",
+      description: "Overlaps the end of the previous scene by `duration`.",
+    },
   );
 
-const ident = () => ({ id: text({ label: "Id", description: "Stable unique id. Written back as cc_… when missing." }) });
+const ident = () => ({
+  id: text({ label: "Id", description: "Stable unique id. Written back as cc_… when missing." }),
+});
 
 export const Composition = defineComponent("Composition", {
   category: "structure",
@@ -69,7 +74,8 @@ export const TRACK_KINDS = ["video", "audio", "overlay", "graphics", "captions"]
 
 export const Track = defineComponent("Track", {
   category: "structure",
-  description: "A lane of clips. Track order sets stacking (later tracks paint above earlier ones).",
+  description:
+    "A lane of clips. Track order sets stacking (later tracks paint above earlier ones).",
   traits: ["container"],
   children: "any",
   controls: {
@@ -79,7 +85,10 @@ export const Track = defineComponent("Track", {
     locked: bool({ default: false }),
     muted: bool({ default: false }),
     solo: bool({ default: false }),
-    blend: enumOf(["normal", "multiply", "screen", "overlay", "soft-light", "hard-light", "difference", "add"], { default: "normal" }),
+    blend: enumOf(
+      ["normal", "multiply", "screen", "overlay", "soft-light", "hard-light", "difference", "add"],
+      { default: "normal" },
+    ),
     opacity: num({ animatable: true, min: 0, max: 1, default: 1 }),
   },
 });
@@ -96,7 +105,8 @@ export const Scene = defineComponent("Scene", {
 
 export const Sequence = defineComponent("Sequence", {
   category: "structure",
-  description: "Plays its children one after another. Each child starts when the previous ends plus `gap`.",
+  description:
+    "Plays its children one after another. Each child starts when the previous ends plus `gap`.",
   traits: ["visual", "container"],
   children: "any",
   controls: {
@@ -117,7 +127,11 @@ export const Group = defineComponent("Group", {
     const px = (v: unknown, base: number, vw: number) => {
       if (v === undefined) return base;
       try {
-        return resolveLength(v as number | string, { parent: base, vw: comp.width, vh: comp.height });
+        return resolveLength(v as number | string, {
+          parent: base,
+          vw: comp.width,
+          vh: comp.height,
+        });
       } catch {
         return vw;
       }
@@ -128,13 +142,16 @@ export const Group = defineComponent("Group", {
     if (p.width === undefined && p.height === undefined) return { html: "{{children}}" };
     const w = p.width === undefined ? rc.node.box[0] : rc.px(p.width, "x");
     const h = p.height === undefined ? rc.node.box[1] : rc.px(p.height, "y");
-    return { html: "{{children}}", box: { left: "0px", top: "0px", width: `${w}px`, height: `${h}px` } };
+    return {
+      html: "{{children}}",
+      box: { left: "0px", top: "0px", width: `${w}px`, height: `${h}px` },
+    };
   },
 });
 
 export const Marker = defineComponent("Marker", {
   category: "structure",
-  description: "A named point in time. Reference it with Time strings like \"@marker:drop\".",
+  description: 'A named point in time. Reference it with Time strings like "@marker:drop".',
   traits: [],
   children: "none",
   controls: {
@@ -157,7 +174,8 @@ export const Precomp = defineComponent("Precomp", {
 
 export const Adjustment = defineComponent("Adjustment", {
   category: "structure",
-  description: "Adjustment layer: effects apply to everything below it. Typed stub: not implemented yet.",
+  description:
+    "Adjustment layer: effects apply to everything below it. Typed stub: not implemented yet.",
   traits: ["visual"],
   stub: true,
   children: "effects",
@@ -171,7 +189,13 @@ export const Fonts = defineComponent("Fonts", {
   description: "Container declaring every font the project uses. Renders never touch the network.",
   traits: [],
   children: ["Font"],
-  controls: { ...ident(), allowSystem: bool({ default: false, description: "Permit system fonts (output differs per machine)." }) },
+  controls: {
+    ...ident(),
+    allowSystem: bool({
+      default: false,
+      description: "Permit system fonts (output differs per machine).",
+    }),
+  },
 });
 
 export const Font = defineComponent("Font", {
@@ -183,7 +207,10 @@ export const Font = defineComponent("Font", {
   controls: {
     id: text({ required: true }),
     family: text({ required: true }),
-    source: text({ default: "google", description: '"google" | "system" | "./fonts/File.woff2" | "https://…"' }),
+    source: text({
+      default: "google",
+      description: '"google" | "system" | "./fonts/File.woff2" | "https://…"',
+    }),
     weights: list(int({ min: 1, max: 1000 })),
     styles: list(enumOf(["normal", "italic", "oblique"])),
     variable: bool({ default: false }),

@@ -37,7 +37,14 @@ export interface LineBox {
   baseline: number;
   glyphs: GlyphBox[];
   /** Words on the line, with boxes. */
-  words: Array<{ text: string; x: number; y: number; width: number; height: number; index: number }>;
+  words: Array<{
+    text: string;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    index: number;
+  }>;
 }
 
 export interface TextMetrics {

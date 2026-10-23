@@ -3,7 +3,14 @@ import { cloneNode, findById, isNode, walk, type CCNode } from "../ast/node.js";
 
 /** One structural change to the element tree, addressed by element id. Serializable; applied by codemods too. */
 export type Patch =
-  | { op: "setProp"; id: string; prop: string; value: unknown; /** previous value; `undefined` + hadPrev=false means the prop did not exist */ prev?: unknown; hadPrev?: boolean }
+  | {
+      op: "setProp";
+      id: string;
+      prop: string;
+      value: unknown;
+      /** previous value; `undefined` + hadPrev=false means the prop did not exist */ prev?: unknown;
+      hadPrev?: boolean;
+    }
   | { op: "insert"; parent: string; index: number; node: CCNode }
   | { op: "remove"; id: string };
 
@@ -21,7 +28,10 @@ export interface EditResult {
 
 export function elementOrThrow(root: CCNode, id: string) {
   const hit = findById(root, id);
-  if (!hit) throw new CodeCutError("unknown_element", `No element with id "${id}"`, { fix: "Use project_read to list ids." });
+  if (!hit)
+    throw new CodeCutError("unknown_element", `No element with id "${id}"`, {
+      fix: "Use project_read to list ids.",
+    });
   return hit;
 }
 
@@ -35,7 +45,14 @@ export function applyPatches(root: CCNode, patches: Patch[]): { project: CCNode;
         const { node } = elementOrThrow(project, p.id);
         const had = Object.prototype.hasOwnProperty.call(node.props, p.prop);
         const prev = node.props[p.prop];
-        inverse.unshift({ op: "setProp", id: p.id, prop: p.prop, value: prev, prev: p.value, hadPrev: had });
+        inverse.unshift({
+          op: "setProp",
+          id: p.id,
+          prop: p.prop,
+          value: prev,
+          prev: p.value,
+          hadPrev: had,
+        });
         if (p.value === undefined) delete node.props[p.prop];
         else node.props = { ...node.props, [p.prop]: p.value };
         if (p.hadPrev === false && p.value === undefined) {
@@ -54,7 +71,12 @@ export function applyPatches(root: CCNode, patches: Patch[]): { project: CCNode;
         const { node, parent, index } = elementOrThrow(project, p.id);
         if (!parent) throw new CodeCutError("invalid_edit", "Cannot remove the root element");
         parent.children.splice(index, 1);
-        inverse.unshift({ op: "insert", parent: String(parent.props.id), index, node: cloneNode(node) });
+        inverse.unshift({
+          op: "insert",
+          parent: String(parent.props.id),
+          index,
+          node: cloneNode(node),
+        });
         break;
       }
     }
@@ -68,7 +90,12 @@ export function undoEdit(project: CCNode, undo: Patch[]): CCNode {
 }
 
 /** Build an EditResult from patches. */
-export function makeResult(root: CCNode, patches: Patch[], description: string, data?: Record<string, unknown>): EditResult {
+export function makeResult(
+  root: CCNode,
+  patches: Patch[],
+  description: string,
+  data?: Record<string, unknown>,
+): EditResult {
   const { project, undo } = applyPatches(root, patches);
   return { project, patches, undo, description, data };
 }

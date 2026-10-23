@@ -7,12 +7,18 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@codecut/core": "workspace:*",
     "@codecut/components": "workspace:*",
-    "@codecut/render": "workspace:*",
+    "@codecut/core": "workspace:*",
     "@codecut/mcp": "workspace:*",
-    "tsx": "latest",
-    "citty": "latest"
+    "@codecut/render": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "citty": "latest",
+    "fontkit": "^2.0.4",
+    "gsap": "3.14.2",
+    "hyperframes": "0.8.186",
+    "puppeteer-core": "^25.15.0",
+    "ts-morph": "^28.0.0",
+    "tsx": "latest"
   },
   "scripts": {
     "typecheck": "tsc -p ../../tsconfig.json --noEmit"

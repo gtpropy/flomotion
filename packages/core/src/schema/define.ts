@@ -45,7 +45,11 @@ export interface ComponentSpec<C extends Controls, T extends readonly Trait[] = 
   /** Which text slot receives plain-string children (e.g. "text"). */
   textChildren?: string;
   /** Box (px) children resolve `%` lengths against. Defaults to this node's own box. */
-  childBox?: (raw: Record<string, unknown>, comp: { width: number; height: number }, parentBox: [number, number]) => [number, number];
+  childBox?: (
+    raw: Record<string, unknown>,
+    comp: { width: number; height: number },
+    parentBox: [number, number],
+  ) => [number, number];
 }
 
 export interface EffectSpec<C extends Controls> {
@@ -84,9 +88,15 @@ export type CommonProps = { children?: unknown; key?: string };
 
 type VisualMixin = ReturnType<typeof timingControls> & ReturnType<typeof transformControls>;
 type TimedMixin = ReturnType<typeof timingControls>;
-type Mix<T extends readonly Trait[]> = "visual" extends T[number] ? VisualMixin : "timed" extends T[number] ? TimedMixin : {};
+type Mix<T extends readonly Trait[]> = "visual" extends T[number]
+  ? VisualMixin
+  : "timed" extends T[number]
+    ? TimedMixin
+    : {};
 type EffectMixin = ReturnType<typeof effectCommon>;
-export type Tag<C extends Controls> = ((props: PropsOf<C> & CommonProps) => CCNode) & { def: ComponentDef<C> };
+export type Tag<C extends Controls> = ((props: PropsOf<C> & CommonProps) => CCNode) & {
+  def: ComponentDef<C>;
+};
 
 // ---------- registry ----------
 
@@ -144,7 +154,11 @@ export const timingControls = () => ({
     unit: "s",
     description: 'Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.',
   }),
-  duration: time({ label: "Duration", unit: "s", description: "Defaults to the rest of the parent." }),
+  duration: time({
+    label: "Duration",
+    unit: "s",
+    description: "Defaults to the rest of the parent.",
+  }),
   end: time({ label: "End", unit: "s", description: "Alternative to duration." }),
   hidden: bool({ default: false, label: "Hidden" }),
   link: text({ description: "Link group id: linked clips move, trim and split together." }),
@@ -177,24 +191,53 @@ export const transformControls = () => ({
   blend: enumOf(BLEND_MODES, { default: "normal", ui: "dropdown" }),
   perspective: num({ animatable: true, min: 0, default: 0, unit: "px" }),
   z: num({ default: 0, step: 1, description: "Stacking override among siblings." }),
-  enter: group(motionFields(), { label: "Enter", description: "Entrance motion at the start of the layer." }),
-  exit: group(motionFields(), { label: "Exit", description: "Exit motion ending at the end of the layer." }),
+  enter: group(motionFields(), {
+    label: "Enter",
+    description: "Entrance motion at the start of the layer.",
+  }),
+  exit: group(motionFields(), {
+    label: "Exit",
+    description: "Exit motion ending at the end of the layer.",
+  }),
 });
 
-export const MOTION_DIRECTIONS = ["n", "ne", "e", "se", "s", "sw", "w", "nw", "center", "z+", "z-"] as const;
+export const MOTION_DIRECTIONS = [
+  "n",
+  "ne",
+  "e",
+  "se",
+  "s",
+  "sw",
+  "w",
+  "nw",
+  "center",
+  "z+",
+  "z-",
+] as const;
 
 /** Fields shared by the `enter`/`exit` props and the Enter/Exit effects. */
 export function motionFields() {
   return {
-    from: enumOf(MOTION_DIRECTIONS, { default: "s", description: "Direction the layer comes from (enter)." }),
-    to: enumOf(MOTION_DIRECTIONS, { default: "s", description: "Direction the layer leaves toward (exit)." }),
+    from: enumOf(MOTION_DIRECTIONS, {
+      default: "s",
+      description: "Direction the layer comes from (enter).",
+    }),
+    to: enumOf(MOTION_DIRECTIONS, {
+      default: "s",
+      description: "Direction the layer leaves toward (exit).",
+    }),
     distance: length({ default: 120, description: "Travel distance in px (or vw/vh/%)." }),
     ease: ease({ default: "expo.out" }),
     duration: time({ default: 0.6, unit: "s" }),
     delay: time({ default: 0, unit: "s" }),
     fade: bool({ default: true }),
     blur: num({ min: 0, max: 200, default: 0, unit: "px" }),
-    scale: num({ min: 0, max: 10, default: 1, description: "Scale at the start of an enter / end of an exit." }),
+    scale: num({
+      min: 0,
+      max: 10,
+      default: 1,
+      description: "Scale at the start of an enter / end of an exit.",
+    }),
     rotate: angle({ default: 0 }),
   };
 }
@@ -258,12 +301,20 @@ function makeDef<C extends Controls>(
     throw new CodeCutError("schema_violation", `Component name "${name}" must be PascalCase`);
   }
   if (!base.own || typeof base.own !== "object") {
-    throw new CodeCutError("schema_violation", `${name}: components without a schema are rejected`, {
-      fix: "Pass `controls` describing every prop.",
-    });
+    throw new CodeCutError(
+      "schema_violation",
+      `${name}: components without a schema are rejected`,
+      {
+        fix: "Pass `controls` describing every prop.",
+      },
+    );
   }
   const controls = mergeControls(base.own, base.mixins);
-  if (!controls.id) controls.id = text({ label: "Id", description: "Stable unique id. Written back as cc_… when missing." });
+  if (!controls.id)
+    controls.id = text({
+      label: "Id",
+      description: "Stable unique id. Written back as cc_… when missing.",
+    });
   const def: ComponentDef<C> = {
     kind,
     name,
@@ -287,8 +338,17 @@ function makeDef<C extends Controls>(
 
 function makeTag<C extends Controls>(def: ComponentDef<C>): Tag<C> {
   const tag = ((props: Record<string, unknown> = {}) => {
-    const { children, key: _key, ...rest } = props as { children?: unknown; key?: string } & Record<string, unknown>;
-    return { $cc: 1 as const, name: def.name, props: rest, children: flattenChildren(children) } satisfies CCNode;
+    const {
+      children,
+      key: _key,
+      ...rest
+    } = props as { children?: unknown; key?: string } & Record<string, unknown>;
+    return {
+      $cc: 1 as const,
+      name: def.name,
+      props: rest,
+      children: flattenChildren(children),
+    } satisfies CCNode;
   }) as Tag<C>;
   tag.def = def;
   Object.defineProperty(tag, "name", { value: def.name });
@@ -298,10 +358,10 @@ function makeTag<C extends Controls>(def: ComponentDef<C>): Tag<C> {
 // ---------- public API ----------
 
 /** The only way to add a component. Components without controls are rejected. */
-export function defineComponent<C extends Controls, const T extends readonly Trait[] = readonly ["visual"]>(
-  name: string,
-  spec: ComponentSpec<C, T>,
-): Tag<C & Mix<T>> {
+export function defineComponent<
+  C extends Controls,
+  const T extends readonly Trait[] = readonly ["visual"],
+>(name: string, spec: ComponentSpec<C, T>): Tag<C & Mix<T>> {
   const traits: Trait[] = [...(spec.traits ?? ["visual"])];
   const mixins: Controls[] = [];
   if (traits.includes("visual") || traits.includes("timed")) mixins.push(timingControls());
@@ -323,7 +383,10 @@ export function defineComponent<C extends Controls, const T extends readonly Tra
 }
 
 /** Effects apply to their parent layer in source order. */
-export function defineEffect<C extends Controls>(name: string, spec: EffectSpec<C>): Tag<C & EffectMixin> {
+export function defineEffect<C extends Controls>(
+  name: string,
+  spec: EffectSpec<C>,
+): Tag<C & EffectMixin> {
   const def = makeDef("effect", name, {
     category: spec.category,
     description: spec.description,
@@ -352,19 +415,31 @@ export interface PropIssue {
 }
 
 function lev(a: string, b: string): number {
-  const d = Array.from({ length: a.length + 1 }, (_, i) => [i, ...new Array(b.length).fill(0)]) as number[][];
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [
+    i,
+    ...new Array(b.length).fill(0),
+  ]) as number[][];
   for (let j = 0; j <= b.length; j++) d[0]![j] = j;
   for (let i = 1; i <= a.length; i++)
     for (let j = 1; j <= b.length; j++)
-      d[i]![j] = Math.min(d[i - 1]![j]! + 1, d[i]![j - 1]! + 1, d[i - 1]![j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1));
+      d[i]![j] = Math.min(
+        d[i - 1]![j]! + 1,
+        d[i]![j - 1]! + 1,
+        d[i - 1]![j - 1]! + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
   return d[a.length]![b.length]!;
 }
 
 export const suggest = (name: string, options: string[]): string | undefined =>
-  options.map((o) => [o, lev(name.toLowerCase(), o.toLowerCase())] as const).sort((a, b) => a[1] - b[1]).find(([, d]) => d <= 2)?.[0];
+  options
+    .map((o) => [o, lev(name.toLowerCase(), o.toLowerCase())] as const)
+    .sort((a, b) => a[1] - b[1])
+    .find(([, d]) => d <= 2)?.[0];
 
 const isKeyframeLike = (v: unknown) =>
-  (Array.isArray(v) && v.length > 0 && v.every((k) => Array.isArray(k) || (typeof k === "object" && k !== null && "t" in k))) ||
+  (Array.isArray(v) &&
+    v.length > 0 &&
+    v.every((k) => Array.isArray(k) || (typeof k === "object" && k !== null && "t" in k))) ||
   (typeof v === "object" && v !== null && !Array.isArray(v) && Array.isArray((v as any).keys));
 
 /** Validate raw props against a definition. Returns issues; never throws. */
@@ -384,7 +459,17 @@ export function validateProps(def: ComponentDef, props: Record<string, unknown>)
       continue;
     }
     if (value === undefined) continue;
-    if (!c.animatable && (typeof value === "function" || (c.kind !== "json" && c.kind !== "group" && c.kind !== "list" && c.kind !== "curve" && c.kind !== "curves" && c.kind !== "fill" && isKeyframeLike(value)))) {
+    if (
+      !c.animatable &&
+      (typeof value === "function" ||
+        (c.kind !== "json" &&
+          c.kind !== "group" &&
+          c.kind !== "list" &&
+          c.kind !== "curve" &&
+          c.kind !== "curves" &&
+          c.kind !== "fill" &&
+          isKeyframeLike(value)))
+    ) {
       issues.push({
         prop: key,
         code: "not_animatable",
@@ -405,7 +490,12 @@ export function validateProps(def: ComponentDef, props: Record<string, unknown>)
   }
   for (const [k, c] of Object.entries(def.controls)) {
     if (c.opts.required && props[k] === undefined) {
-      issues.push({ prop: k, code: "required", message: `${def.name}.${k} is required`, fix: `Add ${k}=…` });
+      issues.push({
+        prop: k,
+        code: "required",
+        message: `${def.name}.${k} is required`,
+        fix: `Add ${k}=…`,
+      });
     }
   }
   return issues;
@@ -445,7 +535,10 @@ export function assertProps(def: ComponentDef, props: Record<string, unknown>, i
 }
 
 /** Fill in declared defaults for props not provided. Static form only. */
-export function applyDefaults(def: ComponentDef, props: Record<string, unknown>): Record<string, unknown> {
+export function applyDefaults(
+  def: ComponentDef,
+  props: Record<string, unknown>,
+): Record<string, unknown> {
   const out = { ...props };
   for (const [k, c] of Object.entries(def.controls)) {
     if (out[k] === undefined && c.opts.default !== undefined) out[k] = c.opts.default;

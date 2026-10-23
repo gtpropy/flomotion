@@ -73,7 +73,18 @@ export function gradeMatrix(g: GradeParams): number[] {
   return m;
 }
 
-const NEUTRAL: GradeParams = { exposure: 0, contrast: 0, saturation: 0, vibrance: 0, temperature: 0, tint: 0, highlights: 0, shadows: 0, whites: 0, blacks: 0 };
+const NEUTRAL: GradeParams = {
+  exposure: 0,
+  contrast: 0,
+  saturation: 0,
+  vibrance: 0,
+  temperature: 0,
+  tint: 0,
+  highlights: 0,
+  shadows: 0,
+  whites: 0,
+  blacks: 0,
+};
 const GRADE_KEYS = Object.keys(NEUTRAL) as Array<keyof GradeParams>;
 
 type V3 = [number, number, number];
@@ -83,7 +94,10 @@ export const ColorGrade = defineEffect("ColorGrade", {
   description:
     "Primary colour correction through SVG filters: basic controls plus lift/gamma/gain/offset wheels. Order: tone, white balance and saturation, then wheels. Apply to a layer or, as a child of Composition, to everything.",
   controls: {
-    scope: enumOf(["layer", "composition"], { default: "layer", description: "Informational: a ColorGrade child of Composition grades the whole frame." }),
+    scope: enumOf(["layer", "composition"], {
+      default: "layer",
+      description: "Informational: a ColorGrade child of Composition grades the whole frame.",
+    }),
     exposure: num({ min: -5, max: 5, step: 0.01, default: 0, animatable: true, unit: "EV" }),
     contrast: num({ min: -1, max: 1, step: 0.01, default: 0, animatable: true }),
     saturation: num({ min: -1, max: 1, step: 0.01, default: 0, animatable: true }),
@@ -98,7 +112,10 @@ export const ColorGrade = defineEffect("ColorGrade", {
     gamma: color3({ default: [1, 1, 1], ui: "wheel", animatable: true }),
     gain: color3({ default: [1, 1, 1], ui: "wheel", animatable: true }),
     offset: color3({ default: [0, 0, 0], ui: "wheel", animatable: true }),
-    lut: file({ accept: [".cube"], description: "Later: .cube LUTs need a WebGL pass. Typed stub; ignored with a warning." }),
+    lut: file({
+      accept: [".cube"],
+      description: "Later: .cube LUTs need a WebGL pass. Typed stub; ignored with a warning.",
+    }),
   },
   apply: (p, rc) => {
     const id = `${rc.id}-cg`;
@@ -112,7 +129,10 @@ export const ColorGrade = defineEffect("ColorGrade", {
     const wheel = (k: string, t: number) => evalSignal(S(k), t) as V3;
     // outside the effect window the grade is neutral
     const gA = (t: number): GradeParams => (t >= w0 && t < w1 ? gradeAt(t) : NEUTRAL);
-    const wA = (k: string, d: V3) => (t: number): V3 => (t >= w0 && t < w1 ? wheel(k, t) : d);
+    const wA =
+      (k: string, d: V3) =>
+      (t: number): V3 =>
+        t >= w0 && t < w1 ? wheel(k, t) : d;
     const lift = wA("lift", [0, 0, 0]);
     const gamma = wA("gamma", [1, 1, 1]);
     const gain = wA("gain", [1, 1, 1]);
@@ -120,10 +140,21 @@ export const ColorGrade = defineEffect("ColorGrade", {
     const t0 = w0;
 
     const ch: Channel[] = [];
-    const add = (target: string, attr: string, fn: (t: number) => string | number, deps: string[]) => {
+    const add = (
+      target: string,
+      attr: string,
+      fn: (t: number) => string | number,
+      deps: string[],
+    ) => {
       const dynamic = deps.some((k) => S(k).kind !== "const") || w0 > 0 || w1 < rc.node.parent!.end;
       if (!dynamic) return;
-      ch.push({ target: `#${target}`, prop: `attr:${attr}`, signal: exprSignal(fn, typeof fn(t0) === "number" ? "number" : "discrete", [w0, w1]), format: (v) => String(v), span: [w0, w1] });
+      ch.push({
+        target: `#${target}`,
+        prop: `attr:${attr}`,
+        signal: exprSignal(fn, typeof fn(t0) === "number" ? "number" : "discrete", [w0, w1]),
+        format: (v) => String(v),
+        span: [w0, w1],
+      });
     };
     const g0 = gA(t0);
     const tone = (t: number) => toneTable(gA(t)).join(" ");
@@ -133,18 +164,26 @@ export const ColorGrade = defineEffect("ColorGrade", {
     add(`${id}-m`, "values", mat, ["saturation", "vibrance", "temperature", "tint"]);
     ["R", "G", "B"].forEach((c, i) => {
       add(`${id}-l${c}`, "slope", (t) => round(gain(t)[i]!, 4), ["gain"]);
-      add(`${id}-l${c}`, "intercept", (t) => round(lift(t)[i]! + offs(t)[i]!, 4), ["lift", "offset"]);
+      add(`${id}-l${c}`, "intercept", (t) => round(lift(t)[i]! + offs(t)[i]!, 4), [
+        "lift",
+        "offset",
+      ]);
       add(`${id}-g${c}`, "exponent", (t) => round(1 / Math.max(0.05, gamma(t)[i]!), 4), ["gamma"]);
     });
-    const lin = (i: number) => `<feFunc${"RGB"[i]} id="${id}-l${"RGB"[i]}" type="linear" slope="${round(gain(t0)[i]!, 4)}" intercept="${round(lift(t0)[i]! + offs(t0)[i]!, 4)}"/>`;
-    const gam = (i: number) => `<feFunc${"RGB"[i]} id="${id}-g${"RGB"[i]}" type="gamma" amplitude="1" exponent="${round(1 / Math.max(0.05, gamma(t0)[i]!), 4)}" offset="0"/>`;
-    const tab = (i: number) => `<feFunc${"RGB"[i]} id="${id}-t${"RGB"[i]}" type="table" tableValues="${toneTable(g0).join(" ")}"/>`;
+    const lin = (i: number) =>
+      `<feFunc${"RGB"[i]} id="${id}-l${"RGB"[i]}" type="linear" slope="${round(gain(t0)[i]!, 4)}" intercept="${round(lift(t0)[i]! + offs(t0)[i]!, 4)}"/>`;
+    const gam = (i: number) =>
+      `<feFunc${"RGB"[i]} id="${id}-g${"RGB"[i]}" type="gamma" amplitude="1" exponent="${round(1 / Math.max(0.05, gamma(t0)[i]!), 4)}" offset="0"/>`;
+    const tab = (i: number) =>
+      `<feFunc${"RGB"[i]} id="${id}-t${"RGB"[i]}" type="table" tableValues="${toneTable(g0).join(" ")}"/>`;
     const defs = `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feComponentTransfer>${tab(0)}${tab(1)}${tab(2)}</feComponentTransfer><feColorMatrix id="${id}-m" type="matrix" values="${gradeMatrix(g0).join(" ")}"/><feComponentTransfer>${lin(0)}${lin(1)}${lin(2)}</feComponentTransfer><feComponentTransfer>${gam(0)}${gam(1)}${gam(2)}</feComponentTransfer></filter>`;
     return {
       defs,
       filters: [exprSignal((t) => (t >= w0 && t < w1 ? `url(#${id})` : ""), "discrete", [w0, w1])],
       channels: ch,
-      issues: p.lut ? ["`lut` (.cube) needs a WebGL grading pass, which is a later tier; the LUT was ignored"] : undefined,
+      issues: p.lut
+        ? ["`lut` (.cube) needs a WebGL grading pass, which is a later tier; the LUT was ignored"]
+        : undefined,
     };
   },
 });
@@ -153,13 +192,15 @@ export const ColorGrade = defineEffect("ColorGrade", {
 
 /** Monotone cubic (PCHIP) sampling of a curve at TABLE_N points. */
 export function curveTable(points: CurvePoint[] | undefined): number[] {
-  if (!points || points.length < 2) return Array.from({ length: TABLE_N }, (_, i) => i / (TABLE_N - 1));
+  if (!points || points.length < 2)
+    return Array.from({ length: TABLE_N }, (_, i) => i / (TABLE_N - 1));
   const pts = [...points].sort((a, b) => a.x - b.x);
   const xs = pts.map((q) => q.x);
   const ys = pts.map((q) => q.y);
   const n = xs.length;
   const d: number[] = [];
-  for (let i = 0; i < n - 1; i++) d.push((ys[i + 1]! - ys[i]!) / Math.max(1e-6, xs[i + 1]! - xs[i]!));
+  for (let i = 0; i < n - 1; i++)
+    d.push((ys[i + 1]! - ys[i]!) / Math.max(1e-6, xs[i + 1]! - xs[i]!));
   const m: number[] = new Array(n).fill(0);
   m[0] = d[0]!;
   m[n - 1] = d[n - 2]!;
@@ -196,7 +237,11 @@ export function curveTable(points: CurvePoint[] | undefined): number[] {
     const t = (x - xs[i]!) / h;
     const t2 = t * t;
     const t3 = t2 * t;
-    const y = (2 * t3 - 3 * t2 + 1) * ys[i]! + (t3 - 2 * t2 + t) * h * m[i]! + (-2 * t3 + 3 * t2) * ys[i + 1]! + (t3 - t2) * h * m[i + 1]!;
+    const y =
+      (2 * t3 - 3 * t2 + 1) * ys[i]! +
+      (t3 - 2 * t2 + t) * h * m[i]! +
+      (-2 * t3 + 3 * t2) * ys[i + 1]! +
+      (t3 - t2) * h * m[i + 1]!;
     out.push(round(clamp01(y), 4));
   }
   return out;
@@ -214,13 +259,21 @@ export const Curves = defineEffect("Curves", {
     const c = (p.curves ?? {}) as Partial<Record<CurveChannel, CurvePoint[]>>;
     const rgb = curveTable(c.rgb);
     const luma = curveTable(c.luma);
-    const comp = (own: number[]) => rgb.map((_, i) => own[Math.min(TABLE_N - 1, Math.round(rgb[i]! * (TABLE_N - 1)))]!);
+    const comp = (own: number[]) =>
+      rgb.map((_, i) => own[Math.min(TABLE_N - 1, Math.round(rgb[i]! * (TABLE_N - 1)))]!);
     const lumaT = comp(luma);
-    const per = (ch: "r" | "g" | "b") => comp(curveTable(c[ch])).map((_, i, arr) => lumaT[Math.min(TABLE_N - 1, Math.round(arr[i]! * (TABLE_N - 1)))]!);
-    const fn = (ch: "R" | "G" | "B", t: number[]) => `<feFunc${ch} type="table" tableValues="${t.join(" ")}"/>`;
+    const per = (ch: "r" | "g" | "b") =>
+      comp(curveTable(c[ch])).map(
+        (_, i, arr) => lumaT[Math.min(TABLE_N - 1, Math.round(arr[i]! * (TABLE_N - 1)))]!,
+      );
+    const fn = (ch: "R" | "G" | "B", t: number[]) =>
+      `<feFunc${ch} type="table" tableValues="${t.join(" ")}"/>`;
     const defs = `<filter id="${id}" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feComponentTransfer>${fn("R", per("r"))}${fn("G", per("g"))}${fn("B", per("b"))}</feComponentTransfer></filter>`;
     const [a, b] = effectWindow(rc);
-    return { defs, filters: [exprSignal((t) => (t >= a && t < b ? `url(#${id})` : ""), "discrete", [a, b])] };
+    return {
+      defs,
+      filters: [exprSignal((t) => (t >= a && t < b ? `url(#${id})` : ""), "discrete", [a, b])],
+    };
   },
 });
 
@@ -232,8 +285,20 @@ export const Grain = defineEffect("Grain", {
     "Film grain: seeded fractal noise overlay. The noise re-seeds every `hold` frames from a seeded PRNG, so renders repeat exactly.",
   controls: {
     amount: num({ min: 0, max: 1, default: 0.12, step: 0.01, animatable: true }),
-    size: num({ min: 0.2, max: 4, default: 1, step: 0.05, description: "Grain size (higher = coarser)." }),
-    hold: num({ min: 1, max: 12, default: 2, step: 1, description: "Frames each noise pattern is held." }),
+    size: num({
+      min: 0.2,
+      max: 4,
+      default: 1,
+      step: 0.05,
+      description: "Grain size (higher = coarser).",
+    }),
+    hold: num({
+      min: 1,
+      max: 12,
+      default: 2,
+      step: 1,
+      description: "Frames each noise pattern is held.",
+    }),
     seed: num({ min: 0, max: 100000, default: 1, step: 1 }),
     mono: bool({ default: true }),
     blend: enumOf(["overlay", "soft-light", "multiply", "screen"], { default: "overlay" }),
@@ -243,15 +308,30 @@ export const Grain = defineEffect("Grain", {
     const [a, b] = effectWindow(rc);
     const amount = rc.node.props.amount as Signal<number>;
     const fps = rc.fps;
-    const seedAt = (t: number) => Math.floor(mulberry32(p.seed * 7919 + Math.floor(((t - a) * fps) / p.hold))() * 100000);
+    const seedAt = (t: number) =>
+      Math.floor(mulberry32(p.seed * 7919 + Math.floor(((t - a) * fps) / p.hold))() * 100000);
     const freq = round(0.9 / p.size, 3);
     const html = `<svg id="${id}" class="cc-grain" width="100%" height="100%" style="position:absolute;inset:0;pointer-events:none;mix-blend-mode:${p.blend};opacity:${round(evalSignal(amount, a))}"><filter id="${id}-f" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence id="${id}-t" type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seedAt(a)}" stitchTiles="stitch"/>${p.mono ? '<feColorMatrix type="saturate" values="0"/>' : ""}</filter><rect width="100%" height="100%" filter="url(#${id}-f)"/></svg>`;
     return {
       overlay: {
         html,
         channels: [
-          { target: `#${id}-t`, prop: "attr:seed", signal: exprSignal(seedAt, "number", [a, b]), span: [a, b] },
-          { target: `#${id}`, prop: "opacity", signal: exprSignal((t) => (t >= a && t < b ? (evalSignal(amount, t) as number) : 0), "number", [a, b]), span: [a, b] },
+          {
+            target: `#${id}-t`,
+            prop: "attr:seed",
+            signal: exprSignal(seedAt, "number", [a, b]),
+            span: [a, b],
+          },
+          {
+            target: `#${id}`,
+            prop: "opacity",
+            signal: exprSignal(
+              (t) => (t >= a && t < b ? (evalSignal(amount, t) as number) : 0),
+              "number",
+              [a, b],
+            ),
+            span: [a, b],
+          },
         ],
       },
     };

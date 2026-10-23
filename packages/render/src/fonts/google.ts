@@ -4,8 +4,13 @@ import { CodeCutError, type FontDecl } from "@codecut/core";
 import { inspectFont, sha256 } from "./inspect.js";
 import type { FontContext, FontFile, FontSource, FontSyncResult } from "./types.js";
 
-const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+const slug = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 /** Build the css2 `family=` value per https://developers.google.com/fonts/docs/css2 (axes alphabetical, tuples sorted). */
 export function css2FamilySpec(decl: FontDecl): string {
@@ -88,16 +93,25 @@ async function download(ctx: FontContext, url: string, attempts = 3): Promise<Bu
       await sleep(400 * (i + 1));
     }
   }
-  throw new CodeCutError("font_error", `Could not download ${url}: ${(last as Error).message}`, { fix: "Check your network, or use the Fontsource fallback by installing @fontsource/<id>." });
+  throw new CodeCutError("font_error", `Could not download ${url}: ${(last as Error).message}`, {
+    fix: "Check your network, or use the Fontsource fallback by installing @fontsource/<id>.",
+  });
 }
 
-const LICENSE_MAP: Record<string, string> = { OFL: "OFL-1.1", APACHE2: "Apache-2.0", UFL: "Ubuntu-font-1.0" };
+const LICENSE_MAP: Record<string, string> = {
+  OFL: "OFL-1.1",
+  APACHE2: "Apache-2.0",
+  UFL: "Ubuntu-font-1.0",
+};
 
 /**
  * Google serves woff2 files with the licence text stripped, so read the family's real licence from
  * its METADATA.pb in github.com/google/fonts (directories ofl, apache, ufl). Returns undefined offline.
  */
-export async function googleFamilyLicense(family: string, ctx: FontContext): Promise<{ license: string; url: string; author?: string } | undefined> {
+export async function googleFamilyLicense(
+  family: string,
+  ctx: FontContext,
+): Promise<{ license: string; url: string; author?: string } | undefined> {
   const dirName = family.toLowerCase().replace(/[^a-z0-9]/g, "");
   for (const dir of ["ofl", "apache", "ufl"]) {
     const url = `https://raw.githubusercontent.com/google/fonts/main/${dir}/${dirName}/METADATA.pb`;
@@ -107,7 +121,11 @@ export async function googleFamilyLicense(family: string, ctx: FontContext): Pro
       const body = await res.text();
       const raw = body.match(/license:\s*"([^"]+)"/)?.[1];
       const author = body.match(/designer:\s*"([^"]+)"/)?.[1];
-      return { license: LICENSE_MAP[raw ?? ""] ?? raw ?? dir.toUpperCase(), url: url.replace("METADATA.pb", ""), author };
+      return {
+        license: LICENSE_MAP[raw ?? ""] ?? raw ?? dir.toUpperCase(),
+        url: url.replace("METADATA.pb", ""),
+        author,
+      };
     } catch {
       /* try next */
     }
@@ -125,26 +143,55 @@ export class GoogleCssSource implements FontSource {
     const url = `https://fonts.googleapis.com/css2?family=${spec}&display=block`;
     ctx.log(`google css: ${url}`);
     const res = await ctx.fetch(url, { headers: { "User-Agent": UA } });
-    if (!res.ok) throw new CodeCutError("font_error", `Google Fonts CSS API returned ${res.status} for ${decl.family}`, { fix: "Check the family name, weights and axes against the family's page on fonts.google.com." });
+    if (!res.ok)
+      throw new CodeCutError(
+        "font_error",
+        `Google Fonts CSS API returned ${res.status} for ${decl.family}`,
+        {
+          fix: "Check the family name, weights and axes against the family's page on fonts.google.com.",
+        },
+      );
     const css = await res.text();
     const wanted = new Set(decl.subsets?.length ? decl.subsets : ["latin"]);
     const faces = parseGoogleCss(css).filter((f) => wanted.has(f.subset));
-    if (!faces.length) throw new CodeCutError("font_error", `No faces for ${decl.family} subsets ${[...wanted].join(", ")}`, { fix: "Pick a subset the family supports (see `font_get`)." });
+    if (!faces.length)
+      throw new CodeCutError(
+        "font_error",
+        `No faces for ${decl.family} subsets ${[...wanted].join(", ")}`,
+        { fix: "Pick a subset the family supports (see `font_get`)." },
+      );
     const dir = join(ctx.cacheDir, slug(decl.family));
     mkdirSync(dir, { recursive: true });
     const files: FontFile[] = [];
     for (const f of faces) {
       const buf = await download(ctx, f.url);
       const hash = sha256(buf);
-      const abs = join(dir, `${f.subset}-${f.style}-${Array.isArray(f.weight) ? f.weight.join("-") : f.weight}-${hash.slice(0, 10)}.woff2`);
+      const abs = join(
+        dir,
+        `${f.subset}-${f.style}-${Array.isArray(f.weight) ? f.weight.join("-") : f.weight}-${hash.slice(0, 10)}.woff2`,
+      );
       if (!existsSync(abs)) writeFileSync(abs, buf);
-      files.push({ abs, rel: relative(ctx.projectRoot, abs), hash, weight: f.weight, style: f.style, unicodeRange: f.unicodeRange, format: "woff2", subset: f.subset });
+      files.push({
+        abs,
+        rel: relative(ctx.projectRoot, abs),
+        hash,
+        weight: f.weight,
+        style: f.style,
+        unicodeRange: f.unicodeRange,
+        format: "woff2",
+        subset: f.subset,
+      });
     }
     const info = inspectFont(files[0]!.abs);
     const variable = files.some((f) => Array.isArray(f.weight));
     const lic = await googleFamilyLicense(decl.family, ctx);
     const license = lic
-      ? { ...info.license, license: lic.license, url: lic.url, commercialOk: /OFL|Apache|Ubuntu/i.test(lic.license) }
+      ? {
+          ...info.license,
+          license: lic.license,
+          url: lic.url,
+          commercialOk: /OFL|Apache|Ubuntu/i.test(lic.license),
+        }
       : { ...info.license, license: "unknown", commercialOk: false };
     return { files, license, url: lic?.url ?? url, variable, axes: info.axes, route: "css-api" };
   }
@@ -164,25 +211,54 @@ export class FontsourceSource implements FontSource {
     const dir = join(ctx.cacheDir, id);
     mkdirSync(dir, { recursive: true });
     const files: FontFile[] = [];
-    const weights = decl.variable ? [decl.axes?.wght ?? [300, 700]] : (decl.weights?.length ? decl.weights : [400]);
+    const weights = decl.variable
+      ? [decl.axes?.wght ?? [300, 700]]
+      : decl.weights?.length
+        ? decl.weights
+        : [400];
     for (const subset of subsets) {
       for (const w of weights) {
         for (const style of decl.styles?.length ? decl.styles : ["normal"]) {
-          const name = decl.variable ? `${id}-${subset}-wght-${style}.woff2` : `${id}-${subset}-${w}-${style}.woff2`;
+          const name = decl.variable
+            ? `${id}-${subset}-wght-${style}.woff2`
+            : `${id}-${subset}-${w}-${style}.woff2`;
           let buf: Buffer;
-          if (base && existsSync(join(base, "files", name))) buf = readFileSync(join(base, "files", name));
+          if (base && existsSync(join(base, "files", name)))
+            buf = readFileSync(join(base, "files", name));
           else buf = await download(ctx, `https://cdn.jsdelivr.net/npm/${pkg}/files/${name}`);
           const hash = sha256(buf);
           const abs = join(dir, `fs-${name.replace(".woff2", "")}-${hash.slice(0, 10)}.woff2`);
           if (!existsSync(abs)) writeFileSync(abs, buf);
-          files.push({ abs, rel: relative(ctx.projectRoot, abs), hash, weight: w as number | [number, number], style, format: "woff2", subset });
+          files.push({
+            abs,
+            rel: relative(ctx.projectRoot, abs),
+            hash,
+            weight: w as number | [number, number],
+            style,
+            format: "woff2",
+            subset,
+          });
         }
       }
     }
     const info = inspectFont(files[0]!.abs);
     const lic = await googleFamilyLicense(decl.family, ctx);
-    const license = lic ? { ...info.license, license: lic.license, url: lic.url, commercialOk: /OFL|Apache|Ubuntu/i.test(lic.license) } : { ...info.license, license: "unknown", commercialOk: false };
-    return { files, license, url: `https://fontsource.org/fonts/${id}`, variable: !!decl.variable, axes: info.axes, route: "fontsource" };
+    const license = lic
+      ? {
+          ...info.license,
+          license: lic.license,
+          url: lic.url,
+          commercialOk: /OFL|Apache|Ubuntu/i.test(lic.license),
+        }
+      : { ...info.license, license: "unknown", commercialOk: false };
+    return {
+      files,
+      license,
+      url: `https://fontsource.org/fonts/${id}`,
+      variable: !!decl.variable,
+      axes: info.axes,
+      route: "fontsource",
+    };
   }
 }
 
@@ -209,7 +285,14 @@ export interface GoogleFontMeta {
   files?: Record<string, string>;
 }
 
-export async function googleFontsApi(opts: { key: string; family?: string; sort?: string; subset?: string; category?: string; fetch?: typeof fetch }): Promise<GoogleFontMeta[]> {
+export async function googleFontsApi(opts: {
+  key: string;
+  family?: string;
+  sort?: string;
+  subset?: string;
+  category?: string;
+  fetch?: typeof fetch;
+}): Promise<GoogleFontMeta[]> {
   const q = new URLSearchParams({ key: opts.key, capability: "VF" });
   q.append("capability", "WOFF2");
   if (opts.family) q.set("family", opts.family);
@@ -217,7 +300,10 @@ export async function googleFontsApi(opts: { key: string; family?: string; sort?
   if (opts.subset) q.set("subset", opts.subset);
   if (opts.category) q.set("category", opts.category);
   const res = await (opts.fetch ?? fetch)(`https://www.googleapis.com/webfonts/v1/webfonts?${q}`);
-  if (!res.ok) throw new CodeCutError("font_error", `Google Fonts Developer API returned ${res.status}`, { fix: "Check GOOGLE_FONTS_API_KEY." });
+  if (!res.ok)
+    throw new CodeCutError("font_error", `Google Fonts Developer API returned ${res.status}`, {
+      fix: "Check GOOGLE_FONTS_API_KEY.",
+    });
   const json = (await res.json()) as { items?: GoogleFontMeta[] };
   return json.items ?? [];
 }

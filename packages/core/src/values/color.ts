@@ -33,10 +33,11 @@ export function parseColor(input: string): RGBA {
     };
   }
   if ((m = s.match(/^rgba?\(([^)]+)\)$/))) {
-    const p = m[1]!.split(/[\s,\/]+/).filter(Boolean);
+    const p = m[1]!.split(/[\s,/]+/).filter(Boolean);
     const ch = (v: string) => (v.endsWith("%") ? (parseFloat(v) / 100) * 255 : parseFloat(v));
     if (p.length < 3) throw badColor(input);
-    const a = p[3] === undefined ? 1 : p[3].endsWith("%") ? parseFloat(p[3]) / 100 : parseFloat(p[3]);
+    const a =
+      p[3] === undefined ? 1 : p[3].endsWith("%") ? parseFloat(p[3]) / 100 : parseFloat(p[3]);
     return { r: ch(p[0]!), g: ch(p[1]!), b: ch(p[2]!), a };
   }
   if ((m = s.match(/^oklch\(([^)]+)\)$/))) {
@@ -47,7 +48,11 @@ export function parseColor(input: string): RGBA {
     const C = parseFloat(p[1]!);
     const H = parseFloat(p[2]!.replace("deg", ""));
     const c = oklchToRgb(L, C, H);
-    return { ...c, a: alpha === undefined ? 1 : alpha.endsWith("%") ? parseFloat(alpha) / 100 : parseFloat(alpha) };
+    return {
+      ...c,
+      a:
+        alpha === undefined ? 1 : alpha.endsWith("%") ? parseFloat(alpha) / 100 : parseFloat(alpha),
+    };
   }
   if (s === "transparent") return { r: 0, g: 0, b: 0, a: 0 };
   const named = NAMED[s];
@@ -94,7 +99,10 @@ function oklchToRgb(L: number, C: number, hDeg: number): { r: number; g: number;
   return { r: enc(lin[0]!), g: enc(lin[1]!), b: enc(lin[2]!) };
 }
 
-const hex2 = (n: number) => Math.round(clamp(n, 0, 255)).toString(16).padStart(2, "0");
+const hex2 = (n: number) =>
+  Math.round(clamp(n, 0, 255))
+    .toString(16)
+    .padStart(2, "0");
 
 export function toHex(c: RGBA): string {
   return `#${hex2(c.r)}${hex2(c.g)}${hex2(c.b)}${c.a < 1 ? hex2(c.a * 255) : ""}`;

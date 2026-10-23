@@ -1,6 +1,12 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { isCodeCutError, lintTree, type LintConfig, type LintIssue, type ResolvedFont } from "@codecut/core";
+import {
+  isCodeCutError,
+  lintTree,
+  type LintConfig,
+  type LintIssue,
+  type ResolvedFont,
+} from "@codecut/core";
 import { safeRect } from "@codecut/components";
 import { collectFontDecls, loadProject, loadVoiceWords, type LoadedProject } from "./project.js";
 import { readLedger, readLock, resolveFromLock } from "./fonts/lock.js";
@@ -15,7 +21,10 @@ export interface LintResult {
 }
 
 /** Lint a project directory: schema, determinism, fonts (lock, ledger, glyph coverage), assets, text rules. */
-export async function lintProjectDir(dir: string, config: Partial<LintConfig> = {}): Promise<LintResult> {
+export async function lintProjectDir(
+  dir: string,
+  config: Partial<LintConfig> = {},
+): Promise<LintResult> {
   const loaded = await loadProject(dir);
   const { root, node } = loaded;
   const ledger = readLedger(root);
@@ -27,7 +36,14 @@ export async function lintProjectDir(dir: string, config: Partial<LintConfig> = 
     try {
       fonts.set(d.id, resolveFromLock(root, d, lock));
     } catch (e) {
-      if (isCodeCutError(e)) issues.push({ severity: "error", rule: "font-lock", message: e.message, id: d.id, fix: e.fix });
+      if (isCodeCutError(e))
+        issues.push({
+          severity: "error",
+          rule: "font-lock",
+          message: e.message,
+          id: d.id,
+          fix: e.fix,
+        });
       else throw e;
     }
   }
@@ -46,7 +62,15 @@ export async function lintProjectDir(dir: string, config: Partial<LintConfig> = 
       safeRect: (preset, comp) => safeRect(preset as "reels", comp),
     },
     {
-      fontResolver: (d) => fonts.get(d.id) ?? { id: d.id, family: d.family, files: [], fallback: d.fallback ?? [], source: d.source === "system" ? "system" : "google", variable: false },
+      fontResolver: (d) =>
+        fonts.get(d.id) ?? {
+          id: d.id,
+          family: d.family,
+          files: [],
+          fallback: d.fallback ?? [],
+          source: d.source === "system" ? "system" : "google",
+          variable: false,
+        },
       words: (id) => words.get(id),
       mediaDuration: (src) => {
         const p = resolve(root, src);
@@ -56,8 +80,15 @@ export async function lintProjectDir(dir: string, config: Partial<LintConfig> = 
   );
   issues.push(...res.issues);
   const seen = new Set<string>();
-  const all = issues.filter((i) => (seen.has(JSON.stringify(i)) ? false : (seen.add(JSON.stringify(i)), true)));
-  return { issues: all, errors: all.filter((i) => i.severity === "error").length, warnings: all.filter((i) => i.severity === "warning").length, loaded };
+  const all = issues.filter((i) =>
+    seen.has(JSON.stringify(i)) ? false : (seen.add(JSON.stringify(i)), true),
+  );
+  return {
+    issues: all,
+    errors: all.filter((i) => i.severity === "error").length,
+    warnings: all.filter((i) => i.severity === "warning").length,
+    loaded,
+  };
 }
 
 export { join };

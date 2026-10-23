@@ -17,8 +17,23 @@ export function probeMedia(path: string): MediaInfo | undefined {
   requireFfmpeg("ffprobe");
   let info: MediaInfo | undefined;
   try {
-    const out = execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration:stream=codec_type,width,height", "-of", "json", path], { encoding: "utf8" });
-    const j = JSON.parse(out) as { format?: { duration?: string }; streams?: Array<{ codec_type?: string; width?: number; height?: number }> };
+    const out = execFileSync(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration:stream=codec_type,width,height",
+        "-of",
+        "json",
+        path,
+      ],
+      { encoding: "utf8" },
+    );
+    const j = JSON.parse(out) as {
+      format?: { duration?: string };
+      streams?: Array<{ codec_type?: string; width?: number; height?: number }>;
+    };
     const v = j.streams?.find((s) => s.codec_type === "video");
     info = {
       duration: Number(j.format?.duration ?? 0),

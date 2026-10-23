@@ -53,16 +53,21 @@ export function peakOffsetOf(ev: AudioEvent, ledger: Ledger, file: string): numb
   if (ev.peak === undefined) return 0;
   if (typeof ev.peak === "number") return ev.peak;
   const entry = ledger.entries.find((e) => e.file && file.endsWith(e.file));
-  if (entry && typeof entry.peak === "object" && entry.peak && ev.peak in entry.peak) return entry.peak[ev.peak]!;
+  if (entry && typeof entry.peak === "object" && entry.peak && ev.peak in entry.peak)
+    return entry.peak[ev.peak]!;
   if (entry && typeof entry.peak === "number") return entry.peak;
   const side = `${file}.peak.json`;
   if (existsSync(side)) {
     const j = JSON.parse(readFileSync(side, "utf8")) as Record<string, number>;
     if (ev.peak in j) return j[ev.peak]!;
   }
-  throw new CodeCutError("asset_missing", `Sound ${ev.id}: no peak named "${ev.peak}" for ${ev.src}`, {
-    fix: "Measure the peak with sound_get (stored in the ledger) or pass peak as a number of seconds.",
-  });
+  throw new CodeCutError(
+    "asset_missing",
+    `Sound ${ev.id}: no peak named "${ev.peak}" for ${ev.src}`,
+    {
+      fix: "Measure the peak with sound_get (stored in the ledger) or pass peak as a number of seconds.",
+    },
+  );
 }
 
 const atempoChain = (r: number): string[] => {
@@ -107,7 +112,18 @@ export async function mixAudio(o: MixOptions): Promise<MixResult> {
     const rate = ev.rate && ev.rate > 0 ? ev.rate : 1;
     const avail = Math.max(0.01, ((info?.duration ?? 0) - mediaStart) / rate);
     const duration = Math.min(ev.duration ?? avail, avail, Math.max(0.01, o.duration - startAt));
-    events.push({ id: ev.id, bus: ev.bus, src: ev.src, file, startAt, mediaStart, duration, gainDb: ev.gainDb ?? 0, peakOffset, landsAt: ev.start });
+    events.push({
+      id: ev.id,
+      bus: ev.bus,
+      src: ev.src,
+      file,
+      startAt,
+      mediaStart,
+      duration,
+      gainDb: ev.gainDb ?? 0,
+      peakOffset,
+      landsAt: ev.start,
+    });
   }
 
   const args: string[] = ["-y", "-hide_banner", "-loglevel", "error", "-bitexact"];
@@ -117,10 +133,19 @@ export async function mixAudio(o: MixOptions): Promise<MixResult> {
     args.push("-i", e.file);
     const src = o.events.find((x) => x.id === e.id)!;
     const rate = src.rate && src.rate > 0 ? src.rate : 1;
-    const parts = [`[${i}:a]atrim=start=${f(e.mediaStart)}:duration=${f(e.duration * rate)}`, "asetpts=PTS-STARTPTS", ...atempoChain(rate)];
+    const parts = [
+      `[${i}:a]atrim=start=${f(e.mediaStart)}:duration=${f(e.duration * rate)}`,
+      "asetpts=PTS-STARTPTS",
+      ...atempoChain(rate),
+    ];
     if (src.fadeIn) parts.push(`afade=t=in:st=0:d=${f(src.fadeIn)}`);
-    if (src.fadeOut) parts.push(`afade=t=out:st=${f(Math.max(0, e.duration - src.fadeOut))}:d=${f(src.fadeOut)}`);
-    parts.push(`volume=${f(e.gainDb)}dB`, "aformat=sample_rates=48000:channel_layouts=stereo", `adelay=${Math.round(e.startAt * 1000)}:all=1`);
+    if (src.fadeOut)
+      parts.push(`afade=t=out:st=${f(Math.max(0, e.duration - src.fadeOut))}:d=${f(src.fadeOut)}`);
+    parts.push(
+      `volume=${f(e.gainDb)}dB`,
+      "aformat=sample_rates=48000:channel_layouts=stereo",
+      `adelay=${Math.round(e.startAt * 1000)}:all=1`,
+    );
     chains.push(`${parts.join(",")}[e${i}]`);
     bus[e.bus]!.push(`[e${i}]`);
   });
@@ -128,12 +153,31 @@ export async function mixAudio(o: MixOptions): Promise<MixResult> {
   for (const name of ["voice", "music", "sfx"] as const) {
     const ins = bus[name]!;
     if (!ins.length) continue;
-    chains.push(ins.length === 1 ? `${ins[0]}anull[b_${name}]` : `${ins.join("")}amix=inputs=${ins.length}:normalize=0:duration=longest[b_${name}]`);
+    chains.push(
+      ins.length === 1
+        ? `${ins[0]}anull[b_${name}]`
+        : `${ins.join("")}amix=inputs=${ins.length}:normalize=0:duration=longest[b_${name}]`,
+    );
     buses.push(name);
   }
   if (!buses.length) {
     // silent track so the render always has a defined mix
-    await run("ffmpeg", ["-y", "-hide_banner", "-loglevel", "error", "-bitexact", "-f", "lavfi", "-i", `anullsrc=r=48000:cl=stereo`, "-t", f(o.duration), "-c:a", "pcm_s16le", o.outFile]);
+    await run("ffmpeg", [
+      "-y",
+      "-hide_banner",
+      "-loglevel",
+      "error",
+      "-bitexact",
+      "-f",
+      "lavfi",
+      "-i",
+      `anullsrc=r=48000:cl=stereo`,
+      "-t",
+      f(o.duration),
+      "-c:a",
+      "pcm_s16le",
+      o.outFile,
+    ]);
     return { file: o.outFile, events, duckAmount: duck, targetLufs: lufs, filtergraph: "(silent)" };
   }
   // ducking: music is compressed by the voice bus
@@ -142,29 +186,64 @@ export async function mixAudio(o: MixOptions): Promise<MixResult> {
   if (buses.includes("music") && buses.includes("voice")) {
     chains.push(`[b_voice]asplit=2[v_key][v_mix]`);
     const ratio = Math.max(2, Math.min(20, 1 + duck));
-    chains.push(`[b_music][v_key]sidechaincompress=threshold=0.02:ratio=${f(ratio)}:attack=15:release=450:makeup=1[music_ducked]`);
+    chains.push(
+      `[b_music][v_key]sidechaincompress=threshold=0.02:ratio=${f(ratio)}:attack=15:release=450:makeup=1[music_ducked]`,
+    );
     musicLabel = "music_ducked";
     voiceMix = "v_mix";
   }
   const finals: string[] = [];
-  for (const b of buses) finals.push(`[${b === "music" ? musicLabel : b === "voice" ? voiceMix : "b_sfx"}]`);
-  chains.push(`${finals.join("")}amix=inputs=${finals.length}:normalize=0:duration=longest,apad=whole_dur=${f(o.duration)},atrim=duration=${f(o.duration)},loudnorm=I=${lufs}:TP=${tp}:LRA=11,aformat=sample_rates=48000:channel_layouts=stereo[master]`);
+  for (const b of buses)
+    finals.push(`[${b === "music" ? musicLabel : b === "voice" ? voiceMix : "b_sfx"}]`);
+  chains.push(
+    `${finals.join("")}amix=inputs=${finals.length}:normalize=0:duration=longest,apad=whole_dur=${f(o.duration)},atrim=duration=${f(o.duration)},loudnorm=I=${lufs}:TP=${tp}:LRA=11,aformat=sample_rates=48000:channel_layouts=stereo[master]`,
+  );
   const graph = chains.join(";");
-  args.push("-filter_complex", graph, "-map", "[master]", "-c:a", "pcm_s16le", "-ar", "48000", "-fflags", "+bitexact", "-flags:a", "+bitexact", o.outFile);
+  args.push(
+    "-filter_complex",
+    graph,
+    "-map",
+    "[master]",
+    "-c:a",
+    "pcm_s16le",
+    "-ar",
+    "48000",
+    "-fflags",
+    "+bitexact",
+    "-flags:a",
+    "+bitexact",
+    o.outFile,
+  );
   try {
     await run("ffmpeg", args, { maxBuffer: 64 * 1024 * 1024 });
   } catch (e) {
-    throw new CodeCutError("render_failed", `FFmpeg audio mix failed: ${(e as { stderr?: string }).stderr?.split("\n").slice(-4).join(" ") ?? (e as Error).message}`, { details: { graph } });
+    throw new CodeCutError(
+      "render_failed",
+      `FFmpeg audio mix failed: ${(e as { stderr?: string }).stderr?.split("\n").slice(-4).join(" ") ?? (e as Error).message}`,
+      { details: { graph } },
+    );
   }
   const m = await measureLoudness(o.outFile);
-  return { file: o.outFile, events, duckAmount: duck, targetLufs: lufs, lufs: m.lufs, truePeak: m.truePeak, filtergraph: graph };
+  return {
+    file: o.outFile,
+    events,
+    duckAmount: duck,
+    targetLufs: lufs,
+    lufs: m.lufs,
+    truePeak: m.truePeak,
+    filtergraph: graph,
+  };
 }
 
 /** Integrated loudness (EBU R128) and true peak via FFmpeg's ebur128. */
 export async function measureLoudness(file: string): Promise<{ lufs?: number; truePeak?: number }> {
   requireFfmpeg();
   try {
-    const r = await run("ffmpeg", ["-hide_banner", "-nostats", "-i", file, "-af", "ebur128=peak=true", "-f", "null", "-"], { maxBuffer: 64 * 1024 * 1024 });
+    const r = await run(
+      "ffmpeg",
+      ["-hide_banner", "-nostats", "-i", file, "-af", "ebur128=peak=true", "-f", "null", "-"],
+      { maxBuffer: 64 * 1024 * 1024 },
+    );
     const text = r.stderr;
     const summary = text.slice(text.lastIndexOf("Summary:"));
     const i = summary.match(/I:\s+(-?[\d.]+)\s+LUFS/)?.[1];

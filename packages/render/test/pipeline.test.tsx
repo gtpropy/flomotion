@@ -4,13 +4,22 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PNG } from "pngjs";
 import { readFileSync } from "node:fs";
-import { Composition, Track, Scene, defineComponent, num, color, resolveProject, compileProject } from "@codecut/core";
+import {
+  Composition,
+  Track,
+  Scene,
+  defineComponent,
+  num,
+  color,
+  resolveProject,
+  compileProject,
+} from "@codecut/core";
 import { materialize, renderProjectDir, snapshotFrames } from "../src/index.js";
 
 const Block = defineComponent("PBlock", {
   category: "test",
   controls: { w: num({ default: 60 }), fillColor: color({ default: "#ff0000" }) },
-  render: (p, rc) => ({
+  render: (p) => ({
     html: `<div style="width:${p.w}px;height:${p.w}px;background:${p.fillColor}"></div>`,
     box: { left: "0px", top: "100px", width: `${p.w}px`, height: `${p.w}px` },
   }),
@@ -20,7 +29,15 @@ const project = (
   <Composition id="pipe" size={[400, 300]} fps={30} duration="2s" background="#000000">
     <Track id="v1">
       <Scene id="s1" start="0s" duration="2s">
-        <Block id="b1" position={[[0, [0, 0]], [1, [300, 0]]] as any} />
+        <Block
+          id="b1"
+          position={
+            [
+              [0, [0, 0]],
+              [1, [300, 0]],
+            ] as any
+          }
+        />
       </Scene>
     </Track>
   </Composition>

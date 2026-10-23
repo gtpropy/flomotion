@@ -62,28 +62,38 @@ export function motionContribution(
     return p <= 0 ? 1 : p >= 1 ? 0 : 1 - ease(p);
   };
   const away = (t: number) => 1 - rest(t);
-  const span2: [number, number] = kind === "enter" ? [sa, sa + delay + duration] : [sb - duration - delay, sb];
+  const span2: [number, number] =
+    kind === "enter" ? [sa, sa + delay + duration] : [sb - duration - delay, sb];
   const sig = (fn: (t: number) => number): Signal<number> => exprSignal(fn, "number", span2);
   const offsets: Offset[] = [];
   const v = DIR[dir];
   if (v) {
     const norm = Math.hypot(v[0], v[1]);
     // entering from "sw" means starting at the south-west and moving to rest
-    if (v[0] !== 0) offsets.push({ prop: "x", mode: "add", signal: sig((t) => (v[0]! / norm) * dist * away(t)) });
-    if (v[1] !== 0) offsets.push({ prop: "y", mode: "add", signal: sig((t) => (v[1]! / norm) * dist * away(t)) });
+    if (v[0] !== 0)
+      offsets.push({ prop: "x", mode: "add", signal: sig((t) => (v[0]! / norm) * dist * away(t)) });
+    if (v[1] !== 0)
+      offsets.push({ prop: "y", mode: "add", signal: sig((t) => (v[1]! / norm) * dist * away(t)) });
   } else if (dir === "z+" || dir === "z-") {
     // z+ comes from the viewer (starts larger), z- from behind (starts smaller); distance 500 = ±100%
     const sign = dir === "z+" ? 1 : -1;
-    offsets.push({ prop: "scale", mode: "mul", signal: sig((t) => 1 + sign * (dist / 500) * away(t)) });
+    offsets.push({
+      prop: "scale",
+      mode: "mul",
+      signal: sig((t) => 1 + sign * (dist / 500) * away(t)),
+    });
   } else if (dir === "center" && scaleEnd === 1) {
     offsets.push({ prop: "scale", mode: "mul", signal: sig((t) => Math.max(0, rest(t))) });
   }
-  if (scaleEnd !== 1) offsets.push({ prop: "scale", mode: "mul", signal: sig((t) => 1 + (scaleEnd - 1) * away(t)) });
+  if (scaleEnd !== 1)
+    offsets.push({ prop: "scale", mode: "mul", signal: sig((t) => 1 + (scaleEnd - 1) * away(t)) });
   if (rotate) offsets.push({ prop: "rotation", mode: "add", signal: sig((t) => rotate * away(t)) });
   if (fade) offsets.push({ prop: "opacity", mode: "mul", signal: sig((t) => rest(t)) });
   const filters: Signal<string>[] = [];
   if (blur > 0) {
-    filters.push(exprSignal((t) => `blur(${Math.round(blur * away(t) * 100) / 100}px)`, "discrete", span2));
+    filters.push(
+      exprSignal((t) => `blur(${Math.round(blur * away(t) * 100) / 100}px)`, "discrete", span2),
+    );
   }
   return { offsets, filters };
 }

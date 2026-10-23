@@ -37,14 +37,22 @@ export function flattenChildren(input: unknown, out: CCChild[] = []): CCChild[] 
 }
 
 /** Walk every element node depth first. */
-export function walk(node: CCNode, fn: (n: CCNode, parent: CCNode | null, index: number) => void, parent: CCNode | null = null, index = 0): void {
+export function walk(
+  node: CCNode,
+  fn: (n: CCNode, parent: CCNode | null, index: number) => void,
+  parent: CCNode | null = null,
+  index = 0,
+): void {
   fn(node, parent, index);
   node.children.forEach((c, i) => {
     if (isNode(c)) walk(c, fn, node, i);
   });
 }
 
-export function findById(root: CCNode, id: string): { node: CCNode; parent: CCNode | null; index: number } | null {
+export function findById(
+  root: CCNode,
+  id: string,
+): { node: CCNode; parent: CCNode | null; index: number } | null {
   let hit: { node: CCNode; parent: CCNode | null; index: number } | null = null;
   walk(root, (n, p, i) => {
     if (!hit && n.props.id === id) hit = { node: n, parent: p, index: i };
@@ -75,7 +83,9 @@ export function serializeNode(n: CCNode): unknown {
   return {
     name: n.name,
     props: JSON.parse(
-      JSON.stringify(n.props, (_k, v) => (typeof v === "function" ? { $expr: Function.prototype.toString.call(v) } : v)),
+      JSON.stringify(n.props, (_k, v) =>
+        typeof v === "function" ? { $expr: Function.prototype.toString.call(v) } : v,
+      ),
     ),
     children: n.children.map((c) => (isNode(c) ? serializeNode(c) : c)),
   };

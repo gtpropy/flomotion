@@ -22,20 +22,32 @@ import { textStyleControls, typographyControls } from "./text/controls.js";
 
 const fit = () => enumOf(["cover", "contain", "fill"], { default: "cover" });
 
-const fullBox = (rc: RenderCtx, p: { width?: number | string; height?: number | string; at?: unknown }) => {
+const fullBox = (
+  rc: RenderCtx,
+  p: { width?: number | string; height?: number | string; at?: unknown },
+) => {
   const w = p.width === undefined ? rc.node.box[0] : rc.px(p.width, "x");
   const h = p.height === undefined ? rc.node.box[1] : rc.px(p.height, "y");
   const pl = placement(p.width === undefined && p.height === undefined ? "top-left" : p.at, rc);
-  return { w, h, box: { ...pl.box, width: `${round(w)}px`, height: `${round(h)}px` }, statics: pl.statics };
+  return {
+    w,
+    h,
+    box: { ...pl.box, width: `${round(w)}px`, height: `${round(h)}px` },
+    statics: pl.statics,
+  };
 };
 
 export const Image = defineComponent("Image", {
   category: "media",
-  description: "A still image. Defaults to filling its parent box; use the transform stack for Ken Burns moves.",
+  description:
+    "A still image. Defaults to filling its parent box; use the transform stack for Ken Burns moves.",
   children: "effects",
   controls: {
     at: atControl(),
-    src: text({ required: true, description: "Image file in the project, e.g. ./assets/logo.png." }),
+    src: text({
+      required: true,
+      description: "Image file in the project, e.g. ./assets/logo.png.",
+    }),
     width: length(),
     height: length(),
     fit: fit(),
@@ -43,7 +55,11 @@ export const Image = defineComponent("Image", {
   },
   render: (p, rc) => {
     const b = fullBox(rc, p);
-    return { html: `<img src="${esc(rc.assetPath(String(p.src)))}" alt="${esc(String(p.alt ?? ""))}" style="width:100%;height:100%;object-fit:${p.fit};display:block">`, box: b.box, statics: b.statics };
+    return {
+      html: `<img src="${esc(rc.assetPath(String(p.src)))}" alt="${esc(String(p.alt ?? ""))}" style="width:100%;height:100%;object-fit:${p.fit};display:block">`,
+      box: b.box,
+      statics: b.statics,
+    };
   },
 });
 
@@ -51,7 +67,10 @@ const trimControls = () => ({
   in: time({ default: 0, unit: "s", description: "Source in point (trim)." }),
   out: time({ unit: "s", description: "Source out point." }),
   speed: num({ min: 0.1, max: 10, default: 1, step: 0.05 }),
-  reverse: bool({ default: false, description: "Reverse playback (needs a pre-rendered reversed copy: later)." }),
+  reverse: bool({
+    default: false,
+    description: "Reverse playback (needs a pre-rendered reversed copy: later).",
+  }),
 });
 
 export const Video = defineComponent("Video", {
@@ -66,7 +85,13 @@ export const Video = defineComponent("Video", {
     height: length(),
     fit: fit(),
     ...trimControls(),
-    volume: num({ min: -60, max: 12, default: -60, unit: "dB", description: "Gain of the clip's own audio in the mix; -60 mutes." }),
+    volume: num({
+      min: -60,
+      max: 12,
+      default: -60,
+      unit: "dB",
+      description: "Gain of the clip's own audio in the mix; -60 mutes.",
+    }),
     bus: enumOf(["sfx", "music", "voice"], { default: "sfx" }),
   },
   render: (p, rc) => {
@@ -75,21 +100,36 @@ export const Video = defineComponent("Video", {
     const dur = rc.node.end - rc.node.start;
     const audio: AudioEvent[] =
       p.volume > -60
-        ? [{ id: `${rc.id}-a`, src: String(p.src), start: rc.node.start, duration: dur, mediaStart: inT, gainDb: p.volume, bus: p.bus, rate: p.speed, fromVideo: true }]
+        ? [
+            {
+              id: `${rc.id}-a`,
+              src: String(p.src),
+              start: rc.node.start,
+              duration: dur,
+              mediaStart: inT,
+              gainDb: p.volume,
+              bus: p.bus,
+              rate: p.speed,
+              fromVideo: true,
+            },
+          ]
         : [];
     return {
       html: `<video id="${rc.sub("v")}" class="clip" src="${esc(rc.assetPath(String(p.src)))}" muted playsinline data-start="${rc.node.start}" data-duration="${round(dur, 4)}" data-media-start="${inT}"${p.speed !== 1 ? ` data-playback-rate="${p.speed}"` : ""} style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:${p.fit}"></video>`,
       box: b.box,
       statics: b.statics,
       extra: { audio },
-      issues: p.reverse ? ["`reverse` needs a pre-rendered reversed copy of the clip (later); playing forward"] : undefined,
+      issues: p.reverse
+        ? ["`reverse` needs a pre-rendered reversed copy of the clip (later); playing forward"]
+        : undefined,
     };
   },
 });
 
 export const Clip = defineComponent("Clip", {
   category: "media",
-  description: "A trimmed piece of video on a track: `in`/`out` select the source range, `speed` retimes it, `volume` is its mix gain.",
+  description:
+    "A trimmed piece of video on a track: `in`/`out` select the source range, `speed` retimes it, `volume` is its mix gain.",
   children: "effects",
   controls: {
     at: atControl(),
@@ -112,7 +152,12 @@ const audioEvent = (rc: RenderCtx, p: any, bus: AudioEvent["bus"], at: number): 
   mediaStart: p.in === undefined ? undefined : parseTimeLiteral(p.in, rc.fps),
   gainDb: typeof p.gain === "number" ? p.gain : 0,
   bus,
-  peak: p.peak === undefined || p.peak === "" ? undefined : isNaN(Number(p.peak)) ? String(p.peak) : Number(p.peak),
+  peak:
+    p.peak === undefined || p.peak === ""
+      ? undefined
+      : isNaN(Number(p.peak))
+        ? String(p.peak)
+        : Number(p.peak),
   fadeIn: p.fadeIn,
   fadeOut: p.fadeOut,
   rate: p.speed,
@@ -120,7 +165,8 @@ const audioEvent = (rc: RenderCtx, p: any, bus: AudioEvent["bus"], at: number): 
 
 export const Audio = defineComponent("Audio", {
   category: "media",
-  description: "Background audio (music or ambience) on a bus. Mixed offline with FFmpeg; music ducks under voice.",
+  description:
+    "Background audio (music or ambience) on a bus. Mixed offline with FFmpeg; music ducks under voice.",
   traits: ["timed"],
   children: "none",
   controls: {
@@ -157,14 +203,16 @@ export const Sound = defineComponent("Sound", {
     tag: text({ description: "Sound tag it was chosen for, e.g. hit/land." }),
   },
   render: (p, rc) => {
-    const at = rc.node.parentStart + (typeof p.at === "number" ? p.at : parseTimeLiteral(p.at, rc.fps));
+    const at =
+      rc.node.parentStart + (typeof p.at === "number" ? p.at : parseTimeLiteral(p.at, rc.fps));
     return { html: "", visual: false, extra: { audio: [audioEvent(rc, p, p.bus, at)] } };
   },
 });
 
 export const Voiceover = defineComponent("Voiceover", {
   category: "media",
-  description: "The narration. Loads the audio and its word timings (`voice.words.json`) so captions and `ctx.word(id, i)` can use them.",
+  description:
+    "The narration. Loads the audio and its word timings (`voice.words.json`) so captions and `ctx.word(id, i)` can use them.",
   traits: [],
   children: "none",
   controls: {
@@ -173,11 +221,19 @@ export const Voiceover = defineComponent("Voiceover", {
     words: text({ description: "Word timings file (default: <src>.words.json)." }),
     at: time({ default: 0, unit: "s" }),
     gain: num({ min: -60, max: 12, default: 0, unit: "dB" }),
-    script: text({ multiline: true, description: "The spoken script (for review and caption fallback)." }),
+    script: text({
+      multiline: true,
+      description: "The spoken script (for review and caption fallback).",
+    }),
   },
   render: (p, rc) => {
-    const at = rc.node.parentStart + (typeof p.at === "number" ? p.at : parseTimeLiteral(p.at, rc.fps));
-    return { html: "", visual: false, extra: { audio: [audioEvent(rc, { ...p, in: undefined }, "voice", at)] } };
+    const at =
+      rc.node.parentStart + (typeof p.at === "number" ? p.at : parseTimeLiteral(p.at, rc.fps));
+    return {
+      html: "",
+      visual: false,
+      extra: { audio: [audioEvent(rc, { ...p, in: undefined }, "voice", at)] },
+    };
   },
 });
 
@@ -195,7 +251,10 @@ export interface CaptionPage {
 }
 
 /** Group words into caption pages by line length and gap (pure; shared with .srt/.vtt export). */
-export function paginateWords(words: Word[], opts: { maxChars: number; maxWords?: number; gap?: number; mode?: "line" | "word" }): CaptionPage[] {
+export function paginateWords(
+  words: Word[],
+  opts: { maxChars: number; maxWords?: number; gap?: number; mode?: "line" | "word" },
+): CaptionPage[] {
   const pages: CaptionPage[] = [];
   let cur: Word[] = [];
   const flush = () => {
@@ -211,7 +270,11 @@ export function paginateWords(words: Word[], opts: { maxChars: number; maxWords?
     const len = [...cur, w].map((x) => x.w).join(" ").length;
     const gapBreak = cur.length > 0 && w.start - cur[cur.length - 1]!.end > (opts.gap ?? 0.8);
     const endPunct = cur.length > 0 && /[.!?]$/.test(cur[cur.length - 1]!.w);
-    if (cur.length && (len > opts.maxChars || cur.length >= (opts.maxWords ?? 99) || gapBreak || endPunct)) flush();
+    if (
+      cur.length &&
+      (len > opts.maxChars || cur.length >= (opts.maxWords ?? 99) || gapBreak || endPunct)
+    )
+      flush();
     cur.push(w);
   }
   flush();
@@ -225,7 +288,12 @@ const ts = (s: number, sep: string) => {
 };
 
 export function toSrt(pages: CaptionPage[]): string {
-  return pages.map((pg, i) => `${i + 1}\n${ts(pg.start, ",")} --> ${ts(pg.end, ",")}\n${pg.words.map((w) => w.w).join(" ")}\n`).join("\n");
+  return pages
+    .map(
+      (pg, i) =>
+        `${i + 1}\n${ts(pg.start, ",")} --> ${ts(pg.end, ",")}\n${pg.words.map((w) => w.w).join(" ")}\n`,
+    )
+    .join("\n");
 }
 export function toVtt(pages: CaptionPage[]): string {
   return `WEBVTT\n\n${pages.map((pg) => `${ts(pg.start, ".")} --> ${ts(pg.end, ".")}\n${pg.words.map((w) => w.w).join(" ")}\n`).join("\n")}`;
@@ -239,11 +307,23 @@ export const Captions = defineComponent("Captions", {
   controls: {
     voice: ref({ required: true, description: 'The Voiceover, e.g. "#vo".' }),
     captionStyle: enumOf(["karaoke", "pop", "line", "word"], { default: "karaoke" }),
-    maxChars: num({ min: 6, max: 80, default: 22, step: 1, description: "Max characters per line." }),
+    maxChars: num({
+      min: 6,
+      max: 80,
+      default: 22,
+      step: 1,
+      description: "Max characters per line.",
+    }),
     maxWords: num({ min: 1, max: 12, default: 4, step: 1 }),
     activeColor: color({ default: "#ffe14d" }),
     at: atControl(),
-    hold: num({ min: 0, max: 2, default: 0.15, unit: "s", description: "How long a page lingers after its last word." }),
+    hold: num({
+      min: 0,
+      max: 2,
+      default: 0.15,
+      unit: "s",
+      description: "How long a page lingers after its last word.",
+    }),
     ...typographyControls(),
     ...textStyleControls(),
     size: num({ animatable: true, min: 1, max: 2000, default: 64, step: 1, unit: "px" }),
@@ -254,15 +334,23 @@ export const Captions = defineComponent("Captions", {
   render: (p, rc) => {
     const id = String(p.voice).replace(/^#/, "");
     const words = rc.words(id);
-    if (!words?.length) return { html: "", issues: [`Voiceover ${p.voice} has no word timings yet; run transcribe`] };
-    const pages = paginateWords(words, { maxChars: p.maxChars, maxWords: p.maxWords, mode: p.captionStyle === "word" ? "word" : "line" });
+    if (!words?.length)
+      return { html: "", issues: [`Voiceover ${p.voice} has no word timings yet; run transcribe`] };
+    const pages = paginateWords(words, {
+      maxChars: p.maxChars,
+      maxWords: p.maxWords,
+      mode: p.captionStyle === "word" ? "word" : "line",
+    });
     const channels: Channel[] = [];
     let html = "";
     const tAbs = (s: number) => s; // word times are absolute composition seconds
     pages.forEach((pg, i) => {
       const pid = rc.sub(`p${i}`);
       const a = tAbs(pg.start);
-      const b = Math.min(tAbs(pg.end) + p.hold, pages[i + 1] ? tAbs(pages[i + 1]!.start) : Infinity);
+      const b = Math.min(
+        tAbs(pg.end) + p.hold,
+        pages[i + 1] ? tAbs(pages[i + 1]!.start) : Infinity,
+      );
       const body = pg.words
         .map((w, k) => {
           const wid = rc.sub(`p${i}w${k}`);
@@ -270,7 +358,15 @@ export const Captions = defineComponent("Captions", {
         })
         .join("");
       html += `<div id="${pid}" style="position:absolute;left:0;top:0;width:100%;text-align:${p.align};opacity:0">${body}</div>`;
-      channels.push({ target: `#${pid}`, prop: "opacity", signal: exprSignal((t) => (t >= a && t < b ? 1 : 0), "number", [Math.max(0, a - 0.05), b + 0.05]), span: [Math.max(0, a - 0.05), b + 0.05] });
+      channels.push({
+        target: `#${pid}`,
+        prop: "opacity",
+        signal: exprSignal((t) => (t >= a && t < b ? 1 : 0), "number", [
+          Math.max(0, a - 0.05),
+          b + 0.05,
+        ]),
+        span: [Math.max(0, a - 0.05), b + 0.05],
+      });
       if (p.captionStyle === "karaoke" || p.captionStyle === "pop") {
         pg.words.forEach((w, k) => {
           const wid = rc.sub(`p${i}w${k}`);
@@ -278,23 +374,50 @@ export const Captions = defineComponent("Captions", {
           const we = tAbs(w.end);
           const span: [number, number] = [a, b];
           const act = (t: number) => t >= ws && t < we;
-          channels.push({ target: `#${wid}`, prop: "color", signal: exprSignal((t) => (act(t) ? p.activeColor : "inherit"), "discrete", span), span, format: (v) => String(v) });
+          channels.push({
+            target: `#${wid}`,
+            prop: "color",
+            signal: exprSignal((t) => (act(t) ? p.activeColor : "inherit"), "discrete", span),
+            span,
+            format: (v) => String(v),
+          });
           if (p.captionStyle === "pop") {
             const q = (t: number) => Math.min(1, Math.max(0, (t - ws) / 0.2));
             const pe = parseEase("back.out(2.2)");
-            channels.push({ target: `#${wid}`, prop: "scale", signal: exprSignal((t) => (act(t) ? round(1 + 0.2 * pe(q(t)), 4) : 1), "number", span), span });
+            channels.push({
+              target: `#${wid}`,
+              prop: "scale",
+              signal: exprSignal(
+                (t) => (act(t) ? round(1 + 0.2 * pe(q(t)), 4) : 1),
+                "number",
+                span,
+              ),
+              span,
+            });
           }
         });
       }
     });
     // measure the tallest page with the text renderer so the box has a height
-    const sample = pages.reduce((m, pg) => (pg.words.map((w) => w.w).join(" ").length > m.length ? pg.words.map((w) => w.w).join(" ") : m), "");
+    const sample = pages.reduce(
+      (m, pg) =>
+        pg.words.map((w) => w.w).join(" ").length > m.length
+          ? pg.words.map((w) => w.w).join(" ")
+          : m,
+      "",
+    );
     const t = renderText({ ...p, text: sample, at: p.at }, rc);
     const boxCss = t.box ?? {};
-    const style = (t.html.match(/<div id="[^"]+-text"[^>]*style="([^"]*)"/)?.[1] ?? "").replace(/position:relative;?/, "");
+    const style = (t.html.match(/<div id="[^"]+-text"[^>]*style="([^"]*)"/)?.[1] ?? "").replace(
+      /position:relative;?/,
+      "",
+    );
     return {
       html: `<div id="${rc.sub("text")}" style="${style};position:relative;min-height:${round(rc.at<number>("size", rc.node.start) * rc.at<number>("leading", rc.node.start))}px">${html}</div>`,
-      box: { ...boxCss, width: `${round(rc.px((rc.node.props.maxWidth as number | string) ?? "92%", "x"))}px` },
+      box: {
+        ...boxCss,
+        width: `${round(rc.px((rc.node.props.maxWidth as number | string) ?? "92%", "x"))}px`,
+      },
       statics: t.statics,
       channels: [...(t.channels ?? []), ...channels],
       issues: t.issues,
@@ -302,5 +425,13 @@ export const Captions = defineComponent("Captions", {
   },
 });
 
-export const mediaComponents: ComponentDef[] = [Image.def, Video.def, Clip.def, Audio.def, Sound.def, Voiceover.def, Captions.def];
+export const mediaComponents: ComponentDef[] = [
+  Image.def,
+  Video.def,
+  Clip.def,
+  Audio.def,
+  Sound.def,
+  Voiceover.def,
+  Captions.def,
+];
 export { css };

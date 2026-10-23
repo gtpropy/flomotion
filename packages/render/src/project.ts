@@ -1,4 +1,12 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
@@ -38,10 +46,13 @@ export function findEntry(dir: string): string {
     const e = (JSON.parse(readFileSync(cfg, "utf8")) as { entry?: string }).entry;
     if (e) return join(root, e);
   }
-  for (const n of ["project.tsx", "promo.tsx", "index.tsx"]) if (existsSync(join(root, n))) return join(root, n);
+  for (const n of ["project.tsx", "promo.tsx", "index.tsx"])
+    if (existsSync(join(root, n))) return join(root, n);
   const tsx = readdirSync(root).filter((f) => f.endsWith(".tsx"));
   if (tsx.length === 1) return join(root, tsx[0]!);
-  throw new CodeCutError("asset_missing", `No project file found in ${dir}`, { fix: "Create project.tsx (export default <Composition …/>) or set \"entry\" in codecut.json." });
+  throw new CodeCutError("asset_missing", `No project file found in ${dir}`, {
+    fix: 'Create project.tsx (export default <Composition …/>) or set "entry" in codecut.json.',
+  });
 }
 
 let importCounter = 0;
@@ -49,11 +60,17 @@ let importCounter = 0;
 export async function loadProject(dir: string): Promise<LoadedProject> {
   const root = resolve(dir);
   const entry = findEntry(root);
-  const mod = (await import(`${pathToFileURL(entry).href}?v=${Date.now()}-${importCounter++}`)) as { default?: unknown };
+  const mod = (await import(`${pathToFileURL(entry).href}?v=${Date.now()}-${importCounter++}`)) as {
+    default?: unknown;
+  };
   let node = mod.default as unknown;
   if (typeof node === "function") node = (node as () => unknown)();
   if (!isNode(node)) {
-    throw new CodeCutError("schema_violation", `${basename(entry)} must export default a <Composition …/> element`, { fix: "export default (<Composition …>…</Composition>);" });
+    throw new CodeCutError(
+      "schema_violation",
+      `${basename(entry)} must export default a <Composition …/> element`,
+      { fix: "export default (<Composition …>…</Composition>);" },
+    );
   }
   return { root, entry, node };
 }
@@ -75,7 +92,19 @@ export function collectFontDecls(node: CCNode): { decls: FontDecl[]; allowSystem
       for (const f of c.children) {
         if (isNode(f) && f.name === "Font") {
           const p = f.props as Record<string, any>;
-          add({ id: p.id, family: p.family, source: p.source ?? "google", weights: p.weights, styles: p.styles, variable: p.variable, axes: p.axes, subsets: p.subsets, unicodeRange: p.unicodeRange, license: p.license, fallback: p.fallback });
+          add({
+            id: p.id,
+            family: p.family,
+            source: p.source ?? "google",
+            weights: p.weights,
+            styles: p.styles,
+            variable: p.variable,
+            axes: p.axes,
+            subsets: p.subsets,
+            unicodeRange: p.unicodeRange,
+            license: p.license,
+            fallback: p.fallback,
+          });
         }
       }
     }
@@ -87,16 +116,28 @@ export function collectFontDecls(node: CCNode): { decls: FontDecl[]; allowSystem
 }
 
 /** Voiceover word timings by id, converted to absolute composition seconds. */
-export function loadVoiceWords(root: string, node: CCNode): Map<string, Array<{ w: string; start: number; end: number }>> {
+export function loadVoiceWords(
+  root: string,
+  node: CCNode,
+): Map<string, Array<{ w: string; start: number; end: number }>> {
   const out = new Map<string, Array<{ w: string; start: number; end: number }>>();
   walk(node, (n) => {
     if (n.name !== "Voiceover") return;
     const p = n.props as Record<string, any>;
-    const file = p.words ? resolve(root, p.words) : resolve(root, String(p.src).replace(/\.[a-z0-9]+$/i, "") + ".words.json");
+    const file = p.words
+      ? resolve(root, p.words)
+      : resolve(root, String(p.src).replace(/\.[a-z0-9]+$/i, "") + ".words.json");
     if (!existsSync(file)) return;
     const at = typeof p.at === "number" ? p.at : p.at ? parseFloat(String(p.at)) : 0;
-    const words = JSON.parse(readFileSync(file, "utf8")) as Array<{ w: string; start: number; end: number }>;
-    out.set(String(p.id), words.map((w) => ({ ...w, start: w.start + at, end: w.end + at })));
+    const words = JSON.parse(readFileSync(file, "utf8")) as Array<{
+      w: string;
+      start: number;
+      end: number;
+    }>;
+    out.set(
+      String(p.id),
+      words.map((w) => ({ ...w, start: w.start + at, end: w.end + at })),
+    );
   });
   return out;
 }
@@ -129,7 +170,11 @@ export function makeAssetResolver(root: string, ledger: Ledger) {
       return undefined;
     }
     const rel = relative(root, abs);
-    const ref: AssetRef = { src, abs, build: `assets/${rel.startsWith("..") ? basename(abs) : rel.replace(/^\.codecut\/assets\//, "")}` };
+    const ref: AssetRef = {
+      src,
+      abs,
+      build: `assets/${rel.startsWith("..") ? basename(abs) : rel.replace(/^\.codecut\/assets\//, "")}`,
+    };
     refs.set(src, ref);
     return ref;
   };
@@ -173,14 +218,24 @@ export async function buildProject(dir: string, opts: BuildOptions = {}): Promis
 }
 
 /** Build from an already evaluated element tree (used by tests and the MCP server). */
-export async function buildLoaded(loaded: LoadedProject, opts: BuildOptions = {}): Promise<BuildResult> {
+export async function buildLoaded(
+  loaded: LoadedProject,
+  opts: BuildOptions = {},
+): Promise<BuildResult> {
   const log = opts.log ?? (() => {});
   const { root, node } = loaded;
   const ledger = readLedger(root);
   const { decls } = collectFontDecls(node);
-  const lock = JSON.parse(existsSync(join(root, CODECUT_DIR, "fonts.lock.json")) ? readFileSync(join(root, CODECUT_DIR, "fonts.lock.json"), "utf8") : '{"version":1,"fonts":{}}');
+  const lock = JSON.parse(
+    existsSync(join(root, CODECUT_DIR, "fonts.lock.json"))
+      ? readFileSync(join(root, CODECUT_DIR, "fonts.lock.json"), "utf8")
+      : '{"version":1,"fonts":{}}',
+  );
   const fontsRoot: ResolvedFont[] = decls.map((d) => resolveFromLock(root, d, lock));
-  const fontsBuild: ResolvedFont[] = fontsRoot.map((f) => ({ ...f, files: f.files.map((x) => ({ ...x, path: `fonts/${basename(x.path)}` })) }));
+  const fontsBuild: ResolvedFont[] = fontsRoot.map((f) => ({
+    ...f,
+    files: f.files.map((x) => ({ ...x, path: `fonts/${basename(x.path)}` })),
+  }));
   const byId = new Map(fontsBuild.map((f) => [f.id, f]));
   const assets = makeAssetResolver(root, ledger);
   const words = loadVoiceWords(root, node);
@@ -193,18 +248,37 @@ export async function buildLoaded(loaded: LoadedProject, opts: BuildOptions = {}
     projectRoot: root,
     fonts: fontsRoot,
     resolve: {
-      fontResolver: (d) => byId.get(d.id) ?? { id: d.id, family: d.family, files: [], fallback: d.fallback ?? [], source: "system", variable: false },
+      fontResolver: (d) =>
+        byId.get(d.id) ?? {
+          id: d.id,
+          family: d.family,
+          files: [],
+          fallback: d.fallback ?? [],
+          source: "system",
+          variable: false,
+        },
       mediaDuration: assets.mediaDuration,
       words: (id) => words.get(id),
     },
     compile: { assetPath: assets.assetPath, words: (id) => words.get(id) },
   });
   if (assets.missing.length) {
-    throw new CodeCutError("asset_missing", `Missing assets: ${[...new Set(assets.missing)].join(", ")}`, { fix: "Add the files to the project, or fetch sounds with `sound_get`." });
+    throw new CodeCutError(
+      "asset_missing",
+      `Missing assets: ${[...new Set(assets.missing)].join(", ")}`,
+      { fix: "Add the files to the project, or fetch sounds with `sound_get`." },
+    );
   }
   const errors = compiled.issues.filter((i) => i.severity === "error");
   if (errors.length) {
-    throw new CodeCutError("schema_violation", `${errors.length} error(s): ${errors.slice(0, 3).map((e) => `${e.id ?? ""} ${e.message}`).join("; ")}`, { details: errors, fix: errors[0]?.fix });
+    throw new CodeCutError(
+      "schema_violation",
+      `${errors.length} error(s): ${errors
+        .slice(0, 3)
+        .map((e) => `${e.id ?? ""} ${e.message}`)
+        .join("; ")}`,
+      { details: errors, fix: errors[0]?.fix },
+    );
   }
 
   // font gate before the first frame
@@ -217,7 +291,9 @@ export async function buildLoaded(loaded: LoadedProject, opts: BuildOptions = {}
 
   // copy fonts and assets
   const extra: Array<{ from: string; to: string }> = [];
-  for (const f of fontsRoot) for (const x of f.files) extra.push({ from: join(root, x.path), to: `fonts/${basename(x.path)}` });
+  for (const f of fontsRoot)
+    for (const x of f.files)
+      extra.push({ from: join(root, x.path), to: `fonts/${basename(x.path)}` });
   for (const a of assets.refs.values()) extra.push({ from: a.abs, to: a.build });
 
   let mix: MixResult | undefined;
@@ -225,13 +301,44 @@ export async function buildLoaded(loaded: LoadedProject, opts: BuildOptions = {}
   const audioEvents = compiled.audio.filter((e) => !!assets.abs(e.src));
   if (opts.mix !== false && audioEvents.length) {
     log("mixing audio");
-    mix = await mixAudio({ root, events: audioEvents, resolveSrc: (s) => assets.abs(s)!, ledger, duration: compiled.ir.end, outFile: join(outDir, "assets", "mix.wav") });
+    mix = await mixAudio({
+      root,
+      events: audioEvents,
+      resolveSrc: (s) => assets.abs(s)!,
+      ledger,
+      duration: compiled.ir.end,
+      outFile: join(outDir, "assets", "mix.wav"),
+    });
     // re-embed with the mix as one <audio>
-    html = html.replace("</div>\n<script>\nwindow.__ccId", `<audio id="cc-mix" src="assets/mix.wav" data-start="0" data-duration="${compiled.ir.end}" data-volume="1"></audio>\n</div>\n<script>\nwindow.__ccId`);
+    html = html.replace(
+      "</div>\n<script>\nwindow.__ccId",
+      `<audio id="cc-mix" src="assets/mix.wav" data-start="0" data-duration="${compiled.ir.end}" data-volume="1"></audio>\n</div>\n<script>\nwindow.__ccId`,
+    );
   }
   materialize(outDir, { html }, { id: node.props.id as string, extraFiles: extra });
   writeFileSync(join(outDir, "index.html"), html);
-  return { dir: outDir, html, compile: compiled, issues: compiled.issues, audio: compiled.audio, sounds: compiled.sounds, fonts: fontsRoot, fontsUsed: compiled.fontsUsed, mix, loaded };
+  return {
+    dir: outDir,
+    html,
+    compile: compiled,
+    issues: compiled.issues,
+    audio: compiled.audio,
+    sounds: compiled.sounds,
+    fonts: fontsRoot,
+    fontsUsed: compiled.fontsUsed,
+    mix,
+    loaded,
+  };
 }
 
-export { collectFontDecls as fontDecls, missingGlyphs, readJson, ledgerPath, childEnv, copyFileSync, mkdirSync, dirname, extname };
+export {
+  collectFontDecls as fontDecls,
+  missingGlyphs,
+  readJson,
+  ledgerPath,
+  childEnv,
+  copyFileSync,
+  mkdirSync,
+  dirname,
+  extname,
+};

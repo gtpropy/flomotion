@@ -15,7 +15,10 @@ export interface ToolInfo {
 export function requireFfmpeg(bin: "ffmpeg" | "ffprobe" = "ffmpeg"): ToolInfo {
   try {
     const out = execFileSync(bin, ["-version"], { encoding: "utf8" });
-    const version = out.split("\n")[0]!.replace(/^.*version\s+/, "").split(" ")[0]!;
+    const version = out
+      .split("\n")[0]!
+      .replace(/^.*version\s+/, "")
+      .split(" ")[0]!;
     const path = execFileSync("which", [bin], { encoding: "utf8" }).trim();
     return { path, version };
   } catch {
@@ -37,9 +40,13 @@ export function findChrome(): string {
     "/usr/bin/chromium-browser",
   ];
   for (const c of candidates) if (existsSync(c)) return c;
-  throw new CodeCutError("missing_dependency", "No Chrome/Chromium found for text measurement and font checks", {
-    fix: "Install Google Chrome, or set CHROME_PATH to a Chrome/Chromium binary. `npx hyperframes browser` can download one.",
-  });
+  throw new CodeCutError(
+    "missing_dependency",
+    "No Chrome/Chromium found for text measurement and font checks",
+    {
+      fix: "Install Google Chrome, or set CHROME_PATH to a Chrome/Chromium binary. `npx hyperframes browser` can download one.",
+    },
+  );
 }
 
 /** Absolute path of the installed hyperframes CLI entry. */

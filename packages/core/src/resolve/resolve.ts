@@ -6,12 +6,18 @@ import { assignMissingIds, generateId } from "../ast/ids.js";
 import { isNode, type CCNode } from "../ast/node.js";
 import { CodeCutError } from "../errors.js";
 import { getLook, type FontDecl } from "../theme.js";
-import { registry as defaultRegistry, validateProps, type ComponentDef, type Registry } from "../schema/define.js";
+import { registry as defaultRegistry, validateProps, type Registry } from "../schema/define.js";
 import type { AnyControl } from "../schema/controls.js";
 import { parseAngle } from "../values/angle.js";
 import { parseColor, toCss } from "../values/color.js";
 import { resolveLength, type Length } from "../values/length.js";
-import { parseTimeLiteral, parseTimeSpec, snapToFrame, type Time, type TimeSpec } from "../values/time.js";
+import {
+  parseTimeLiteral,
+  parseTimeSpec,
+  snapToFrame,
+  type Time,
+  type TimeSpec,
+} from "../values/time.js";
 import type {
   TimelineMarker,
   RNode,
@@ -51,9 +57,13 @@ const err = (env: Env, i: ResolveIssue) => env.issues.push(i);
 export function resolveProject(source: CCNode, opts: ResolveOptions = {}): ResolvedProject {
   const reg = opts.registry ?? defaultRegistry;
   if (source.name !== "Composition") {
-    throw new CodeCutError("schema_violation", `Project root must be <Composition>, got <${source.name}>`, {
-      fix: "Export a <Composition …> as the default export.",
-    });
+    throw new CodeCutError(
+      "schema_violation",
+      `Project root must be <Composition>, got <${source.name}>`,
+      {
+        fix: "Export a <Composition …> as the default export.",
+      },
+    );
   }
   const root = source;
   const generated = opts.assignIds === false ? [] : assignMissingIds(root);
@@ -110,7 +120,13 @@ export function resolveProject(source: CCNode, opts: ResolveOptions = {}): Resol
 
 // ---------- pass 1 ----------
 
-function build(env: Env, node: CCNode, parent: RNode | null, depth: number, generatedIds: Set<string>): RNode {
+function build(
+  env: Env,
+  node: CCNode,
+  parent: RNode | null,
+  depth: number,
+  generatedIds: Set<string>,
+): RNode {
   const def = env.reg.get(node.name);
   if (!def) {
     throw new CodeCutError("unknown_component", `Unknown component <${node.name}>`, {
@@ -119,7 +135,13 @@ function build(env: Env, node: CCNode, parent: RNode | null, depth: number, gene
   }
   const id = String(node.props.id);
   if (env.byId.has(id)) {
-    err(env, { severity: "error", rule: "duplicate-id", message: `Duplicate id "${id}"`, id, fix: "Ids must be unique." });
+    err(env, {
+      severity: "error",
+      rule: "duplicate-id",
+      message: `Duplicate id "${id}"`,
+      id,
+      fix: "Ids must be unique.",
+    });
   }
 
   // merge <Keyframes prop=… values=… /> children into the parent's raw props
@@ -128,11 +150,18 @@ function build(env: Env, node: CCNode, parent: RNode | null, depth: number, gene
   for (const k of kfNodes) {
     const prop = String(k.props.prop);
     if (raw[prop] !== undefined) {
-      err(env, { severity: "error", rule: "keyframes-conflict", message: `<Keyframes prop="${prop}"> conflicts with an existing ${prop} prop on #${id}`, id, prop });
+      err(env, {
+        severity: "error",
+        rule: "keyframes-conflict",
+        message: `<Keyframes prop="${prop}"> conflicts with an existing ${prop} prop on #${id}`,
+        id,
+        prop,
+      });
       continue;
     }
     const track: Record<string, unknown> = { keys: k.props.values ?? [] };
-    for (const f of ["mode", "spatial", "orient", "separate", "loop"] as const) if (k.props[f] !== undefined) track[f] = k.props[f];
+    for (const f of ["mode", "spatial", "orient", "separate", "loop"] as const)
+      if (k.props[f] !== undefined) track[f] = k.props[f];
     if (k.props.keys) track.keysRef = k.props.keys;
     raw[prop] = track;
   }
@@ -183,7 +212,14 @@ function resolveComp(env: Env, rootR: RNode): ResolvedComp {
   const p = rootR.raw;
   const issuesBefore = env.issues.length;
   for (const i of validateProps(rootR.def, stripFns(p))) {
-    err(env, { severity: "error", rule: "schema", message: i.message, id: rootR.id, prop: i.prop, fix: i.fix });
+    err(env, {
+      severity: "error",
+      rule: "schema",
+      message: i.message,
+      id: rootR.id,
+      prop: i.prop,
+      fix: i.fix,
+    });
   }
   void issuesBefore;
   const size = (p.size as [number, number] | undefined) ?? [1920, 1080];
@@ -191,21 +227,34 @@ function resolveComp(env: Env, rootR: RNode): ResolvedComp {
   env.fps = fps;
   const dur = p.duration === undefined ? 0 : parseTimeLiteral(p.duration as Time, fps);
   if (!(dur > 0)) {
-    err(env, { severity: "error", rule: "schema", message: "Composition.duration is required and must be > 0", id: rootR.id, prop: "duration" });
+    err(env, {
+      severity: "error",
+      rule: "schema",
+      message: "Composition.duration is required and must be > 0",
+      id: rootR.id,
+      prop: "duration",
+    });
   }
   const theme = resolveTheme(env, rootR, p.theme as string | undefined);
   const fontDecls = collectFonts(env, rootR, theme);
   const fonts = fontDecls.map(
-    (d) => env.opts.fontResolver?.(d) ?? {
-      id: d.id,
-      family: d.family,
-      files: [],
-      fallback: d.fallback ?? [],
-      source: (d.source === "google" ? "google" : d.source === "system" ? "system" : /^https?:/.test(d.source) ? "url" : "local") as ResolvedFont["source"],
-      variable: !!d.variable,
-      axes: d.axes,
-      license: d.license,
-    },
+    (d) =>
+      env.opts.fontResolver?.(d) ?? {
+        id: d.id,
+        family: d.family,
+        files: [],
+        fallback: d.fallback ?? [],
+        source: (d.source === "google"
+          ? "google"
+          : d.source === "system"
+            ? "system"
+            : /^https?:/.test(d.source)
+              ? "url"
+              : "local") as ResolvedFont["source"],
+        variable: !!d.variable,
+        axes: d.axes,
+        license: d.license,
+      },
   );
   return {
     id: rootR.id,
@@ -213,7 +262,10 @@ function resolveComp(env: Env, rootR: RNode): ResolvedComp {
     height: size[1],
     fps,
     duration: dur,
-    background: tokenColor(theme, (p.background as string | undefined) ?? theme.tokens["background"] as string ?? "#000000"),
+    background: tokenColor(
+      theme,
+      (p.background as string | undefined) ?? (theme.tokens["background"] as string) ?? "#000000",
+    ),
     theme,
     fonts,
     bpm: p.bpm as number | undefined,
@@ -225,7 +277,9 @@ const stripFns = (p: Record<string, unknown>) => p;
 function resolveTheme(env: Env, rootR: RNode, ref: string | undefined): ResolvedTheme {
   const theme: ResolvedTheme = { tokens: {}, palette: {}, type: {}, easing: {} };
   // inline <Theme>/<Look> elements declared under the composition
-  const inline = rootR.source.children.filter((c): c is CCNode => isNode(c) && (c.name === "Theme" || c.name === "Look"));
+  const inline = rootR.source.children.filter(
+    (c): c is CCNode => isNode(c) && (c.name === "Theme" || c.name === "Look"),
+  );
   const lookId = ref?.match(/^\$(?:look|theme)\.([\w-]+)$/)?.[1];
   const look = lookId ? getLook(lookId) : undefined;
   if (ref && !look && !inline.some((n) => n.props.id === lookId)) {
@@ -249,12 +303,21 @@ function resolveTheme(env: Env, rootR: RNode, ref: string | undefined): Resolved
     if (look.background) theme.tokens["background"] = look.background;
   }
   for (const n of inline.filter((n) => !lookId || n.props.id === lookId)) {
-    Object.assign(theme.palette, (n.props.palette as object) ?? {}, (n.props.brand as object) ?? {});
+    Object.assign(
+      theme.palette,
+      (n.props.palette as object) ?? {},
+      (n.props.brand as object) ?? {},
+    );
     Object.assign(theme.type, (n.props.type as object) ?? {});
     Object.assign(theme.easing, (n.props.easing as object) ?? {});
-    if (n.props.transition) theme.transition = n.props.transition as { type: string; duration: number };
+    if (n.props.transition)
+      theme.transition = n.props.transition as { type: string; duration: number };
     if (typeof n.props.grain === "number") theme.grain = n.props.grain;
-    if (n.props.sound) theme.sound = { ...(theme.sound ?? {}), ...(n.props.sound as object) } as Record<string, string>;
+    if (n.props.sound)
+      theme.sound = { ...(theme.sound ?? {}), ...(n.props.sound as object) } as Record<
+        string,
+        string
+      >;
   }
   for (const [k, v] of Object.entries(theme.palette)) {
     theme.tokens[`brand.${k}`] = v;
@@ -275,7 +338,7 @@ function collectFonts(env: Env, rootR: RNode, theme: ResolvedTheme): FontDecl[] 
       decls.push(d);
     }
   };
-  const lookFonts = theme.id ? getLook(theme.id)?.fonts ?? [] : [];
+  const lookFonts = theme.id ? (getLook(theme.id)?.fonts ?? []) : [];
   const fontsNode = rootR.source.children.find((c): c is CCNode => isNode(c) && c.name === "Fonts");
   if (fontsNode) {
     for (const f of fontsNode.children) {
@@ -311,9 +374,18 @@ function collectMarkers(env: Env, n: RNode) {
   if (n.name === "Marker") {
     const at = n.raw.at;
     try {
-      const base = n.parent ? n.parent.name === "Composition" || n.parent.name === "Track" ? 0 : parentStartGuess(n.parent) : 0;
+      const base = n.parent
+        ? n.parent.name === "Composition" || n.parent.name === "Track"
+          ? 0
+          : parentStartGuess(n.parent)
+        : 0;
       const spec = parseTimeSpec(at as Time, env.fps);
-      const abs = spec.kind === "abs" ? spec.seconds : spec.kind === "literal" ? spec.seconds + base : undefined;
+      const abs =
+        spec.kind === "abs"
+          ? spec.seconds
+          : spec.kind === "literal"
+            ? spec.seconds + base
+            : undefined;
       if (abs !== undefined) {
         env.markers.push({
           at: snapToFrame(abs, env.fps),
@@ -323,7 +395,13 @@ function collectMarkers(env: Env, n: RNode) {
         });
       }
     } catch (e) {
-      err(env, { severity: "error", rule: "invalid-time", message: (e as Error).message, id: n.id, prop: "at" });
+      err(env, {
+        severity: "error",
+        rule: "invalid-time",
+        message: (e as Error).message,
+        id: n.id,
+        prop: "at",
+      });
     }
   }
   n.children.forEach((c) => collectMarkers(env, c));
@@ -377,7 +455,14 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
       try {
         return parseTimeSpec(v as Time, fps);
       } catch (e) {
-        err(env, { severity: "error", rule: "invalid-time", message: (e as Error).message, id: n.id, prop: key, fix: 'Use 1.5, "1.5s", "36f" or "00:00:01:12".' });
+        err(env, {
+          severity: "error",
+          rule: "invalid-time",
+          message: (e as Error).message,
+          id: n.id,
+          prop: key,
+          fix: 'Use 1.5, "1.5s", "36f" or "00:00:01:12".',
+        });
         return undefined;
       }
     };
@@ -390,7 +475,13 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
         case "marker": {
           const m = env.markers.find((x) => x.id === spec.name || x.label === spec.name);
           if (!m) {
-            err(env, { severity: "error", rule: "unresolved-ref", message: `Unknown marker "${spec.name}"`, id: n.id, fix: "Add <Marker at=… label=…/> with that label or id." });
+            err(env, {
+              severity: "error",
+              rule: "unresolved-ref",
+              message: `Unknown marker "${spec.name}"`,
+              id: n.id,
+              fix: "Add <Marker at=… label=…/> with that label or id.",
+            });
             return base;
           }
           return m.at + spec.offset;
@@ -398,7 +489,13 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
         case "ref": {
           const t = env.byId.get(spec.id);
           if (!t) {
-            err(env, { severity: "error", rule: "unresolved-ref", message: `Unknown element #${spec.id} in time reference`, id: n.id, fix: "Check the id." });
+            err(env, {
+              severity: "error",
+              rule: "unresolved-ref",
+              message: `Unknown element #${spec.id} in time reference`,
+              id: n.id,
+              fix: "Check the id.",
+            });
             return base;
           }
           timeNode(env, t, visiting);
@@ -418,17 +515,32 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
     else if (parent.name === "Stagger") {
       const sibs = parent.children;
       const i = sibs.indexOf(n);
-      const each = parent.raw.each === undefined ? 0.08 : parseTimeLiteral(parent.raw.each as Time, fps);
+      const each =
+        parent.raw.each === undefined ? 0.08 : parseTimeLiteral(parent.raw.each as Time, fps);
       const order = String(parent.raw.from ?? "start");
-      const k = order === "end" ? sibs.length - 1 - i : order === "center" ? Math.abs(i - (sibs.length - 1) / 2) : order === "edges" ? (sibs.length - 1) / 2 - Math.abs(i - (sibs.length - 1) / 2) : i;
+      const k =
+        order === "end"
+          ? sibs.length - 1 - i
+          : order === "center"
+            ? Math.abs(i - (sibs.length - 1) / 2)
+            : order === "edges"
+              ? (sibs.length - 1) / 2 - Math.abs(i - (sibs.length - 1) / 2)
+              : i;
       start = parent.start + k * each;
     } else if (parent.name === "Sequence") {
       const prev = parent.children[parent.children.indexOf(n) - 1];
-      const gap = typeof parent.raw.gap === "undefined" ? 0 : parseTimeLiteral(parent.raw.gap as Time, fps);
+      const gap =
+        typeof parent.raw.gap === "undefined" ? 0 : parseTimeLiteral(parent.raw.gap as Time, fps);
       if (prev) timeNode(env, prev, visiting);
       start = prev ? prev.end + gap : parent.start;
     } else start = base;
-    if (n.name === "Marker" || n.name === "Sound" || n.name === "Voiceover" || n.name === "Font" || n.name === "Fonts") {
+    if (
+      n.name === "Marker" ||
+      n.name === "Sound" ||
+      n.name === "Voiceover" ||
+      n.name === "Font" ||
+      n.name === "Fonts"
+    ) {
       const at = readSpec("at");
       if (at && n.name !== "Font" && n.name !== "Fonts") start = toAbs(at);
     }
@@ -436,7 +548,11 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
     let end: number;
     if (endSpec) end = toAbs(endSpec);
     else if (durSpec) {
-      end = start + (durSpec.kind === "literal" || durSpec.kind === "abs" ? durSpec.seconds : toAbs(durSpec) - start);
+      end =
+        start +
+        (durSpec.kind === "literal" || durSpec.kind === "abs"
+          ? durSpec.seconds
+          : toAbs(durSpec) - start);
     } else {
       const media = typeof p.src === "string" ? env.opts.mediaDuration?.(String(p.src)) : undefined;
       const trim = mediaTrim(p);
@@ -452,7 +568,12 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
     n.start = start;
     n.end = Math.max(end, start);
     n.duration = snapToFrame(n.end - start, fps);
-    if (n.end > parent.end + 1e-6 && n.def.kind !== "effect" && parent.name !== "Composition" && n.def.traits.includes("visual")) {
+    if (
+      n.end > parent.end + 1e-6 &&
+      n.def.kind !== "effect" &&
+      parent.name !== "Composition" &&
+      n.def.traits.includes("visual")
+    ) {
       err(env, {
         severity: "warning",
         rule: "child-outside-parent",
@@ -469,9 +590,11 @@ function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
   timed.add(n);
 }
 
-const mediaTimed = (name: string) => ["Video", "Audio", "Clip", "Voiceover", "Sound"].includes(name);
+const mediaTimed = (name: string) =>
+  ["Video", "Audio", "Clip", "Voiceover", "Sound"].includes(name);
 function mediaTrim(p: Record<string, unknown>): { in: number; out?: number } {
-  const num = (v: unknown) => (typeof v === "number" ? v : typeof v === "string" ? parseTimeLiteral(v, 30) : undefined);
+  const num = (v: unknown) =>
+    typeof v === "number" ? v : typeof v === "string" ? parseTimeLiteral(v, 30) : undefined;
   return { in: num(p.in) ?? 0, out: num(p.out) };
 }
 
@@ -494,7 +617,14 @@ function resolveProps(env: Env, n: RNode): void {
   for (const i of validateProps(def, raw)) {
     env.issues.push({
       severity: "error",
-      rule: i.code === "unknown_prop" ? "unknown-prop" : i.code === "not_animatable" ? "not-animatable" : i.code === "required" ? "required-prop" : "invalid-value",
+      rule:
+        i.code === "unknown_prop"
+          ? "unknown-prop"
+          : i.code === "not_animatable"
+            ? "not-animatable"
+            : i.code === "required"
+              ? "required-prop"
+              : "invalid-value",
       message: i.message,
       id: n.id,
       prop: i.prop,
@@ -508,7 +638,12 @@ function resolveProps(env: Env, n: RNode): void {
     word: (voice, i) => {
       const words = env.opts.words?.(voice);
       const w = words?.[i];
-      if (!w) throw new CodeCutError("unresolved_ref", `ctx.word(${JSON.stringify(voice)}, ${i}) has no timing`, { fix: "Run transcribe for this voice first." });
+      if (!w)
+        throw new CodeCutError(
+          "unresolved_ref",
+          `ctx.word(${JSON.stringify(voice)}, ${i}) has no timing`,
+          { fix: "Run transcribe for this voice first." },
+        );
       return w;
     },
   };
@@ -517,7 +652,13 @@ function resolveProps(env: Env, n: RNode): void {
     if (!s.startsWith("$")) return s;
     const v = comp.theme.tokens[s.slice(1)];
     if (typeof v === "string") return v;
-    env.issues.push({ severity: "error", rule: "unresolved-token", message: `Unknown token ${s}`, id: n.id, fix: "Define it in the Theme/Look." });
+    env.issues.push({
+      severity: "error",
+      rule: "unresolved-token",
+      message: `Unknown token ${s}`,
+      id: n.id,
+      fix: "Define it in the Theme/Look.",
+    });
     return "#ff00ff";
   };
 
@@ -558,13 +699,26 @@ function resolveProps(env: Env, n: RNode): void {
     if (c.animatable) {
       if (typeof v === "function") {
         const issues = checkPurity(v as (...a: any[]) => unknown);
-        for (const pi of issues) env.issues.push({ severity: "error", rule: "impure-expression", message: `${n.id}.${label}: ${pi.message}`, id: n.id, prop: label });
+        for (const pi of issues)
+          env.issues.push({
+            severity: "error",
+            rule: "impure-expression",
+            message: `${n.id}.${label}: ${pi.message}`,
+            id: n.id,
+            prop: label,
+          });
         let fn = v as (t: number, ctx: any) => unknown;
         if (c.kind === "vec2" || c.kind === "vec3") {
           const inner = fn;
           fn = (t, ctx) => c.normalize(inner(t, ctx));
         }
-        return buildSignal(fn, { vk: c.valueKind, fps: comp.fps, keyBase: n.parentStart, exprBase: n.start, ctx: ctxBase });
+        return buildSignal(fn, {
+          vk: c.valueKind,
+          fps: comp.fps,
+          keyBase: n.parentStart,
+          exprBase: n.start,
+          ctx: ctxBase,
+        });
       }
       if ((c.kind === "vec2" || c.kind === "vec3") && isSeparate(v)) {
         const o = v as Record<string, unknown>;
@@ -572,12 +726,27 @@ function resolveProps(env: Env, n: RNode): void {
         const fallback = c.normalize(c.opts.default ?? 0) as number[];
         return {
           kind: "sep",
-          parts: names.map((nm) => (o[nm] === undefined ? undefined : buildSignal(mapKeys(o[nm], (x) => x), { vk: "number", fps: comp.fps, keyBase: n.parentStart, exprBase: n.start, ctx: ctxBase }))),
+          parts: names.map((nm) =>
+            o[nm] === undefined
+              ? undefined
+              : buildSignal(
+                  mapKeys(o[nm], (x) => x),
+                  {
+                    vk: "number",
+                    fps: comp.fps,
+                    keyBase: n.parentStart,
+                    exprBase: n.start,
+                    ctx: ctxBase,
+                  },
+                ),
+          ),
           fallback,
         } satisfies Signal;
       }
       if (isKeyframes(v)) {
-        const mapped = mapKeys(v, (x) => (c.kind === "length" ? resolveLength(x as Length, basis) : normStatic(c, x)));
+        const mapped = mapKeys(v, (x) =>
+          c.kind === "length" ? resolveLength(x as Length, basis) : normStatic(c, x),
+        );
         return buildSignal(mapped, {
           vk: c.valueKind,
           fps: comp.fps,
@@ -601,14 +770,25 @@ function resolveProps(env: Env, n: RNode): void {
       continue;
     }
     try {
-      out[k] = c.kind === "time" && !(c.animatable) ? resolveGenericTime(env, n, v as Time) : normValue(c, v, k);
+      out[k] =
+        c.kind === "time" && !c.animatable
+          ? resolveGenericTime(env, n, v as Time)
+          : normValue(c, v, k);
     } catch (e) {
-      env.issues.push({ severity: "error", rule: "invalid-value", message: `${def.name}.${k}: ${(e as Error).message}`, id: n.id, prop: k, fix: (e as CodeCutError).fix });
+      env.issues.push({
+        severity: "error",
+        rule: "invalid-value",
+        message: `${def.name}.${k}: ${(e as Error).message}`,
+        id: n.id,
+        prop: k,
+        fix: (e as CodeCutError).fix,
+      });
     }
   }
   // animatable props with defaults still need signals even if undefined → constants
   for (const [k, c] of Object.entries(def.controls)) {
-    if (c.animatable && out[k] === undefined && c.opts.default !== undefined) out[k] = normValue(c, c.opts.default, k);
+    if (c.animatable && out[k] === undefined && c.opts.default !== undefined)
+      out[k] = normValue(c, c.opts.default, k);
   }
   n.props = out;
 }
@@ -630,24 +810,41 @@ function resolveKeyTime(env: Env, n: RNode, t: Time): number {
       return spec.seconds - n.parentStart;
     case "marker": {
       const m = env.markers.find((x) => x.id === spec.name || x.label === spec.name);
-      if (!m) throw new CodeCutError("unresolved_ref", `Unknown marker "${spec.name}"`, { fix: "Add a <Marker label=…/>." });
+      if (!m)
+        throw new CodeCutError("unresolved_ref", `Unknown marker "${spec.name}"`, {
+          fix: "Add a <Marker label=…/>.",
+        });
       return m.at + spec.offset - n.parentStart;
     }
     case "ref": {
       const target = env.byId.get(spec.id);
-      if (!target) throw new CodeCutError("unresolved_ref", `Unknown element #${spec.id}`, { fix: "Check the id." });
-      const v = spec.edge === "start" ? target.start : spec.edge === "end" ? target.end : target.duration;
+      if (!target)
+        throw new CodeCutError("unresolved_ref", `Unknown element #${spec.id}`, {
+          fix: "Check the id.",
+        });
+      const v =
+        spec.edge === "start" ? target.start : spec.edge === "end" ? target.end : target.duration;
       return v + spec.offset - n.parentStart;
     }
   }
 }
 
 const isSeparate = (v: unknown) =>
-  typeof v === "object" && v !== null && !Array.isArray(v) && !("keys" in v) && ("x" in v || "y" in v || "z" in v);
+  typeof v === "object" &&
+  v !== null &&
+  !Array.isArray(v) &&
+  !("keys" in v) &&
+  ("x" in v || "y" in v || "z" in v);
 
 function mapKeys(raw: unknown, fn: (v: unknown) => unknown): unknown {
   if (Array.isArray(raw)) {
-    return raw.map((k) => (Array.isArray(k) ? [k[0], fn(k[1]), ...k.slice(2)] : k && typeof k === "object" && "v" in k ? { ...k, v: fn((k as { v: unknown }).v) } : k));
+    return raw.map((k) =>
+      Array.isArray(k)
+        ? [k[0], fn(k[1]), ...k.slice(2)]
+        : k && typeof k === "object" && "v" in k
+          ? { ...k, v: fn((k as { v: unknown }).v) }
+          : k,
+    );
   }
   if (raw && typeof raw === "object" && Array.isArray((raw as { keys?: unknown }).keys)) {
     return { ...(raw as object), keys: mapKeys((raw as { keys: unknown }).keys, fn) };
@@ -675,7 +872,10 @@ function normFill(v: unknown, tok: (s: string) => string): unknown {
 /** ctx.prop("#id.prop") at absolute time t, for expressions. */
 function readRef(env: Env, ref: string, t: number): unknown {
   const m = ref.match(/^#([\w-]+)\.([\w.]+)$/);
-  if (!m) throw new CodeCutError("unresolved_ref", `Bad ref ${JSON.stringify(ref)}`, { fix: 'Use "#id.prop".' });
+  if (!m)
+    throw new CodeCutError("unresolved_ref", `Bad ref ${JSON.stringify(ref)}`, {
+      fix: 'Use "#id.prop".',
+    });
   const node = env.byId.get(m[1]!);
   if (!node) throw new CodeCutError("unresolved_ref", `Unknown element #${m[1]}`);
   const v = node.props[m[2]!];

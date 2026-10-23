@@ -45,10 +45,13 @@ export function bakeSignal(
   hz: number,
   opts: { unit?: string; format?: (v: any) => string } = {},
 ): BakeOutcome {
-  const fmt = (v: unknown): Sample => (opts.format ? opts.format(v) : typeof v === "number" ? round(v) : String(v));
+  const fmt = (v: unknown): Sample =>
+    opts.format ? opts.format(v) : typeof v === "number" ? round(v) : String(v);
   const span = signalSpan(sig, elementSpan);
   if (!span) {
-    return { static: { target, prop, value: fmt(evalSignal(sig, elementSpan[0])), unit: opts.unit } };
+    return {
+      static: { target, prop, value: fmt(evalSignal(sig, elementSpan[0])), unit: opts.unit },
+    };
   }
   const t0 = Math.floor(span[0] * hz + 1e-9) / hz;
   const n = Math.max(2, Math.ceil((span[1] - t0) * hz - 1e-9) + 1);

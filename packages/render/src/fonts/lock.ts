@@ -1,6 +1,14 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { CODECUT_DIR, CodeCutError, emptyLedger, upsertEntry, type FontDecl, type Ledger, type ResolvedFont } from "@codecut/core";
+import {
+  CODECUT_DIR,
+  CodeCutError,
+  emptyLedger,
+  upsertEntry,
+  type FontDecl,
+  type Ledger,
+  type ResolvedFont,
+} from "@codecut/core";
 import { sha256 } from "./inspect.js";
 import type { FontFile, FontSyncResult } from "./types.js";
 
@@ -12,7 +20,15 @@ export interface LockedFont {
   variable: boolean;
   axes?: Record<string, [number, number]>;
   license: string;
-  files: Array<{ path: string; hash: string; weight: number | [number, number]; style: string; unicodeRange?: string; format: FontFile["format"]; subset?: string }>;
+  files: Array<{
+    path: string;
+    hash: string;
+    weight: number | [number, number];
+    style: string;
+    unicodeRange?: string;
+    format: FontFile["format"];
+    subset?: string;
+  }>;
 }
 
 export interface FontLock {
@@ -36,11 +52,23 @@ export function writeJson(path: string, value: unknown): void {
   writeFileSync(path, JSON.stringify(value, null, 2) + "\n");
 }
 
-export const readLock = (root: string): FontLock => readJson(lockPath(root), { version: 1, fonts: {} });
+export const readLock = (root: string): FontLock =>
+  readJson(lockPath(root), { version: 1, fonts: {} });
 export const readLedger = (root: string): Ledger => readJson(ledgerPath(root), emptyLedger());
 
 export const declHash = (d: FontDecl) =>
-  sha256(JSON.stringify({ f: d.family, s: d.source, w: d.weights, st: d.styles, v: d.variable, a: d.axes, sub: d.subsets, ur: d.unicodeRange }));
+  sha256(
+    JSON.stringify({
+      f: d.family,
+      s: d.source,
+      w: d.weights,
+      st: d.styles,
+      v: d.variable,
+      a: d.axes,
+      sub: d.subsets,
+      ur: d.unicodeRange,
+    }),
+  );
 
 export function lockEntry(decl: FontDecl, r: FontSyncResult): LockedFont {
   return {
@@ -51,7 +79,15 @@ export function lockEntry(decl: FontDecl, r: FontSyncResult): LockedFont {
     variable: r.variable,
     axes: r.axes,
     license: r.license.license,
-    files: r.files.map((f) => ({ path: f.rel, hash: f.hash, weight: f.weight, style: f.style, unicodeRange: f.unicodeRange, format: f.format, subset: f.subset })),
+    files: r.files.map((f) => ({
+      path: f.rel,
+      hash: f.hash,
+      weight: f.weight,
+      style: f.style,
+      unicodeRange: f.unicodeRange,
+      format: f.format,
+      subset: f.subset,
+    })),
   };
 }
 
@@ -83,28 +119,55 @@ export function resolveFromLock(root: string, decl: FontDecl, lock = readLock(ro
   const system = decl.source === "system";
   const e = lock.fonts[decl.id];
   if (system) {
-    return { id: decl.id, family: decl.family, files: [], fallback: decl.fallback ?? [], source: "system", variable: !!decl.variable };
+    return {
+      id: decl.id,
+      family: decl.family,
+      files: [],
+      fallback: decl.fallback ?? [],
+      source: "system",
+      variable: !!decl.variable,
+    };
   }
   if (!e) {
-    throw new CodeCutError("font_error", `Font "${decl.id}" (${decl.family}) is not in .codecut/fonts.lock.json`, { fix: "Run `codecut fonts sync` to download and lock it." });
+    throw new CodeCutError(
+      "font_error",
+      `Font "${decl.id}" (${decl.family}) is not in .codecut/fonts.lock.json`,
+      { fix: "Run `codecut fonts sync` to download and lock it." },
+    );
   }
   if (e.declHash !== declHash(decl)) {
-    throw new CodeCutError("font_error", `Font "${decl.id}" changed since it was locked`, { fix: "Run `codecut fonts sync` to refresh the lock for the new declaration." });
+    throw new CodeCutError("font_error", `Font "${decl.id}" changed since it was locked`, {
+      fix: "Run `codecut fonts sync` to refresh the lock for the new declaration.",
+    });
   }
   const files: ResolvedFont["files"] = [];
   for (const f of e.files) {
     const abs = join(root, f.path);
     if (!existsSync(abs)) {
-      throw new CodeCutError("font_error", `Font "${decl.id}": file ${f.path} is missing`, { fix: "Restore the file or run `codecut fonts sync`.", details: { id: decl.id, path: f.path } });
+      throw new CodeCutError("font_error", `Font "${decl.id}": file ${f.path} is missing`, {
+        fix: "Restore the file or run `codecut fonts sync`.",
+        details: { id: decl.id, path: f.path },
+      });
     }
     const hash = sha256(readFileSync(abs));
     if (hash !== f.hash) {
-      throw new CodeCutError("font_error", `Font "${decl.id}": ${f.path} changed on disk (hash mismatch)`, {
-        fix: "If the change is intended, run `codecut fonts sync --update-lock`.",
-        details: { id: decl.id, path: f.path, expected: f.hash, actual: hash },
-      });
+      throw new CodeCutError(
+        "font_error",
+        `Font "${decl.id}": ${f.path} changed on disk (hash mismatch)`,
+        {
+          fix: "If the change is intended, run `codecut fonts sync --update-lock`.",
+          details: { id: decl.id, path: f.path, expected: f.hash, actual: hash },
+        },
+      );
     }
-    files.push({ path: f.path, weight: f.weight, style: f.style, hash: f.hash, unicodeRange: f.unicodeRange, format: f.format });
+    files.push({
+      path: f.path,
+      weight: f.weight,
+      style: f.style,
+      hash: f.hash,
+      unicodeRange: f.unicodeRange,
+      format: f.format,
+    });
   }
   return {
     id: decl.id,

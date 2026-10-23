@@ -45,7 +45,15 @@ export function materialize(
   writeFileSync(join(outDir, "index.html"), compiled.html);
   writeFileSync(
     join(outDir, "hyperframes.json"),
-    JSON.stringify({ $schema: "https://hyperframes.heygen.com/schema/hyperframes.json", paths: { blocks: "compositions", components: "compositions/components", assets: "assets" }, media: { autoProxy: false } }, null, 2),
+    JSON.stringify(
+      {
+        $schema: "https://hyperframes.heygen.com/schema/hyperframes.json",
+        paths: { blocks: "compositions", components: "compositions/components", assets: "assets" },
+        media: { autoProxy: false },
+      },
+      null,
+      2,
+    ),
   );
   writeFileSync(join(outDir, "meta.json"), JSON.stringify({ id: opts.id, name: opts.id }, null, 2));
   for (const f of opts.extraFiles ?? []) {

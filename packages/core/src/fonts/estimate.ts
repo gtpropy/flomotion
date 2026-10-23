@@ -1,13 +1,28 @@
 import { hashSeed } from "../values/noise.js";
-import type { GlyphBox, LineBox, MeasureOptions, TextMeasurer, TextMetrics, TextStyle } from "./measure.js";
+import type {
+  GlyphBox,
+  LineBox,
+  MeasureOptions,
+  TextMeasurer,
+  TextMetrics,
+  TextStyle,
+} from "./measure.js";
 
 /** Stable cache key for a measurement request (text + style + width). Font file hashes are mixed in by callers. */
-export function measureKey(text: string, style: TextStyle, opts: MeasureOptions = {}, salt = ""): string {
+export function measureKey(
+  text: string,
+  style: TextStyle,
+  opts: MeasureOptions = {},
+  salt = "",
+): string {
   const s = JSON.stringify([text, style, opts.maxWidth ?? null, salt]);
   return hashSeed(s).toString(36) + hashSeed(s.split("").reverse().join("")).toString(36);
 }
 
-const segmenter = typeof Intl !== "undefined" && "Segmenter" in Intl ? new Intl.Segmenter(undefined, { granularity: "grapheme" }) : null;
+const segmenter =
+  typeof Intl !== "undefined" && "Segmenter" in Intl
+    ? new Intl.Segmenter(undefined, { granularity: "grapheme" })
+    : null;
 
 /** Split into grapheme clusters (so emoji and combining marks stay whole). */
 export function graphemes(s: string): string[] {
@@ -19,7 +34,11 @@ export function graphemes(s: string): string[] {
  * A deterministic layout estimate used when no Chrome measurement exists yet: average glyph width
  * 0.55 em, greedy word wrap. Good enough to plan; the real render uses the measured layout.
  */
-export function estimateText(text: string, style: TextStyle, opts: MeasureOptions = {}): TextMetrics {
+export function estimateText(
+  text: string,
+  style: TextStyle,
+  opts: MeasureOptions = {},
+): TextMetrics {
   const size = style.fontSize;
   const track = style.letterSpacing ?? 0;
   const avg = size * 0.55 + track;
@@ -51,13 +70,22 @@ export function estimateText(text: string, style: TextStyle, opts: MeasureOption
         wx += w;
         wi += graphemes(part).length;
       }
-      lines.push({ text: t, x: 0, y, width: gl.length * avg, height: lh, baseline: y + lh * 0.8, glyphs, words: wordsOut });
+      lines.push({
+        text: t,
+        x: 0,
+        y,
+        width: gl.length * avg,
+        height: lh,
+        baseline: y + lh * 0.8,
+        glyphs,
+        words: wordsOut,
+      });
       y += lh;
       void endIndex;
     };
     for (const w of words) {
       const wl = graphemes(w).length * avg;
-      if (cur && !/^\s+$/.test(w) && (graphemes(cur).length * avg + wl > maxW)) {
+      if (cur && !/^\s+$/.test(w) && graphemes(cur).length * avg + wl > maxW) {
         flush(index);
         curStart = index;
         cur = "";

@@ -7,7 +7,14 @@ export interface ResolvedFont {
   id: string;
   family: string;
   /** Local file(s) relative to the project root, with lock hash. */
-  files: Array<{ path: string; weight?: number | [number, number]; style?: string; hash?: string; unicodeRange?: string; format: string }>;
+  files: Array<{
+    path: string;
+    weight?: number | [number, number];
+    style?: string;
+    hash?: string;
+    unicodeRange?: string;
+    format: string;
+  }>;
   fallback: string[];
   source: "google" | "local" | "url" | "system";
   variable: boolean;

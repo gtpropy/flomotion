@@ -44,7 +44,10 @@ export function inspectFont(path: string): FontInfo {
   const lic = [font.license, font.licenseURL, font.copyright].filter(Boolean).join(" \n ");
   const cls = classifyFontLicense(lic);
   const axes: Record<string, [number, number]> = {};
-  for (const [tag, a] of Object.entries((font.variationAxes ?? {}) as Record<string, { min: number; max: number }>)) axes[tag] = [a.min, a.max];
+  for (const [tag, a] of Object.entries(
+    (font.variationAxes ?? {}) as Record<string, { min: number; max: number }>,
+  ))
+    axes[tag] = [a.min, a.max];
   const info: FontInfo = {
     family: font.familyName ?? "",
     fullName: font.fullName ?? "",

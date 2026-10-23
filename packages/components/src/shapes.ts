@@ -18,7 +18,17 @@ import {
   type RenderCtx,
   type Signal,
 } from "@codecut/core";
-import { atControl, at0, boxStroke, css, esc, fillCss, placement, round, type StrokeSpec } from "./util.js";
+import {
+  atControl,
+  at0,
+  boxStroke,
+  css,
+  esc,
+  fillCss,
+  placement,
+  round,
+  type StrokeSpec,
+} from "./util.js";
 
 export const strokeControl = () =>
   group(
@@ -35,7 +45,10 @@ export const strokeControl = () =>
 
 const boxOut = (rc: RenderCtx, w: number, h: number, at: unknown) => {
   const pl = placement(at, rc);
-  return { box: { ...pl.box, width: `${round(w)}px`, height: `${round(h)}px` }, statics: pl.statics };
+  return {
+    box: { ...pl.box, width: `${round(w)}px`, height: `${round(h)}px` },
+    statics: pl.statics,
+  };
 };
 
 function rectLike(name: string, description: string, defaultRadius: number) {
@@ -70,7 +83,11 @@ function rectLike(name: string, description: string, defaultRadius: number) {
   });
 }
 
-export const Rect = rectLike("Rect", "A rectangle with solid, gradient or image fill and an optional stroke.", 0);
+export const Rect = rectLike(
+  "Rect",
+  "A rectangle with solid, gradient or image fill and an optional stroke.",
+  0,
+);
 export const RoundRect = rectLike("RoundRect", "A rounded rectangle (default radius 24 px).", 24);
 
 export const Circle = defineComponent("Circle", {
@@ -112,7 +129,10 @@ const svgFill = (f: unknown, rc: RenderCtx, defs: string[], id: string): string 
   if (typeof f === "string") return `fill="${f}"`;
   if (f && typeof f === "object" && (f as { type?: string }).type === "linear") {
     const g = f as { angle?: number | string; stops: Array<[number, string]> };
-    const a = (((typeof g.angle === "number" ? g.angle : parseFloat(String(g.angle ?? 180))) - 90) * Math.PI) / 180;
+    const a =
+      (((typeof g.angle === "number" ? g.angle : parseFloat(String(g.angle ?? 180))) - 90) *
+        Math.PI) /
+      180;
     defs.push(
       `<linearGradient id="${id}-g" x1="${round(0.5 - Math.cos(a) / 2)}" y1="${round(0.5 - Math.sin(a) / 2)}" x2="${round(0.5 + Math.cos(a) / 2)}" y2="${round(0.5 + Math.sin(a) / 2)}">${g.stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join("")}</linearGradient>`,
     );
@@ -120,7 +140,9 @@ const svgFill = (f: unknown, rc: RenderCtx, defs: string[], id: string): string 
   }
   if (f && typeof f === "object" && (f as { type?: string }).type === "radial") {
     const g = f as { stops: Array<[number, string]> };
-    defs.push(`<radialGradient id="${id}-g">${g.stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join("")}</radialGradient>`);
+    defs.push(
+      `<radialGradient id="${id}-g">${g.stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join("")}</radialGradient>`,
+    );
     return `fill="url(#${id}-g)"`;
   }
   void rc;
@@ -162,10 +184,14 @@ export const Line = defineComponent("Line", {
 /** A scalar component of a vec Signal as its own Signal. */
 function pick(sig: Signal, i: number): Signal<number> {
   if (sig.kind === "const") return { kind: "const", v: (sig.v as number[])[i] ?? 0 };
-  return exprSignal((t) => {
-    const v = evalAt(sig, t) as number[];
-    return v[i] ?? 0;
-  }, "number", undefined);
+  return exprSignal(
+    (t) => {
+      const v = evalAt(sig, t) as number[];
+      return v[i] ?? 0;
+    },
+    "number",
+    undefined,
+  );
 }
 import { evalSignal as evalAt } from "@codecut/core";
 
@@ -176,8 +202,17 @@ function trimChannels(id: string, s: Signal, e: Signal): Channel[] {
   const end = (t: number) => Math.min(1, Math.max(0, evalAt(e, t) as number));
   const len = (t: number) => Math.max(0, end(t) - start(t));
   return [
-    { target: `#${id}`, prop: "attr:stroke-dasharray", signal: exprSignal((t) => `${round(len(t), 4)} ${round(1 - len(t) + 0.0001, 4)}`, "discrete"), format: (v) => String(v) },
-    { target: `#${id}`, prop: "attr:stroke-dashoffset", signal: exprSignal((t) => round(-start(t), 4), "number") },
+    {
+      target: `#${id}`,
+      prop: "attr:stroke-dasharray",
+      signal: exprSignal((t) => `${round(len(t), 4)} ${round(1 - len(t) + 0.0001, 4)}`, "discrete"),
+      format: (v) => String(v),
+    },
+    {
+      target: `#${id}`,
+      prop: "attr:stroke-dashoffset",
+      signal: exprSignal((t) => round(-start(t), 4), "number"),
+    },
   ];
 }
 
@@ -186,7 +221,14 @@ const polygonPoints = (p: any): Array<[number, number]> => {
   const sides = Math.max(3, Math.round(p.sides ?? 6));
   const r = p.radius ?? 100;
   const rot = ((p.rotation ?? -90) * Math.PI) / 180;
-  return Array.from({ length: sides }, (_, i) => [round(r + r * Math.cos(rot + (i * 2 * Math.PI) / sides)), round(r + r * Math.sin(rot + (i * 2 * Math.PI) / sides))] as [number, number]);
+  return Array.from(
+    { length: sides },
+    (_, i) =>
+      [
+        round(r + r * Math.cos(rot + (i * 2 * Math.PI) / sides)),
+        round(r + r * Math.sin(rot + (i * 2 * Math.PI) / sides)),
+      ] as [number, number],
+  );
 };
 
 export const Polygon = defineComponent("Polygon", {
@@ -267,7 +309,10 @@ export const Svg = defineComponent("Svg", {
       : p.src
         ? `<img src="${esc(rc.assetPath(String(p.src)))}" style="width:100%;height:100%;display:block">`
         : "";
-    return { html: `<div style="width:100%;height:100%">${inner}</div>`, ...boxOut(rc, w, h, p.at) };
+    return {
+      html: `<div style="width:100%;height:100%">${inner}</div>`,
+      ...boxOut(rc, w, h, p.at),
+    };
   },
 });
 
@@ -283,13 +328,25 @@ const svgUrl = (svg: string) =>
  * An SVG (viewBox 0 0 1 1, stretched to the layer box) used as a CSS mask image. Geometry is in layer-box
  * fractions. Alpha mode: opaque inside the shape. `invert` makes it opaque everywhere else.
  */
-export function maskImageSvg(o: { shape: MaskShape; cx: number; cy: number; w: number; h: number; radius: number; feather: number; invert: boolean; luma: boolean }): string {
+export function maskImageSvg(o: {
+  shape: MaskShape;
+  cx: number;
+  cy: number;
+  w: number;
+  h: number;
+  radius: number;
+  feather: number;
+  invert: boolean;
+  luma: boolean;
+}): string {
   const f = Math.max(0, o.feather);
   const shape =
     o.shape === "ellipse"
       ? `<ellipse cx="${o.cx}" cy="${o.cy}" rx="${o.w / 2}" ry="${o.h / 2}" fill="#fff"${f ? ' filter="url(#b)"' : ""}/>`
       : `<rect x="${o.cx - o.w / 2}" y="${o.cy - o.h / 2}" width="${o.w}" height="${o.h}" rx="${o.shape === "roundrect" ? o.radius : 0}" ry="${o.shape === "roundrect" ? o.radius : 0}" fill="#fff"${f ? ' filter="url(#b)"' : ""}/>`;
-  const blur = f ? `<filter id="b" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="${f}"/></filter>` : "";
+  const blur = f
+    ? `<filter id="b" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="${f}"/></filter>`
+    : "";
   const fillIn = o.invert ? "#000" : "#fff";
   const fillOut = o.invert ? "#fff" : "#000";
   const body = shape.replace(/fill="#fff"/, `fill="${fillIn}"`);
@@ -301,7 +358,12 @@ export function maskImageSvg(o: { shape: MaskShape; cx: number; cy: number; w: n
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" preserveAspectRatio="none"><defs>${blur}<mask id="m" maskContentUnits="userSpaceOnUse" x="0" y="0" width="1" height="1"><rect width="1" height="1" fill="${fillOut}"/>${body}</mask></defs><rect width="1" height="1" fill="#000" mask="url(#m)"/></svg>`;
 }
 
-const MASK_STATIC = { "mask-size": "100% 100%", "mask-repeat": "no-repeat", "-webkit-mask-size": "100% 100%", "-webkit-mask-repeat": "no-repeat" };
+const MASK_STATIC = {
+  "mask-size": "100% 100%",
+  "mask-repeat": "no-repeat",
+  "-webkit-mask-size": "100% 100%",
+  "-webkit-mask-repeat": "no-repeat",
+};
 
 export const Mask = defineEffect("Mask", {
   category: "shapes",
@@ -312,32 +374,65 @@ export const Mask = defineEffect("Mask", {
     center: vec2({ animatable: true, default: [0.5, 0.5], step: 0.01, unit: "box" }),
     size: vec2({ animatable: true, default: [1, 1], step: 0.01, unit: "box" }),
     radius: num({ animatable: true, min: 0, max: 0.5, default: 0.1, step: 0.01, unit: "box" }),
-    feather: num({ animatable: true, min: 0, max: 0.5, default: 0, step: 0.005, unit: "box", description: "Edge softness." }),
+    feather: num({
+      animatable: true,
+      min: 0,
+      max: 0.5,
+      default: 0,
+      step: 0.005,
+      unit: "box",
+      description: "Edge softness.",
+    }),
     invert: bool({ default: false }),
-    mode: enumOf(["alpha", "luma"], { default: "alpha", description: "Read the mask's alpha or its luminance." }),
+    mode: enumOf(["alpha", "luma"], {
+      default: "alpha",
+      description: "Read the mask's alpha or its luminance.",
+    }),
   },
   apply: (p, rc) => {
-    const sigs = { center: p.center as Signal, size: p.size as Signal, radius: p.radius as Signal, feather: p.feather as Signal };
+    const sigs = {
+      center: p.center as Signal,
+      size: p.size as Signal,
+      radius: p.radius as Signal,
+      feather: p.feather as Signal,
+    };
     const at = (t: number) => {
       const c = evalAt(sigs.center, t) as number[];
       const s = evalAt(sigs.size, t) as number[];
-      return maskImageSvg({ shape: p.shape, cx: c[0]!, cy: c[1]!, w: s[0]!, h: s[1]!, radius: evalAt(sigs.radius, t) as number, feather: evalAt(sigs.feather, t) as number, invert: p.invert, luma: p.mode === "luma" });
+      return maskImageSvg({
+        shape: p.shape,
+        cx: c[0]!,
+        cy: c[1]!,
+        w: s[0]!,
+        h: s[1]!,
+        radius: evalAt(sigs.radius, t) as number,
+        feather: evalAt(sigs.feather, t) as number,
+        invert: p.invert,
+        luma: p.mode === "luma",
+      });
     };
     const t0 = rc.node.start;
     const animated = Object.values(sigs).some((x) => x.kind !== "const");
-    const style: Record<string, string> = { "mask-image": svgUrl(at(t0)), "-webkit-mask-image": svgUrl(at(t0)), ...MASK_STATIC };
+    const style: Record<string, string> = {
+      "mask-image": svgUrl(at(t0)),
+      "-webkit-mask-image": svgUrl(at(t0)),
+      ...MASK_STATIC,
+    };
     if (p.mode === "luma") style["mask-mode"] = "luminance";
     const channels: Channel[] = animated
-      ? [{ target: `#${rc.node.parent!.id}-xf`, prop: "maskImage", signal: exprSignal((t) => svgUrl(at(t)), "discrete", [rc.node.start, rc.node.end]), span: [rc.node.start, rc.node.end], format: (v) => String(v) }]
+      ? [
+          {
+            target: `#${rc.node.parent!.id}-xf`,
+            prop: "maskImage",
+            signal: exprSignal((t) => svgUrl(at(t)), "discrete", [rc.node.start, rc.node.end]),
+            span: [rc.node.start, rc.node.end],
+            format: (v) => String(v),
+          },
+        ]
       : [];
     return { style, channels };
   },
 });
-
-const at0Vec = (rc: RenderCtx, prop: string, d: number[]): [number, number] => {
-  const v = rc.at<number[]>(prop, rc.node.start);
-  return [v[0] ?? d[0]!, v[1] ?? d[1]!];
-};
 
 const MATTE_SOURCES = ["Rect", "RoundRect", "Circle", "Polygon"];
 
@@ -356,9 +451,24 @@ export const Matte = defineEffect("Matte", {
     if (!src || !MATTE_SOURCES.includes(src.name)) {
       return { issues: [`source ${p.source} must be a Rect, RoundRect, Circle or Polygon layer`] };
     }
-    const shape: MaskShape = src.name === "Circle" ? "ellipse" : src.name === "RoundRect" ? "roundrect" : "rect";
-    const svg = maskImageSvg({ shape, cx: 0.5, cy: 0.5, w: 1, h: 1, radius: src.name === "RoundRect" ? 0.1 : 0, feather: 0, invert: p.invert, luma: p.mode === "luma" });
-    const style: Record<string, string> = { "mask-image": svgUrl(svg), "-webkit-mask-image": svgUrl(svg), ...MASK_STATIC };
+    const shape: MaskShape =
+      src.name === "Circle" ? "ellipse" : src.name === "RoundRect" ? "roundrect" : "rect";
+    const svg = maskImageSvg({
+      shape,
+      cx: 0.5,
+      cy: 0.5,
+      w: 1,
+      h: 1,
+      radius: src.name === "RoundRect" ? 0.1 : 0,
+      feather: 0,
+      invert: p.invert,
+      luma: p.mode === "luma",
+    });
+    const style: Record<string, string> = {
+      "mask-image": svgUrl(svg),
+      "-webkit-mask-image": svgUrl(svg),
+      ...MASK_STATIC,
+    };
     if (p.mode === "luma") style["mask-mode"] = "luminance";
     return { style };
   },

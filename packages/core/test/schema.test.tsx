@@ -40,7 +40,22 @@ describe("defineComponent", () => {
     expect(registry.has("TestBox")).toBe(true);
     const def = Box.def;
     expect(Object.keys(def.controls)).toEqual(
-      expect.arrayContaining(["w", "id", "start", "duration", "position", "rotation", "scale", "skew", "anchor", "opacity", "crop", "flip", "blend", "perspective"]),
+      expect.arrayContaining([
+        "w",
+        "id",
+        "start",
+        "duration",
+        "position",
+        "rotation",
+        "scale",
+        "skew",
+        "anchor",
+        "opacity",
+        "crop",
+        "flip",
+        "blend",
+        "perspective",
+      ]),
     );
     expect(def.controls.opacity!.animatable).toBe(true);
   });
@@ -77,18 +92,40 @@ describe("defineComponent", () => {
 describe("validateProps", () => {
   it("accepts good props, keyframes and expressions", () => {
     expect(validateProps(Box.def, { w: 5, mode: "b", pos: [1, 2] })).toEqual([]);
-    expect(validateProps(Box.def, { w: [[0, 0], [1, 50, "expo.out"]] })).toEqual([]);
+    expect(
+      validateProps(Box.def, {
+        w: [
+          [0, 0],
+          [1, 50, "expo.out"],
+        ],
+      }),
+    ).toEqual([]);
     expect(validateProps(Box.def, { w: (t: number) => t })).toEqual([]);
   });
   it("flags range, enum, unknown, non-animatable", () => {
-    const issues = validateProps(Box.def, { w: 500, mode: "z", opacty: 3, label: (() => "x") as any });
+    const issues = validateProps(Box.def, {
+      w: 500,
+      mode: "z",
+      opacty: 3,
+      label: (() => "x") as any,
+    });
     const codes = issues.map((i) => `${i.prop}:${i.code}`).sort();
-    expect(codes).toEqual(["label:not_animatable", "mode:invalid_value", "opacty:unknown_prop", "w:invalid_value"]);
+    expect(codes).toEqual([
+      "label:not_animatable",
+      "mode:invalid_value",
+      "opacty:unknown_prop",
+      "w:invalid_value",
+    ]);
     expect(issues.find((i) => i.prop === "opacty")!.message).toMatch(/Did you mean "opacity"/);
     expect(issues.find((i) => i.prop === "w")!.fix).toMatch(/range 0 to 100/);
   });
   it("range-checks keyframe values", () => {
-    const issues = validateProps(Box.def, { w: [[0, 0], [1, 999]] });
+    const issues = validateProps(Box.def, {
+      w: [
+        [0, 0],
+        [1, 999],
+      ],
+    });
     expect(issues).toHaveLength(1);
     expect(issues[0]!.code).toBe("invalid_value");
   });
@@ -110,15 +147,26 @@ describe("generators", () => {
     expect(md).toContain("# TestBox");
     expect(md).toContain("range 0..100");
     const rules = deriveLintRules(Box.def);
-    expect(rules).toEqual(expect.arrayContaining([expect.objectContaining({ prop: "w", rule: "range" }), expect.objectContaining({ prop: "label", rule: "animatable" })]));
+    expect(rules).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ prop: "w", rule: "range" }),
+        expect.objectContaining({ prop: "label", rule: "animatable" }),
+      ]),
+    );
   });
 });
 
 describe("defineEffect", () => {
   it("creates effects with common controls", () => {
-    const E = defineEffect("TestFx", { category: "test", controls: { amp: num({ default: 1 }) }, sound: "hit/land" });
+    const E = defineEffect("TestFx", {
+      category: "test",
+      controls: { amp: num({ default: 1 }) },
+      sound: "hit/land",
+    });
     expect(E.def.kind).toBe("effect");
     expect(E.def.sound).toBe("hit/land");
-    expect(Object.keys(E.def.controls)).toEqual(expect.arrayContaining(["amp", "start", "duration", "enabled"]));
+    expect(Object.keys(E.def.controls)).toEqual(
+      expect.arrayContaining(["amp", "start", "duration", "enabled"]),
+    );
   });
 });

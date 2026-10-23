@@ -22,11 +22,21 @@ import {
   type SoundCue,
 } from "@codecut/core";
 import { strokeControl } from "./shapes.js";
-import { atControl, boxStroke, css, esc, fillCss, placement, round, type StrokeSpec } from "./util.js";
+import {
+  atControl,
+  boxStroke,
+  css,
+  esc,
+  fillCss,
+  placement,
+  round,
+  type StrokeSpec,
+} from "./util.js";
 import { renderText } from "./text/text.js";
 import { textStyleControls, typographyControls } from "./text/controls.js";
 
-const lenPx = (rc: RenderCtx, v: number | string | undefined, d: number, axis: "x" | "y") => (v === undefined ? d : rc.px(v, axis));
+const lenPx = (rc: RenderCtx, v: number | string | undefined, d: number, axis: "x" | "y") =>
+  v === undefined ? d : rc.px(v, axis);
 
 // ---------- UIMock ----------
 
@@ -44,7 +54,15 @@ function deviceBox(raw: Record<string, unknown>) {
   const w = num(raw.width, d.w);
   const h = num(raw.height, d.h);
   const bezel = num(raw.bezel, d.bezel);
-  return { w, h, bezel, radius: num(raw.radius, d.radius), bar: d.bar, screenW: w - bezel * 2, screenH: h - bezel * 2 - d.bar };
+  return {
+    w,
+    h,
+    bezel,
+    radius: num(raw.radius, d.radius),
+    bar: d.bar,
+    screenW: w - bezel * 2,
+    screenH: h - bezel * 2 - d.bar,
+  };
 }
 
 export const UIMock = defineComponent("UIMock", {
@@ -78,8 +96,14 @@ export const UIMock = defineComponent("UIMock", {
       p.device === "browser"
         ? `<div style="position:absolute;left:0;top:0;right:0;height:${barH}px;background:#eceff3;display:flex;align-items:center;gap:10px;padding:0 22px"><i style="width:14px;height:14px;border-radius:50%;background:#ff5f57"></i><i style="width:14px;height:14px;border-radius:50%;background:#febc2e"></i><i style="width:14px;height:14px;border-radius:50%;background:#28c840"></i><span style="margin-left:18px;flex:1;max-width:60%;height:34px;border-radius:17px;background:#fff;color:#667;font:500 20px sans-serif;display:flex;align-items:center;padding:0 18px">${esc(String(p.url))}</span></div>`
         : "";
-    const island = p.device === "phone" && p.notch ? `<div style="position:absolute;left:50%;top:18px;width:${Math.round(b.w * 0.24)}px;height:34px;margin-left:-${Math.round(b.w * 0.12)}px;border-radius:17px;background:#000;z-index:5"></div>` : "";
-    const base = p.device === "laptop" ? `<div style="position:absolute;left:-4%;right:-4%;bottom:-22px;height:22px;border-radius:0 0 24px 24px;background:linear-gradient(#cfd3d9,#9aa0a8)"></div>` : "";
+    const island =
+      p.device === "phone" && p.notch
+        ? `<div style="position:absolute;left:50%;top:18px;width:${Math.round(b.w * 0.24)}px;height:34px;margin-left:-${Math.round(b.w * 0.12)}px;border-radius:17px;background:#000;z-index:5"></div>`
+        : "";
+    const base =
+      p.device === "laptop"
+        ? `<div style="position:absolute;left:-4%;right:-4%;bottom:-22px;height:22px;border-radius:0 0 24px 24px;background:linear-gradient(#cfd3d9,#9aa0a8)"></div>`
+        : "";
     return {
       html: `<div id="${rc.sub("frame")}" style="${css({ position: "relative", width: "100%", height: "100%", background: p.bezelColor, "border-radius": `${b.radius}px`, padding: `${b.bezel}px`, "box-sizing": "border-box", "box-shadow": p.shadow ? "0 40px 90px rgba(0,0,0,.45), 0 0 0 2px rgba(255,255,255,.06) inset" : undefined })}"><div id="${rc.sub("screen")}" style="${css({ position: "relative", width: "100%", height: "100%", "border-radius": `${Math.max(0, b.radius - b.bezel)}px`, overflow: "hidden", background: p.screenColor })}">${chrome}<div id="${rc.sub("content")}" style="position:absolute;left:0;right:0;bottom:0;top:${barH}px">{{children}}</div></div>${island}${base}</div>`,
       box: { ...pl.box, width: `${b.w}px`, height: `${b.h}px` },
@@ -101,12 +125,20 @@ function cardControls() {
     fill: fill({ default: "#16161d" }),
     stroke: strokeControl(),
     shadow: bool({ default: true }),
-    layout: enumOf(["stack", "absolute"], { default: "stack", description: "stack: children flow top to bottom. absolute: children use `at`." }),
+    layout: enumOf(["stack", "absolute"], {
+      default: "stack",
+      description: "stack: children flow top to bottom. absolute: children use `at`.",
+    }),
     align: enumOf(["start", "center", "end", "stretch"], { default: "stretch" }),
   };
 }
 
-const ALIGN: Record<string, string> = { start: "flex-start", center: "center", end: "flex-end", stretch: "stretch" };
+const ALIGN: Record<string, string> = {
+  start: "flex-start",
+  center: "center",
+  end: "flex-end",
+  stretch: "stretch",
+};
 
 function cardRender(glass: boolean) {
   return (p: any, rc: RenderCtx) => {
@@ -135,7 +167,11 @@ function cardRender(glass: boolean) {
         "align-items": stack ? ALIGN[p.align] : undefined,
         position: "relative",
       })}">{{children}}</div>`,
-      box: { ...pl.box, width: `${round(w)}px`, ...(p.height !== undefined ? { height: `${round(rc.px(p.height, "y"))}px` } : {}) },
+      box: {
+        ...pl.box,
+        width: `${round(w)}px`,
+        ...(p.height !== undefined ? { height: `${round(rc.px(p.height, "y"))}px` } : {}),
+      },
       statics: pl.statics,
       flow: stack,
     };
@@ -144,7 +180,8 @@ function cardRender(glass: boolean) {
 
 export const Card = defineComponent("Card", {
   category: "ui",
-  description: "A surface with radius, optional stroke and shadow. Children stack top to bottom (or use `layout=\"absolute\"`).",
+  description:
+    'A surface with radius, optional stroke and shadow. Children stack top to bottom (or use `layout="absolute"`).',
   traits: ["visual", "container"],
   children: "any",
   controls: cardControls(),
@@ -189,7 +226,9 @@ export const Cursor = defineComponent("Cursor", {
   render: (p, rc) => {
     const id = rc.sub("arrow");
     const size = p.size as number;
-    const clicks = ((p.clicks as Array<number | string>) ?? []).map((c) => rc.node.parentStart + parseTimeLiteral(c, rc.fps));
+    const clicks = ((p.clicks as Array<number | string>) ?? []).map(
+      (c) => rc.node.parentStart + parseTimeLiteral(c, rc.fps),
+    );
     const channels: Channel[] = [];
     const sounds: SoundCue[] = [];
     let ripples = "";
@@ -199,8 +238,18 @@ export const Cursor = defineComponent("Cursor", {
       const span: [number, number] = [tc, tc + 0.55];
       const q = (t: number) => Math.min(1, Math.max(0, (t - tc) / 0.55));
       const e = parseEase("expo.out");
-      channels.push({ target: `#${rid}`, prop: "opacity", signal: exprSignal((t) => round(t < tc ? 0 : 0.7 * (1 - q(t)), 3), "number", span), span });
-      channels.push({ target: `#${rid}`, prop: "scale", signal: exprSignal((t) => round(0.2 + 1.4 * e(q(t)), 3), "number", span), span });
+      channels.push({
+        target: `#${rid}`,
+        prop: "opacity",
+        signal: exprSignal((t) => round(t < tc ? 0 : 0.7 * (1 - q(t)), 3), "number", span),
+        span,
+      });
+      channels.push({
+        target: `#${rid}`,
+        prop: "scale",
+        signal: exprSignal((t) => round(0.2 + 1.4 * e(q(t)), 3), "number", span),
+        span,
+      });
       sounds.push({ tag: "ui/tap", at: tc, source: rc.id });
     });
     if (clicks.length) {
@@ -213,7 +262,12 @@ export const Cursor = defineComponent("Cursor", {
         return round(v, 4);
       };
       const span: [number, number] = [Math.min(...clicks), Math.max(...clicks) + 0.25];
-      channels.push({ target: `#${id}`, prop: "scale", signal: exprSignal(press, "number", span), span });
+      channels.push({
+        target: `#${id}`,
+        prop: "scale",
+        signal: exprSignal(press, "number", span),
+        span,
+      });
     }
     const pl = placement(Array.isArray(p.at) ? p.at : "top-left", rc);
     return {
@@ -247,7 +301,9 @@ export const Chip = defineComponent("Chip", {
   },
   render: (p, rc) => {
     const pl = placement(p.at, rc);
-    const dot = p.dot ? `<i style="display:inline-block;width:${round(p.size * 0.3)}px;height:${round(p.size * 0.3)}px;border-radius:50%;background:${p.dot};margin-right:${round(p.size * 0.35)}px"></i>` : "";
+    const dot = p.dot
+      ? `<i style="display:inline-block;width:${round(p.size * 0.3)}px;height:${round(p.size * 0.3)}px;border-radius:50%;background:${p.dot};margin-right:${round(p.size * 0.35)}px"></i>`
+      : "";
     return {
       html: `<div id="${rc.sub("chip")}" style="${css({ display: "inline-flex", "align-items": "center", "white-space": "nowrap", background: fillCss(p.fill, rc), color: p.textColor, "font-family": rc.fontFamily(p.font), "font-size": `${p.size}px`, "font-weight": p.weight, padding: `${p.paddingY}px ${p.paddingX}px`, "border-radius": "999px", "box-shadow": boxStroke(p.stroke as StrokeSpec), "line-height": 1 })}">${dot}${esc(String(p.label))}</div>`,
       box: { ...pl.box, width: "max-content" },
@@ -258,7 +314,10 @@ export const Chip = defineComponent("Chip", {
 
 // ---------- Counter ----------
 
-export function formatNumber(v: number, o: { decimals: number; group: boolean; prefix: string; suffix: string }): string {
+export function formatNumber(
+  v: number,
+  o: { decimals: number; group: boolean; prefix: string; suffix: string },
+): string {
   const s = Math.abs(v).toFixed(o.decimals);
   const [int_, dec] = s.split(".");
   const g = o.group ? int_!.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : int_!;
@@ -267,7 +326,8 @@ export function formatNumber(v: number, o: { decimals: number; group: boolean; p
 
 export const Counter = defineComponent("Counter", {
   category: "ui",
-  description: "An animated number that counts from `from` to `to`. Uses tabular figures so the width does not jitter.",
+  description:
+    "An animated number that counts from `from` to `to`. Uses tabular figures so the width does not jitter.",
   children: "effects",
   textChildren: "text",
   controls: {
@@ -275,7 +335,11 @@ export const Counter = defineComponent("Counter", {
     from: num({ default: 0 }),
     to: num({ default: 100 }),
     delay: time({ default: 0, unit: "s" }),
-    over: time({ default: 1.2, unit: "s", description: "How long the count takes (not the layer duration)." }),
+    over: time({
+      default: 1.2,
+      unit: "s",
+      description: "How long the count takes (not the layer duration).",
+    }),
     ease: text({ default: "expo.out" }),
     decimals: int({ min: 0, max: 8, default: 0 }),
     group: bool({ default: true, description: "Thousands separators." }),
@@ -283,21 +347,34 @@ export const Counter = defineComponent("Counter", {
     suffix: text({ default: "" }),
     ...typographyControls(),
     ...textStyleControls(),
-    numeric: enumOf(["default", "tabular", "proportional", "lining", "oldstyle"], { default: "tabular" }),
+    numeric: enumOf(["default", "tabular", "proportional", "lining", "oldstyle"], {
+      default: "tabular",
+    }),
     align: enumOf(["left", "center", "right", "justify"], { default: "center" }),
     weight: num({ animatable: true, min: 1, max: 1000, default: 700, step: 1, unit: "wght" }),
     size: num({ animatable: true, min: 1, max: 2000, default: 120, step: 1, unit: "px" }),
   },
   render: (p, rc) => {
-    const fmt = (v: number) => formatNumber(v, { decimals: p.decimals, group: p.group, prefix: p.prefix, suffix: p.suffix });
+    const fmt = (v: number) =>
+      formatNumber(v, { decimals: p.decimals, group: p.group, prefix: p.prefix, suffix: p.suffix });
     const delay = typeof p.delay === "number" ? p.delay : parseFloat(String(p.delay));
     const dur = typeof p.over === "number" ? p.over : parseFloat(String(p.over));
     const a = rc.node.start + delay;
     const e = parseEase(p.ease);
-    const val = (t: number) => p.from + (p.to - p.from) * e(Math.min(1, Math.max(0, (t - a) / Math.max(1e-6, dur))));
+    const val = (t: number) =>
+      p.from + (p.to - p.from) * e(Math.min(1, Math.max(0, (t - a) / Math.max(1e-6, dur))));
     const out = renderText({ ...p, text: fmt(p.from) }, rc);
     const span: [number, number] = [a, a + dur];
-    out.channels = [...(out.channels ?? []), { target: `#${rc.id}-text`, prop: "text", signal: exprSignal((t) => fmt(val(t)), "discrete", span), span, format: (v) => String(v) }];
+    out.channels = [
+      ...(out.channels ?? []),
+      {
+        target: `#${rc.id}-text`,
+        prop: "text",
+        signal: exprSignal((t) => fmt(val(t)), "discrete", span),
+        span,
+        format: (v) => String(v),
+      },
+    ];
     return out;
   },
 });
@@ -306,7 +383,8 @@ export const Counter = defineComponent("Counter", {
 
 export const ProgressRing = defineComponent("ProgressRing", {
   category: "ui",
-  description: "A circular progress indicator. Animate `value` (0 to 1); optionally show the percentage.",
+  description:
+    "A circular progress indicator. Animate `value` (0 to 1); optionally show the percentage.",
   children: "effects",
   controls: {
     at: atControl(),
@@ -329,7 +407,9 @@ export const ProgressRing = defineComponent("ProgressRing", {
     const defs: string[] = [];
     let stroke = typeof p.color === "string" ? p.color : "#7c8cff";
     if (p.color && typeof p.color === "object" && (p.color as any).type === "linear") {
-      defs.push(`<linearGradient id="${id}-g" x1="0" y1="0" x2="1" y2="1">${(p.color as any).stops.map(([o, c]: [number, string]) => `<stop offset="${o}" stop-color="${c}"/>`).join("")}</linearGradient>`);
+      defs.push(
+        `<linearGradient id="${id}-g" x1="0" y1="0" x2="1" y2="1">${(p.color as any).stops.map(([o, c]: [number, string]) => `<stop offset="${o}" stop-color="${c}"/>`).join("")}</linearGradient>`,
+      );
       stroke = `url(#${id}-g)`;
     }
     const v0 = rc.at<number>("value", rc.node.start);
@@ -337,8 +417,28 @@ export const ProgressRing = defineComponent("ProgressRing", {
     const channels: Channel[] = [];
     const span: [number, number] = [rc.node.start, rc.node.end];
     if (sg.kind !== "const") {
-      channels.push({ target: `#${id}`, prop: "attr:stroke-dashoffset", signal: exprSignal((t) => round(1 - Math.min(1, Math.max(0, evalProp(sg, t) as number)), 4), "number", span), span });
-      if (p.showValue) channels.push({ target: `#${id}-label`, prop: "text", signal: exprSignal((t) => `${Math.round(Math.min(1, Math.max(0, evalProp(sg, t) as number)) * 100)}%`, "discrete", span), span, format: (v) => String(v) });
+      channels.push({
+        target: `#${id}`,
+        prop: "attr:stroke-dashoffset",
+        signal: exprSignal(
+          (t) => round(1 - Math.min(1, Math.max(0, evalProp(sg, t) as number)), 4),
+          "number",
+          span,
+        ),
+        span,
+      });
+      if (p.showValue)
+        channels.push({
+          target: `#${id}-label`,
+          prop: "text",
+          signal: exprSignal(
+            (t) => `${Math.round(Math.min(1, Math.max(0, evalProp(sg, t) as number)) * 100)}%`,
+            "discrete",
+            span,
+          ),
+          span,
+          format: (v) => String(v),
+        });
     }
     const pl = placement(p.at, rc);
     return {
@@ -356,7 +456,8 @@ const PALETTE = ["#7c8cff", "#ff6b9a", "#35d0a5", "#ffb84d", "#4dc3ff", "#c084fc
 
 export const Chart = defineComponent("Chart", {
   category: "ui",
-  description: "Bar, line or donut chart that draws in. `progress` (0 to 1) animates the reveal; bars stagger by `stagger`.",
+  description:
+    "Bar, line or donut chart that draws in. `progress` (0 to 1) animates the reveal; bars stagger by `stagger`.",
   children: "effects",
   controls: {
     at: atControl(),
@@ -366,8 +467,19 @@ export const Chart = defineComponent("Chart", {
     height: num({ min: 50, max: 4000, default: 480, unit: "px" }),
     max: num({ min: 0, description: "Axis max (default: largest value)." }),
     progress: num({ animatable: true, min: 0, max: 1, default: 1, step: 0.01 }),
-    stagger: num({ min: 0, max: 1, default: 0.12, description: "Bar stagger as a fraction of the reveal." }),
-    thickness: num({ min: 4, max: 400, default: 56, unit: "px", description: "Donut ring thickness." }),
+    stagger: num({
+      min: 0,
+      max: 1,
+      default: 0.12,
+      description: "Bar stagger as a fraction of the reveal.",
+    }),
+    thickness: num({
+      min: 4,
+      max: 400,
+      default: 56,
+      unit: "px",
+      description: "Donut ring thickness.",
+    }),
     labels: bool({ default: true }),
     labelColor: color({ default: "#c7c9d6" }),
     font: text({ default: "$type.body" }),
@@ -377,7 +489,9 @@ export const Chart = defineComponent("Chart", {
   render: (p, rc) => {
     const W = p.width as number;
     const H = p.height as number;
-    const data = ((p.data as Array<{ label?: string; value: number; color?: string }>) ?? []).map((d, i) => ({ ...d, color: d.color ?? PALETTE[i % PALETTE.length]! }));
+    const data = ((p.data as Array<{ label?: string; value: number; color?: string }>) ?? []).map(
+      (d, i) => ({ ...d, color: d.color ?? PALETTE[i % PALETTE.length]! }),
+    );
     const maxV = p.max ?? Math.max(1, ...data.map((d) => d.value));
     const id = rc.sub("chart");
     const sg = rc.node.props.progress as Signal<number>;
@@ -403,10 +517,21 @@ export const Chart = defineComponent("Chart", {
         };
         const h0 = full * k(rc.node.start);
         svg += `<rect id="${id}-b${i}" x="${round(x)}" y="${round(area - h0)}" width="${round(bw)}" height="${round(h0)}" rx="${p.radius}" fill="${d.color}"/>`;
-        if (p.labels && d.label) svg += `<text x="${round(x + bw / 2)}" y="${H - 14}" text-anchor="middle" fill="${p.labelColor}" style="font:${font}">${esc(d.label)}</text>`;
+        if (p.labels && d.label)
+          svg += `<text x="${round(x + bw / 2)}" y="${H - 14}" text-anchor="middle" fill="${p.labelColor}" style="font:${font}">${esc(d.label)}</text>`;
         if (animated) {
-          channels.push({ target: `#${id}-b${i}`, prop: "attr:height", signal: exprSignal((t) => round(full * k(t)), "number", span), span });
-          channels.push({ target: `#${id}-b${i}`, prop: "attr:y", signal: exprSignal((t) => round(area - full * k(t)), "number", span), span });
+          channels.push({
+            target: `#${id}-b${i}`,
+            prop: "attr:height",
+            signal: exprSignal((t) => round(full * k(t)), "number", span),
+            span,
+          });
+          channels.push({
+            target: `#${id}-b${i}`,
+            prop: "attr:y",
+            signal: exprSignal((t) => round(area - full * k(t)), "number", span),
+            span,
+          });
         }
       });
     } else if (p.type === "line") {
@@ -420,12 +545,29 @@ export const Chart = defineComponent("Chart", {
       svg += `<path id="${id}-line" d="${dpath}" fill="none" stroke="${color0}" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1 1" stroke-dashoffset="${round(off0, 4)}"/>`;
       pts.forEach((q, i) => {
         svg += `<circle id="${id}-d${i}" cx="${round(q[0])}" cy="${round(q[1])}" r="9" fill="${color0}" opacity="${prog(rc.node.start) >= (i + 1) / n ? 1 : 0}"/>`;
-        if (p.labels && data[i]?.label) svg += `<text x="${round(q[0])}" y="${H - 14}" text-anchor="middle" fill="${p.labelColor}" style="font:${font}">${esc(data[i]!.label!)}</text>`;
-        if (animated) channels.push({ target: `#${id}-d${i}`, prop: "attr:opacity", signal: exprSignal((t) => (prog(t) >= (i + 1) / n - 0.001 ? 1 : 0), "number", span), span });
+        if (p.labels && data[i]?.label)
+          svg += `<text x="${round(q[0])}" y="${H - 14}" text-anchor="middle" fill="${p.labelColor}" style="font:${font}">${esc(data[i]!.label!)}</text>`;
+        if (animated)
+          channels.push({
+            target: `#${id}-d${i}`,
+            prop: "attr:opacity",
+            signal: exprSignal((t) => (prog(t) >= (i + 1) / n - 0.001 ? 1 : 0), "number", span),
+            span,
+          });
       });
       if (animated) {
-        channels.push({ target: `#${id}-line`, prop: "attr:stroke-dashoffset", signal: exprSignal((t) => round(1 - e(prog(t)), 4), "number", span), span });
-        channels.push({ target: `#${id}-area`, prop: "attr:opacity", signal: exprSignal((t) => round(0.12 * e(prog(t)), 4), "number", span), span });
+        channels.push({
+          target: `#${id}-line`,
+          prop: "attr:stroke-dashoffset",
+          signal: exprSignal((t) => round(1 - e(prog(t)), 4), "number", span),
+          span,
+        });
+        channels.push({
+          target: `#${id}-area`,
+          prop: "attr:opacity",
+          signal: exprSignal((t) => round(0.12 * e(prog(t)), 4), "number", span),
+          span,
+        });
       }
     } else {
       const R = Math.min(W, H) / 2 - p.thickness / 2;
@@ -439,8 +581,19 @@ export const Chart = defineComponent("Chart", {
         const off = (t: number) => -startFrac * e(prog(t)) * 100;
         svg += `<circle id="${id}-s${i}" cx="${W / 2}" cy="${H / 2}" r="${round(R)}" fill="none" stroke="${d.color}" stroke-width="${p.thickness}" pathLength="100" stroke-dasharray="${round(seg(rc.node.start), 3)} 100" stroke-dashoffset="${round(off(rc.node.start), 3)}" transform="rotate(-90 ${W / 2} ${H / 2})"/>`;
         if (animated) {
-          channels.push({ target: `#${id}-s${i}`, prop: "attr:stroke-dasharray", signal: exprSignal((t) => `${round(seg(t), 3)} 100`, "discrete", span), span, format: (v) => String(v) });
-          channels.push({ target: `#${id}-s${i}`, prop: "attr:stroke-dashoffset", signal: exprSignal((t) => round(off(t), 3), "number", span), span });
+          channels.push({
+            target: `#${id}-s${i}`,
+            prop: "attr:stroke-dasharray",
+            signal: exprSignal((t) => `${round(seg(t), 3)} 100`, "discrete", span),
+            span,
+            format: (v) => String(v),
+          });
+          channels.push({
+            target: `#${id}-s${i}`,
+            prop: "attr:stroke-dashoffset",
+            signal: exprSignal((t) => round(off(t), 3), "number", span),
+            span,
+          });
         }
       });
     }
@@ -456,10 +609,18 @@ export const Chart = defineComponent("Chart", {
 
 // ---------- CodeBlock ----------
 
-const KEYWORDS = new Set("const let var function return if else for while import from export default new class extends async await try catch throw type interface true false null undefined def in of as typeof".split(" "));
+const KEYWORDS = new Set(
+  "const let var function return if else for while import from export default new class extends async await try catch throw type interface true false null undefined def in of as typeof".split(
+    " ",
+  ),
+);
 
-function highlight(src: string, theme: { kw: string; str: string; num: string; cm: string; fn: string }): string {
-  const re = /(\/\/[^\n]*|#[^\n]*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|\b(\d+(?:\.\d+)?)\b|([A-Za-z_$][\w$]*)(?=\()|([A-Za-z_$][\w$]*)/g;
+function highlight(
+  src: string,
+  theme: { kw: string; str: string; num: string; cm: string; fn: string },
+): string {
+  const re =
+    /(\/\/[^\n]*|#[^\n]*)|("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)|\b(\d+(?:\.\d+)?)\b|([A-Za-z_$][\w$]*)(?=\()|([A-Za-z_$][\w$]*)/g;
   let out = "";
   let last = 0;
   for (const m of src.matchAll(re)) {
@@ -468,8 +629,12 @@ function highlight(src: string, theme: { kw: string; str: string; num: string; c
     if (m[1]) out += `<span style="color:${theme.cm}">${esc(m[1])}</span>`;
     else if (m[2]) out += `<span style="color:${theme.str}">${esc(m[2])}</span>`;
     else if (m[3]) out += `<span style="color:${theme.num}">${m[3]}</span>`;
-    else if (m[4]) out += KEYWORDS.has(m[4]) ? `<span style="color:${theme.kw}">${m[4]}</span>` : `<span style="color:${theme.fn}">${m[4]}</span>`;
-    else if (m[5]) out += KEYWORDS.has(m[5]) ? `<span style="color:${theme.kw}">${m[5]}</span>` : esc(m[5]);
+    else if (m[4])
+      out += KEYWORDS.has(m[4])
+        ? `<span style="color:${theme.kw}">${m[4]}</span>`
+        : `<span style="color:${theme.fn}">${m[4]}</span>`;
+    else if (m[5])
+      out += KEYWORDS.has(m[5]) ? `<span style="color:${theme.kw}">${m[5]}</span>` : esc(m[5]);
   }
   return out + esc(src.slice(last));
 }
@@ -493,11 +658,18 @@ export const CodeBlock = defineComponent("CodeBlock", {
   },
   render: (p, rc) => {
     const dark = p.theme === "dark";
-    const th = dark ? { kw: "#ff7ab2", str: "#8fe38f", num: "#ffcb6b", cm: "#6b7089", fn: "#82aaff" } : { kw: "#c2185b", str: "#2e7d32", num: "#e65100", cm: "#8a8fa3", fn: "#1565c0" };
+    const th = dark
+      ? { kw: "#ff7ab2", str: "#8fe38f", num: "#ffcb6b", cm: "#6b7089", fn: "#82aaff" }
+      : { kw: "#c2185b", str: "#2e7d32", num: "#e65100", cm: "#8a8fa3", fn: "#1565c0" };
     const lines = String(p.code).replace(/\n$/, "").split("\n");
     const lh = p.size * 1.55;
     const id = rc.sub("code");
-    const body = lines.map((l, i) => `<div style="height:${lh}px;white-space:pre">${p.lineNumbers ? `<span style="display:inline-block;width:${p.size * 2}px;color:${th.cm}">${i + 1}</span>` : ""}${highlight(l, th)}</div>`).join("");
+    const body = lines
+      .map(
+        (l, i) =>
+          `<div style="height:${lh}px;white-space:pre">${p.lineNumbers ? `<span style="display:inline-block;width:${p.size * 2}px;color:${th.cm}">${i + 1}</span>` : ""}${highlight(l, th)}</div>`,
+      )
+      .join("");
     const H = lines.length * lh + p.padding * 2;
     const W = p.width as number;
     const rv = rc.node.props.reveal as Signal<number>;
@@ -510,11 +682,25 @@ export const CodeBlock = defineComponent("CodeBlock", {
       const part = pos - full;
       if (v >= 1) return "inset(0 0 0 0)";
       const y1 = full * lh;
-      const pts = [`0px 0px`, `${innerW}px 0px`, `${innerW}px ${y1}px`, `${round(part * innerW)}px ${y1}px`, `${round(part * innerW)}px ${y1 + lh}px`, `0px ${y1 + lh}px`];
+      const pts = [
+        `0px 0px`,
+        `${innerW}px 0px`,
+        `${innerW}px ${y1}px`,
+        `${round(part * innerW)}px ${y1}px`,
+        `${round(part * innerW)}px ${y1 + lh}px`,
+        `0px ${y1 + lh}px`,
+      ];
       return `polygon(${pts.join(", ")})`;
     };
     const channels: Channel[] = [];
-    if (rv.kind !== "const") channels.push({ target: `#${id}-body`, prop: "clipPath", signal: exprSignal((t) => clip(evalProp(rv, t) as number), "discrete", span), span, format: (v) => String(v) });
+    if (rv.kind !== "const")
+      channels.push({
+        target: `#${id}-body`,
+        prop: "clipPath",
+        signal: exprSignal((t) => clip(evalProp(rv, t) as number), "discrete", span),
+        span,
+        format: (v) => String(v),
+      });
     const pl = placement(p.at, rc);
     return {
       html: `<div id="${id}" style="width:100%;height:100%;box-sizing:border-box;padding:${p.padding}px;border-radius:${p.radius}px;background:${dark ? "#10121a" : "#f6f7fb"};color:${dark ? "#e6e8f2" : "#20243a"};font:500 ${p.size}px/${lh}px ${rc.fontFamily(p.font)};box-shadow:0 30px 70px rgba(0,0,0,.35);overflow:hidden"><div id="${id}-body" style="clip-path:${clip(rc.at<number>("reveal", rc.node.start))}">${body}</div></div>`,
@@ -525,5 +711,15 @@ export const CodeBlock = defineComponent("CodeBlock", {
   },
 });
 
-export const uiComponents: ComponentDef[] = [UIMock.def, Card.def, GlassCard.def, Cursor.def, Chip.def, Counter.def, ProgressRing.def, Chart.def, CodeBlock.def];
+export const uiComponents: ComponentDef[] = [
+  UIMock.def,
+  Card.def,
+  GlassCard.def,
+  Cursor.def,
+  Chip.def,
+  Counter.def,
+  ProgressRing.def,
+  Chart.def,
+  CodeBlock.def,
+];
 export { lenPx };

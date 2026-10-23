@@ -23,7 +23,10 @@ export interface RenderResult {
 }
 
 /** Render a materialized project directory with HyperFrames. Fails loudly on any error. */
-export async function renderProjectDir(dir: string, opts: RenderOptions = {}): Promise<RenderResult> {
+export async function renderProjectDir(
+  dir: string,
+  opts: RenderOptions = {},
+): Promise<RenderResult> {
   requireFfmpeg();
   const output = resolve(opts.output ?? join(dir, "renders", "out.mp4"));
   const args = ["render", dir, "-o", output];
@@ -37,7 +40,10 @@ export async function renderProjectDir(dir: string, opts: RenderOptions = {}): P
   if (r.code !== 0 || !existsSync(output)) {
     throw new CodeCutError("render_failed", `hyperframes render failed (exit ${r.code})`, {
       fix: "See the details for the HyperFrames log; run `codecut lint` first.",
-      details: log.split("\n").filter((l) => /error|fail|404|timeout/i.test(l)).slice(0, 20),
+      details: log
+        .split("\n")
+        .filter((l) => /error|fail|404|timeout/i.test(l))
+        .slice(0, 20),
     });
   }
   return { output, bytes: statSync(output).size, log };
@@ -51,16 +57,23 @@ export interface SnapshotOptions {
 }
 
 /** Capture exact-time PNG stills of a materialized project. Returns file paths in time order given. */
-export async function snapshotFrames(dir: string, opts: SnapshotOptions): Promise<{ files: string[]; contactSheet?: string }> {
+export async function snapshotFrames(
+  dir: string,
+  opts: SnapshotOptions,
+): Promise<{ files: string[]; contactSheet?: string }> {
   const args = ["snapshot", dir, "--at", opts.times.join(","), "-o", opts.outDir, "--no-end"];
   if (opts.software) args.push("--no-browser-gpu");
   const r = await runHyperframes(args, { cwd: dir, timeoutMs: 10 * 60_000 });
   if (r.code !== 0) {
     throw new CodeCutError("render_failed", `hyperframes snapshot failed (exit ${r.code})`, {
-      details: stripAnsi(r.stdout + r.stderr).split("\n").slice(-15),
+      details: stripAnsi(r.stdout + r.stderr)
+        .split("\n")
+        .slice(-15),
     });
   }
-  const files = opts.times.map((t, i) => join(opts.outDir, `frame-${String(i).padStart(2, "0")}-at-${t}s.png`));
+  const files = opts.times.map((t, i) =>
+    join(opts.outDir, `frame-${String(i).padStart(2, "0")}-at-${t}s.png`),
+  );
   const sheet = join(opts.outDir, "contact-sheet.jpg");
   return { files: files.filter(existsSync), contactSheet: existsSync(sheet) ? sheet : undefined };
 }

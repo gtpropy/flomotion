@@ -10,7 +10,9 @@ export function fontFaceCss(root: string, fonts: ResolvedFont[]): string {
   for (const f of fonts) {
     if (f.source === "system") continue;
     for (const file of f.files) {
-      const w = Array.isArray(file.weight) ? `${file.weight[0]} ${file.weight[1]}` : String(file.weight ?? 400);
+      const w = Array.isArray(file.weight)
+        ? `${file.weight[0]} ${file.weight[1]}`
+        : String(file.weight ?? 400);
       rules.push(
         `@font-face{font-family:${JSON.stringify(f.family)};src:url(${JSON.stringify(pathToFileURL(resolve(root, file.path)).href)}) format(${JSON.stringify(file.format)});font-weight:${w};font-style:${file.style ?? "normal"};font-display:block${file.unicodeRange ? `;unicode-range:${file.unicodeRange}` : ""}}`,
       );
@@ -35,7 +37,12 @@ export async function openFontPage(root: string, fonts: ResolvedFont[]): Promise
   const browser = await puppeteer.launch({
     executablePath: findChrome(),
     headless: true,
-    args: ["--allow-file-access-from-files", "--no-sandbox", "--font-render-hinting=none", "--disable-lcd-text"],
+    args: [
+      "--allow-file-access-from-files",
+      "--no-sandbox",
+      "--font-render-hinting=none",
+      "--disable-lcd-text",
+    ],
   });
   const page = await browser.newPage();
   const remote: string[] = [];
@@ -54,4 +61,5 @@ export async function openFontPage(root: string, fonts: ResolvedFont[]): Promise
   return { browser, page, close: () => browser.close() };
 }
 
-export const remoteRequests = (s: ChromeSession): string[] => (s.page as unknown as { __remote: string[] }).__remote ?? [];
+export const remoteRequests = (s: ChromeSession): string[] =>
+  (s.page as unknown as { __remote: string[] }).__remote ?? [];

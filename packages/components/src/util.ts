@@ -13,15 +13,21 @@ export function css(style: Record<string, string | number | undefined | false>):
     .join(";");
 }
 
-export const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+export const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const lengthLike = z.union([z.number(), z.string()]);
 
 /** `at`: a placement preset or an explicit [x, y] from the top-left of the parent. */
 export const atControl = () =>
   json<string | Array<number | string>>(
-    { default: "center", description: `Placement: ${AT_PRESETS.join(" | ")} or [x, y] (px, %, vw, vh) from the top-left.` },
-    z.union([z.enum(AT_PRESETS), z.tuple([lengthLike, lengthLike])]) as z.ZodType<string | Array<number | string>>,
+    {
+      default: "center",
+      description: `Placement: ${AT_PRESETS.join(" | ")} or [x, y] (px, %, vw, vh) from the top-left.`,
+    },
+    z.union([z.enum(AT_PRESETS), z.tuple([lengthLike, lengthLike])]) as z.ZodType<
+      string | Array<number | string>
+    >,
   );
 
 const PRESET: Record<string, { left: string; top: string; xp: number; yp: number }> = {
@@ -57,7 +63,8 @@ export function fillCss(fill: Fill | undefined, rc: RenderCtx): string {
   if (typeof fill === "string") return fill;
   switch (fill.type) {
     case "linear": {
-      const angle = typeof fill.angle === "number" ? fill.angle : parseFloat(String(fill.angle ?? 180));
+      const angle =
+        typeof fill.angle === "number" ? fill.angle : parseFloat(String(fill.angle ?? 180));
       return `linear-gradient(${angle}deg, ${fill.stops.map(([p, c]) => `${c} ${round(p * 100, 2)}%`).join(", ")})`;
     }
     case "radial": {
@@ -72,13 +79,18 @@ export function fillCss(fill: Fill | undefined, rc: RenderCtx): string {
 }
 
 /** Resolve a Length (number|string) to px given a parent axis. */
-export const px = (rc: RenderCtx, v: number | string | undefined, fallback: number, axis?: "x" | "y") =>
-  v === undefined ? fallback : rc.px(v, axis);
+export const px = (
+  rc: RenderCtx,
+  v: number | string | undefined,
+  fallback: number,
+  axis?: "x" | "y",
+) => (v === undefined ? fallback : rc.px(v, axis));
 
 /** First-frame static value of a prop that may be a Signal. */
 export const at0 = <T = any>(rc: RenderCtx, prop: string): T => rc.at<T>(prop, rc.node.start);
 
-export const num3 = (v: unknown, d: number[]): number[] => (Array.isArray(v) ? [v[0] ?? d[0]!, v[1] ?? d[1]!, v[2] ?? d[2]!] : d);
+export const num3 = (v: unknown, d: number[]): number[] =>
+  Array.isArray(v) ? [v[0] ?? d[0]!, v[1] ?? d[1]!, v[2] ?? d[2]!] : d;
 
 /** Stroke control group value shape used by shapes. */
 export interface StrokeSpec {

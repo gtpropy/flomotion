@@ -37,7 +37,7 @@ const FAMILIES: Record<string, Family> = {
   power4: power(5),
   // GSAP blends in a p^6 term so the curve lands exactly on 1 (see gsap-core `_insertEase("Expo")`).
   expo: {
-    out: (p) => 1 - (2 ** (10 * (-p)) * (1 - p) + (1 - p) ** 6 * p),
+    out: (p) => 1 - (2 ** (10 * -p) * (1 - p) + (1 - p) ** 6 * p),
     in: (p) => 2 ** (10 * (p - 1)) * p + p ** 6 * (1 - p),
   },
   circ: {
@@ -198,7 +198,9 @@ export function springValue(t: number, stiffness: number, damping: number, mass 
   const zeta = damping / (2 * Math.sqrt(stiffness * mass));
   if (zeta < 1) {
     const wd = w0 * Math.sqrt(1 - zeta * zeta);
-    return 1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + ((zeta * w0) / wd) * Math.sin(wd * t));
+    return (
+      1 - Math.exp(-zeta * w0 * t) * (Math.cos(wd * t) + ((zeta * w0) / wd) * Math.sin(wd * t))
+    );
   }
   if (zeta === 1) return 1 - Math.exp(-w0 * t) * (1 + w0 * t);
   const s = Math.sqrt(zeta * zeta - 1);

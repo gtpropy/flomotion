@@ -57,7 +57,12 @@ const clamp01 = (x: number) => (x < 0 ? 0 : x > 1 ? 1 : x);
 
 /** Clip a unit square by the half-plane `a*x + b*y <= c`; returns polygon points in %. */
 export function halfPlanePolygon(a: number, b: number, c: number): string {
-  const square: Array<[number, number]> = [[0, 0], [1, 0], [1, 1], [0, 1]];
+  const square: Array<[number, number]> = [
+    [0, 0],
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ];
   const out: Array<[number, number]> = [];
   for (let i = 0; i < 4; i++) {
     const p = square[i]!;
@@ -78,8 +83,16 @@ export function halfPlanePolygon(a: number, b: number, c: number): string {
  * Plan a transition INTO `scene` from `prev`. The incoming scene animates over its first `duration`
  * seconds while the previous scene holds underneath (its slot is extended until the end of the window).
  */
-export function transitionPlan(scene: RNode, prev: RNode, spec: TransitionSpec, comp: ResolvedComp): TransitionPlan {
-  const d = Math.max(1 / comp.fps, typeof spec.duration === "number" ? spec.duration : parseFloat(String(spec.duration ?? 0.3)));
+export function transitionPlan(
+  scene: RNode,
+  prev: RNode,
+  spec: TransitionSpec,
+  comp: ResolvedComp,
+): TransitionPlan {
+  const d = Math.max(
+    1 / comp.fps,
+    typeof spec.duration === "number" ? spec.duration : parseFloat(String(spec.duration ?? 0.3)),
+  );
   const t0 = scene.start;
   const t1 = t0 + d;
   const ease = parseEase(spec.ease ?? DEFAULT_EASE[spec.type] ?? "linear");
@@ -90,11 +103,19 @@ export function transitionPlan(scene: RNode, prev: RNode, spec: TransitionSpec, 
   const span: [number, number] = [t0, t1];
   const num = (fn: (t: number) => number) => exprSignal(fn, "number", span);
   const str = (fn: (t: number) => string) => exprSignal(fn, "discrete", span);
-  const plan: TransitionPlan = { incoming: empty(), outgoing: empty(), overlays: [], holdUntil: t1, issues: [] };
+  const plan: TransitionPlan = {
+    incoming: empty(),
+    outgoing: empty(),
+    overlays: [],
+    holdUntil: t1,
+    issues: [],
+  };
   const dir = DIRS[spec.direction ?? "e"] ?? DIRS.e!;
   const tint = (c: string | undefined, fallback: string) => {
     const raw = c ?? fallback;
-    const v = raw.startsWith("$") ? (comp.theme.tokens[raw.slice(1)] as string | undefined) ?? fallback : raw;
+    const v = raw.startsWith("$")
+      ? ((comp.theme.tokens[raw.slice(1)] as string | undefined) ?? fallback)
+      : raw;
     try {
       return toCss(parseColor(v));
     } catch {
@@ -115,14 +136,24 @@ export function transitionPlan(scene: RNode, prev: RNode, spec: TransitionSpec, 
       plan.incoming.offsets.push({ prop: "opacity", mode: "mul", signal: num(e) });
       break;
     case "dipToColor":
-      plan.incoming.offsets.push({ prop: "opacity", mode: "mul", signal: num((t) => (p(t) < 0.5 ? 0 : 1)) });
+      plan.incoming.offsets.push({
+        prop: "opacity",
+        mode: "mul",
+        signal: num((t) => (p(t) < 0.5 ? 0 : 1)),
+      });
       overlay("dip", tint(spec.color, "#000000"), (t) => ease(tri(p(t))));
       break;
     case "flash":
-      plan.incoming.offsets.push({ prop: "opacity", mode: "mul", signal: num((t) => (p(t) < 0.35 ? 0 : 1)) });
+      plan.incoming.offsets.push({
+        prop: "opacity",
+        mode: "mul",
+        signal: num((t) => (p(t) < 0.35 ? 0 : 1)),
+      });
       overlay("flash", tint(spec.color, "#ffffff"), (t) => {
         const x = p(t);
-        return x < 0.35 ? ease(x / 0.35) * (spec.intensity ?? 1) : (1 - ease((x - 0.35) / 0.65)) * (spec.intensity ?? 1);
+        return x < 0.35
+          ? ease(x / 0.35) * (spec.intensity ?? 1)
+          : (1 - ease((x - 0.35) / 0.65)) * (spec.intensity ?? 1);
       });
       break;
     case "wipe": {
@@ -146,29 +177,67 @@ export function transitionPlan(scene: RNode, prev: RNode, spec: TransitionSpec, 
     case "slide":
     case "push": {
       const [dx, dy] = dir;
-      if (dx) plan.incoming.offsets.push({ prop: "x", mode: "add", signal: num((t) => -dx * W * (1 - e(t))) });
-      if (dy) plan.incoming.offsets.push({ prop: "y", mode: "add", signal: num((t) => -dy * H * (1 - e(t))) });
+      if (dx)
+        plan.incoming.offsets.push({
+          prop: "x",
+          mode: "add",
+          signal: num((t) => -dx * W * (1 - e(t))),
+        });
+      if (dy)
+        plan.incoming.offsets.push({
+          prop: "y",
+          mode: "add",
+          signal: num((t) => -dy * H * (1 - e(t))),
+        });
       if (spec.type === "push") {
-        if (dx) plan.outgoing.offsets.push({ prop: "x", mode: "add", signal: num((t) => dx * W * e(t)) });
-        if (dy) plan.outgoing.offsets.push({ prop: "y", mode: "add", signal: num((t) => dy * H * e(t)) });
+        if (dx)
+          plan.outgoing.offsets.push({ prop: "x", mode: "add", signal: num((t) => dx * W * e(t)) });
+        if (dy)
+          plan.outgoing.offsets.push({ prop: "y", mode: "add", signal: num((t) => dy * H * e(t)) });
       }
       break;
     }
     case "whipPan": {
       const [dx, dy] = DIRS[spec.direction ?? "e"] ?? DIRS.e!;
-      const blur = (t: number) => Math.round(Math.sin(p(t) * Math.PI) * 40 * (spec.intensity ?? 1) * 10) / 10;
-      for (const side of [plan.incoming, plan.outgoing]) side.filters.push(str((t) => `blur(${blur(t)}px)`));
-      if (dx) plan.incoming.offsets.push({ prop: "x", mode: "add", signal: num((t) => -dx * W * (1 - e(t))) });
-      if (dy) plan.incoming.offsets.push({ prop: "y", mode: "add", signal: num((t) => -dy * H * (1 - e(t))) });
-      if (dx) plan.outgoing.offsets.push({ prop: "x", mode: "add", signal: num((t) => dx * W * e(t)) });
-      if (dy) plan.outgoing.offsets.push({ prop: "y", mode: "add", signal: num((t) => dy * H * e(t)) });
+      const blur = (t: number) =>
+        Math.round(Math.sin(p(t) * Math.PI) * 40 * (spec.intensity ?? 1) * 10) / 10;
+      for (const side of [plan.incoming, plan.outgoing])
+        side.filters.push(str((t) => `blur(${blur(t)}px)`));
+      if (dx)
+        plan.incoming.offsets.push({
+          prop: "x",
+          mode: "add",
+          signal: num((t) => -dx * W * (1 - e(t))),
+        });
+      if (dy)
+        plan.incoming.offsets.push({
+          prop: "y",
+          mode: "add",
+          signal: num((t) => -dy * H * (1 - e(t))),
+        });
+      if (dx)
+        plan.outgoing.offsets.push({ prop: "x", mode: "add", signal: num((t) => dx * W * e(t)) });
+      if (dy)
+        plan.outgoing.offsets.push({ prop: "y", mode: "add", signal: num((t) => dy * H * e(t)) });
       break;
     }
     case "zoomThrough":
       plan.outgoing.offsets.push({ prop: "scale", mode: "mul", signal: num((t) => 1 + 2 * e(t)) });
-      plan.outgoing.offsets.push({ prop: "opacity", mode: "mul", signal: num((t) => 1 - clamp01((p(t) - 0.35) / 0.5)) });
-      plan.incoming.offsets.push({ prop: "scale", mode: "mul", signal: num((t) => 0.5 + 0.5 * e(t)) });
-      plan.incoming.offsets.push({ prop: "opacity", mode: "mul", signal: num((t) => clamp01(p(t) / 0.5)) });
+      plan.outgoing.offsets.push({
+        prop: "opacity",
+        mode: "mul",
+        signal: num((t) => 1 - clamp01((p(t) - 0.35) / 0.5)),
+      });
+      plan.incoming.offsets.push({
+        prop: "scale",
+        mode: "mul",
+        signal: num((t) => 0.5 + 0.5 * e(t)),
+      });
+      plan.incoming.offsets.push({
+        prop: "opacity",
+        mode: "mul",
+        signal: num((t) => clamp01(p(t) / 0.5)),
+      });
       break;
     case "glitch": {
       const seed = 17;
@@ -183,11 +252,17 @@ export function transitionPlan(scene: RNode, prev: RNode, spec: TransitionSpec, 
         mode: "mul",
         signal: num((t) => (p(t) < 0.2 ? (noise1D(step(t) * 5.7, seed + 1) > 0 ? 1 : 0.2) : 1)),
       });
-      plan.incoming.filters.push(str((t) => `hue-rotate(${Math.round(noise1D(step(t) * 2.3, seed + 2) * 90 * (1 - p(t)))}deg)`));
+      plan.incoming.filters.push(
+        str(
+          (t) => `hue-rotate(${Math.round(noise1D(step(t) * 2.3, seed + 2) * 90 * (1 - p(t)))}deg)`,
+        ),
+      );
       break;
     }
     case "shader":
-      plan.issues.push(`shader("${spec.name ?? ""}") transitions are a typed stub (later tier); using dissolve`);
+      plan.issues.push(
+        `shader("${spec.name ?? ""}") transitions are a typed stub (later tier); using dissolve`,
+      );
       plan.incoming.offsets.push({ prop: "opacity", mode: "mul", signal: num(e) });
       break;
     default:

@@ -7,14 +7,14 @@ and real test renders. **Installed version wins over the prompt.** Differences a
 
 ## CLI used by CodeCut
 
-| Need | Command |
-| --- | --- |
-| Render | `hyperframes render <dir> -o out.mp4 [-f 30] [-q draft\|looks\|delivery] [-w 1] --quiet` |
-| Lint+runtime check | `hyperframes check <dir> --json` (also `lint --json`, `validate`) |
-| Still frames | `hyperframes snapshot <dir> --at 1.5,3 -o <outdir> --no-end` (exact instants) |
-| Timeline listing | `hyperframes timeline <dir> --json` |
-| Beats / transcribe / tts | `beats`, `transcribe` (whisper-cpp), `tts` (Kokoro, local) exist; optional |
-| Env health | `hyperframes doctor` (reports FFmpeg, Chrome, whisper-cpp, memory) |
+| Need                     | Command                                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------------------- |
+| Render                   | `hyperframes render <dir> -o out.mp4 [-f 30] [-q draft\|looks\|delivery] [-w 1] --quiet` |
+| Lint+runtime check       | `hyperframes check <dir> --json` (also `lint --json`, `validate`)                        |
+| Still frames             | `hyperframes snapshot <dir> --at 1.5,3 -o <outdir> --no-end` (exact instants)            |
+| Timeline listing         | `hyperframes timeline <dir> --json`                                                      |
+| Beats / transcribe / tts | `beats`, `transcribe` (whisper-cpp), `tts` (Kokoro, local) exist; optional               |
+| Env health               | `hyperframes doctor` (reports FFmpeg, Chrome, whisper-cpp, memory)                       |
 
 Render writes `renders/<name>.mp4` by default; `-o` overrides. Telemetry: set
 `HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for child processes (CodeCut does).
@@ -29,7 +29,7 @@ Render writes `renders/<name>.mp4` by default; `-o` overrides. Telemetry: set
 - Timed element: `class="clip"` + `data-start` + `data-duration` (seconds). Visible over
   `[start, start+duration)`; an end-state landing exactly on the end is never rendered.
 - **`data-track-index` is a Studio lane only.** Render never reads it. Paint order = CSS `z-index`.
-- Timeline: one paused GSAP timeline per composition, registered *after* its tweens:
+- Timeline: one paused GSAP timeline per composition, registered _after_ its tweens:
   `window.__timelines = window.__timelines || {}; window.__timelines["<composition-id>"] = tl;`
 - Supported GSAP methods: `set`, `to`, `from`, `fromTo`. Prefer `fromTo` (seek-back safe).
   Absolute positions as 3rd arg.
@@ -38,8 +38,8 @@ Render writes `renders/<name>.mp4` by default; `-o` overrides. Telemetry: set
   element (`gsap_css_transform_conflict`), tween of the `.clip` element itself
   (`gsap_animates_clip_element`: animate a child or its `opacity`).
 - Nested timed clips: a clip inside another timed element takes `data-start` from the
-  *composition*, not the parent, and shows only while the parent shows. CodeCut avoids this:
-  timed wrappers (scenes) have *untimed* children, or all layers are flat siblings.
+  _composition_, not the parent, and shows only while the parent shows. CodeCut avoids this:
+  timed wrappers (scenes) have _untimed_ children, or all layers are flat siblings.
 - Seek protocol for non-GSAP drawing: `window.addEventListener("hf-seek", e => draw(e.detail.time))`
   (`e.detail.waitUntil(promise)` for async). No rAF clock. Heavy setup:
   `window.__hf.buildReady["key"] = promise`.
@@ -67,7 +67,7 @@ a `@codecut/render` dependency.
   Source Code Pro, Noto Sans JP, Roboto, Open Sans, Lato, Poppins.
 - **For bundled names HyperFrames fetches from Google Fonts at render and caches in
   `~/.cache/hyperframes/fonts/<family>/`** (observed log: `Fetched 11 font face(s) for "Inter"
-  from Google Fonts`). This is network use at render, so CodeCut always emits its own
+from Google Fonts`). This is network use at render, so CodeCut always emits its own
   `@font-face` for every used family and refuses bare-name use of bundled families.
 - A local `@font-face` with `src:url('assets/fonts/x.woff2')` is embedded as a data URI
   (`Embedded local font file ... → data URI`) and makes no network request. Verified.
@@ -86,7 +86,7 @@ a `@codecut/render` dependency.
   `hyperframes_version`, `hyperframes_renderer`, `encoder=Lavf61.7.100` — no timestamps.
   Docker mode (`--docker`) is the documented route for cross-machine determinism.
 - Output: H.264, `yuv420p`, 30 fps default, size from root `data-width/height`.
-- 8 GB machine triggers *low-memory profile*: 1 capture worker, screenshot capture.
+- 8 GB machine triggers _low-memory profile_: 1 capture worker, screenshot capture.
   First render downloads/caches fonts and takes ~1.5 min; warm render of 2 s took ~5 s.
 - Static-frame dedup reuses identical frames (speeds up holds).
 - `check` runs lint + runtime + layout + contrast; warns `first_frame_empty`, `line_unread`,
@@ -96,12 +96,28 @@ a `@codecut/render` dependency.
 
 ## Differences from the prompt
 
-| Prompt | Installed reality | CodeCut decision |
-| --- | --- | --- |
-| `data-track-index` positions layers | Studio lane only; z-index paints | Compiler emits both; z-index from track order |
-| Fonts from `document.fonts.load` fail-hard | HF itself silently falls back | Own `fontGate` pre-render step |
-| GSAP "loaded the way HF expects" (CDN) | CDN in scaffold; local script works | Vendor GSAP locally |
-| No network at render | HF auto-fetches Google fonts for bundled names | Always emit own `@font-face`, lint bare bundled names |
-| Byte-identical double render | True on same machine (no timestamps) | Compare bytes; fall back to frame hashes if a future version embeds timestamps |
-| Audio mix by HF | HF mixes `<audio>` tags itself | CodeCut mixes offline with FFmpeg and emits one `<audio id="mix">` |
-| Transcribe | `hyperframes transcribe` (whisper-cpp) exists | Prefer `whisper-cpp` via HF; error if missing |
+| Prompt                                     | Installed reality                              | CodeCut decision                                                               |
+| ------------------------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------ |
+| `data-track-index` positions layers        | Studio lane only; z-index paints               | Compiler emits both; z-index from track order                                  |
+| Fonts from `document.fonts.load` fail-hard | HF itself silently falls back                  | Own `fontGate` pre-render step                                                 |
+| GSAP "loaded the way HF expects" (CDN)     | CDN in scaffold; local script works            | Vendor GSAP locally                                                            |
+| No network at render                       | HF auto-fetches Google fonts for bundled names | Always emit own `@font-face`, lint bare bundled names                          |
+| Byte-identical double render               | True on same machine (no timestamps)           | Compare bytes; fall back to frame hashes if a future version embeds timestamps |
+| Audio mix by HF                            | HF mixes `<audio>` tags itself                 | CodeCut mixes offline with FFmpeg and emits one `<audio id="mix">`             |
+| Transcribe                                 | `hyperframes transcribe` (whisper-cpp) exists  | Prefer `whisper-cpp` via HF; error if missing                                  |
+
+## Verified later while building
+
+- **Google Fonts CSS API v2** (checked at developers.google.com/fonts/docs/css2): endpoint
+  `https://fonts.googleapis.com/css2?family=<spec>&display=block`; axes alphabetical (`ital` before `wght`),
+  tuples sorted numerically, ranges `300..700`. A modern Chrome User-Agent returns woff2 split into `/* subset */`
+  `@font-face` blocks with `unicode-range`. Developer API: `https://www.googleapis.com/webfonts/v1/webfonts?key=…`
+  (`capability=VF` adds `axes`). No quotas are documented.
+- Google serves woff2 with the licence text **stripped** (only a copyright string remains), so CodeCut reads the
+  family's real licence from `github.com/google/fonts/<ofl|apache|ufl>/<family>/METADATA.pb`.
+- **CSS `mask: url(#svgMask)` is not applied to HTML elements in headless Chrome 152** (the golden frames showed no
+  masking). Masks are implemented as a data-URI SVG `mask-image` instead.
+- GSAP seeks are exact for a master tween driving `onUpdate`, including out-of-order `snapshot --at` times;
+  `snapshot` and `render` agree frame for frame.
+- Running under `tsx` injects an esbuild `__name` helper into functions passed to `page.evaluate`; the measurement
+  page defines a no-op `window.__name`.

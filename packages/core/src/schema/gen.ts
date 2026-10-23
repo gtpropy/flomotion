@@ -17,7 +17,8 @@ function describe(c: AnyControl): string {
   const o = c.opts as ControlOpts<any>;
   const bits: string[] = [];
   if (o.description) bits.push(o.description);
-  if (o.min !== undefined || o.max !== undefined) bits.push(`range ${o.min ?? "-∞"}..${o.max ?? "∞"}`);
+  if (o.min !== undefined || o.max !== undefined)
+    bits.push(`range ${o.min ?? "-∞"}..${o.max ?? "∞"}`);
   if (o.unit) bits.push(`unit ${o.unit}`);
   if (o.default !== undefined) bits.push(`default ${JSON.stringify(o.default)}`);
   return bits.join("; ");
@@ -25,7 +26,10 @@ function describe(c: AnyControl): string {
 
 /** JSON Schema for MCP tool arguments (props in wire form: no expressions). */
 export function propsJsonSchema(def: ComponentDef): Record<string, unknown> {
-  return z.toJSONSchema(def.wire, { unrepresentable: "any", io: "input" }) as Record<string, unknown>;
+  return z.toJSONSchema(def.wire, { unrepresentable: "any", io: "input" }) as Record<
+    string,
+    unknown
+  >;
 }
 
 export interface McpToolSchemas {
@@ -52,7 +56,10 @@ export function mcpToolSchemas(reg: Registry): McpToolSchemas {
       properties: {
         parent: { type: "string", description: "Id of the parent Composition/Track/Scene/Layer." },
         type: { type: "string", enum: comps.map((d) => d.name) },
-        props: { type: "object", description: "Validated against the component schema (see codecut://schema/{component})." },
+        props: {
+          type: "object",
+          description: "Validated against the component schema (see codecut://schema/{component}).",
+        },
         at: { type: "integer", description: "Child index to insert at (default: append)." },
       },
       "x-propsByType": propsByName(comps),
@@ -90,8 +97,10 @@ export function deriveLintRules(def: ComponentDef): DerivedRule[] {
     if (o.min !== undefined || o.max !== undefined) {
       rules.push({ component: def.name, prop, rule: "range", detail: { min: o.min, max: o.max } });
     }
-    if (!c.animatable) rules.push({ component: def.name, prop, rule: "animatable", detail: { animatable: false } });
-    if (c.values) rules.push({ component: def.name, prop, rule: "enum", detail: { values: c.values } });
+    if (!c.animatable)
+      rules.push({ component: def.name, prop, rule: "animatable", detail: { animatable: false } });
+    if (c.values)
+      rules.push({ component: def.name, prop, rule: "enum", detail: { values: c.values } });
     if (o.required) rules.push({ component: def.name, prop, rule: "required", detail: {} });
   }
   return rules;
@@ -115,7 +124,13 @@ export function docsMarkdown(def: ComponentDef): string {
     return `| \`${k}\` | ${type} | ${def_} | ${[o.description, ...bits].filter(Boolean).join("; ")} |`;
   });
   const children =
-    def.children === "any" ? "any layers and effects" : def.children === "none" ? "none" : def.children === "effects" ? "effects only" : (def.children as readonly string[]).join(", ");
+    def.children === "any"
+      ? "any layers and effects"
+      : def.children === "none"
+        ? "none"
+        : def.children === "effects"
+          ? "effects only"
+          : (def.children as readonly string[]).join(", ");
   return [
     `# ${def.name}`,
     "",
@@ -146,7 +161,9 @@ export function docsIndexMarkdown(reg: Registry): string {
   for (const [cat, defs] of [...byCat].sort(([a], [b]) => a.localeCompare(b))) {
     out.push(`## ${cat}`, "");
     for (const d of defs.sort((a, b) => a.name.localeCompare(b.name))) {
-      out.push(`- [${d.name}](./${d.name}.md) (${d.kind}${d.stub ? ", stub" : ""})${d.description ? `: ${d.description}` : ""}`);
+      out.push(
+        `- [${d.name}](./${d.name}.md) (${d.kind}${d.stub ? ", stub" : ""})${d.description ? `: ${d.description}` : ""}`,
+      );
     }
     out.push("");
   }

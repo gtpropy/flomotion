@@ -1,15 +1,16 @@
 import { describe, expect, it } from "vitest";
 import gsap from "gsap";
-import {
-  parseTimeLiteral,
-  parseTimeSpec,
-  snapToFrame,
-  toTimecode,
-} from "../src/values/time.js";
+import { parseTimeLiteral, parseTimeSpec, snapToFrame, toTimecode } from "../src/values/time.js";
 import { parseLength, resolveLength } from "../src/values/length.js";
 import { parseAngle } from "../src/values/angle.js";
 import { parseColor, toHex, contrastRatio } from "../src/values/color.js";
-import { evalEase as ease, parseEase, springSettleTime, springValue, toGsapEase } from "../src/values/ease.js";
+import {
+  evalEase as ease,
+  parseEase,
+  springSettleTime,
+  springValue,
+  toGsapEase,
+} from "../src/values/ease.js";
 import { mulberry32, noise1D, noise2D } from "../src/values/noise.js";
 import { CodeCutError } from "../src/errors.js";
 
@@ -27,8 +28,17 @@ describe("time", () => {
   });
   it("parses references", () => {
     expect(parseTimeSpec("@12s", 30)).toEqual({ kind: "abs", seconds: 12 });
-    expect(parseTimeSpec("@marker:drop+0.2", 30)).toEqual({ kind: "marker", name: "drop", offset: 0.2 });
-    expect(parseTimeSpec("#t1.end+0.2", 30)).toEqual({ kind: "ref", id: "t1", edge: "end", offset: 0.2 });
+    expect(parseTimeSpec("@marker:drop+0.2", 30)).toEqual({
+      kind: "marker",
+      name: "drop",
+      offset: 0.2,
+    });
+    expect(parseTimeSpec("#t1.end+0.2", 30)).toEqual({
+      kind: "ref",
+      id: "t1",
+      edge: "end",
+      offset: 0.2,
+    });
     expect(parseTimeSpec("#hero-2.start-6f", 30)).toEqual({
       kind: "ref",
       id: "hero-2",
@@ -70,21 +80,51 @@ describe("length / angle / color", () => {
 
 describe("ease", () => {
   it("hits endpoints", () => {
-    for (const e of ["linear", "expo.out", "back.out(1.7)", "bezier(.2,.8,.2,1)", "spring(180,18)", "elastic.out", "bounce.out", "sine.inOut", "steps(4)"]) {
+    for (const e of [
+      "linear",
+      "expo.out",
+      "back.out(1.7)",
+      "bezier(.2,.8,.2,1)",
+      "spring(180,18)",
+      "elastic.out",
+      "bounce.out",
+      "sine.inOut",
+      "steps(4)",
+    ]) {
       expect(ease(e, 0)).toBeCloseTo(0, 5);
       expect(ease(e, 1)).toBeCloseTo(1, 5);
     }
   });
   it("matches GSAP for every native family", () => {
     const specs = [
-      "sine.in", "sine.out", "sine.inOut",
-      "quad.in", "quad.out", "quad.inOut", "cubic.out", "quart.inOut", "quint.in",
-      "power2.out", "power4.inOut",
-      "expo.in", "expo.out", "expo.inOut",
-      "circ.in", "circ.out", "circ.inOut",
-      "back.in", "back.out", "back.out(1.7)", "back.inOut(2)",
-      "elastic.out", "elastic.in", "elastic.out(1,0.3)", "elastic.inOut",
-      "bounce.out", "bounce.in", "bounce.inOut",
+      "sine.in",
+      "sine.out",
+      "sine.inOut",
+      "quad.in",
+      "quad.out",
+      "quad.inOut",
+      "cubic.out",
+      "quart.inOut",
+      "quint.in",
+      "power2.out",
+      "power4.inOut",
+      "expo.in",
+      "expo.out",
+      "expo.inOut",
+      "circ.in",
+      "circ.out",
+      "circ.inOut",
+      "back.in",
+      "back.out",
+      "back.out(1.7)",
+      "back.inOut(2)",
+      "elastic.out",
+      "elastic.in",
+      "elastic.out(1,0.3)",
+      "elastic.inOut",
+      "bounce.out",
+      "bounce.in",
+      "bounce.inOut",
     ];
     for (const spec of specs) {
       const native = toGsapEase(spec)!;
@@ -108,9 +148,13 @@ describe("ease", () => {
     expect(ts).toBeLessThan(3);
     expect(Math.abs(springValue(ts + 0.5, 180, 18) - 1)).toBeLessThan(0.001);
     // underdamped spring overshoots
-    expect(Math.max(...Array.from({ length: 200 }, (_, i) => springValue(i / 100, 180, 8)))).toBeGreaterThan(1.05);
+    expect(
+      Math.max(...Array.from({ length: 200 }, (_, i) => springValue(i / 100, 180, 8))),
+    ).toBeGreaterThan(1.05);
     // overdamped does not
-    expect(Math.max(...Array.from({ length: 200 }, (_, i) => springValue(i / 100, 100, 40)))).toBeLessThanOrEqual(1);
+    expect(
+      Math.max(...Array.from({ length: 200 }, (_, i) => springValue(i / 100, 100, 40))),
+    ).toBeLessThanOrEqual(1);
   });
   it("rejects unknown eases", () => {
     expect(() => parseEase("wiggle.out")).toThrow(CodeCutError);

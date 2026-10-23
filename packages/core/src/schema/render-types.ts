@@ -18,7 +18,19 @@ export interface Channel {
 
 /** A parent transform channel nudged by an effect. */
 export interface Offset {
-  prop: "x" | "y" | "z" | "rotation" | "rotationX" | "rotationY" | "scaleX" | "scaleY" | "scale" | "skewX" | "skewY" | "opacity";
+  prop:
+    | "x"
+    | "y"
+    | "z"
+    | "rotation"
+    | "rotationX"
+    | "rotationY"
+    | "scaleX"
+    | "scaleY"
+    | "scale"
+    | "skewX"
+    | "skewY"
+    | "opacity";
   mode: "add" | "mul";
   signal: Signal<number>;
 }

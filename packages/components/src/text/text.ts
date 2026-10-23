@@ -42,23 +42,31 @@ export function parseMarkup(src: string): Item[] {
   const rules: Array<[RegExp, string, string]> = [
     [/\*\*([^*]+)\*\*/, '<b style="font-weight:700">', "</b>"],
     [/(?<![\w])_([^_]+)_(?![\w])/, "<i>", "</i>"],
-    [/==([^=]+)==/, '<span class="cc-mark" style="background:linear-gradient(#ffe14d,#ffe14d) no-repeat 0 85%/100% 45%">', "</span>"],
+    [
+      /==([^=]+)==/,
+      '<span class="cc-mark" style="background:linear-gradient(#ffe14d,#ffe14d) no-repeat 0 85%/100% 45%">',
+      "</span>",
+    ],
     [/~~([^~]+)~~/, "<s>", "</s>"],
   ];
   const parse = (s: string): Item[] => {
     let best: { idx: number; len: number; inner: string; open: string; close: string } | undefined;
     for (const [re, open, close] of rules) {
       const m = re.exec(s);
-      if (m && (best === undefined || m.index < best.idx)) best = { idx: m.index, len: m[0].length, inner: m[1]!, open, close };
+      if (m && (best === undefined || m.index < best.idx))
+        best = { idx: m.index, len: m[0].length, inner: m[1]!, open, close };
     }
     if (!best) return s ? [s] : [];
-    return [...(best.idx > 0 ? [s.slice(0, best.idx)] : []), { v: 1, open: best.open, close: best.close, children: parse(best.inner) } as VNode, ...parse(s.slice(best.idx + best.len))];
+    return [
+      ...(best.idx > 0 ? [s.slice(0, best.idx)] : []),
+      { v: 1, open: best.open, close: best.close, children: parse(best.inner) } as VNode,
+      ...parse(s.slice(best.idx + best.len)),
+    ];
   };
   return parse(src);
 }
 
 const isV = (x: Item): x is VNode => typeof x === "object" && (x as VNode).v === 1;
-const isR = (x: Item): x is RNode => typeof x === "object" && !isV(x);
 
 interface RichOut {
   html: string;
@@ -86,7 +94,8 @@ function rich(items: Item[], rc: RenderCtx): RichOut {
         if (!r) continue;
         out.channels.push(...(r.channels ?? []));
         const [o, c] = r.html.split("{{children}}");
-        html += (o ?? "") + walk(node.content as Item[], open + (o ?? ""), (c ?? "") + close) + (c ?? "");
+        html +=
+          (o ?? "") + walk(node.content as Item[], open + (o ?? ""), (c ?? "") + close) + (c ?? "");
       }
     }
     return html;
@@ -109,7 +118,14 @@ interface State {
   indent: number;
   paragraphSpacing: number;
   baselineShift: number;
-  axes: { wght?: number; wdth?: number; slnt?: number; ital?: number; opsz?: number; custom?: Record<string, number> };
+  axes: {
+    wght?: number;
+    wdth?: number;
+    slnt?: number;
+    ital?: number;
+    opsz?: number;
+    custom?: Record<string, number>;
+  };
   [k: string]: any;
 }
 
@@ -122,14 +138,23 @@ const readState = (rc: RenderCtx, t: number): State => {
 function axesString(a: State["axes"] | undefined): string | undefined {
   if (!a) return undefined;
   const parts: string[] = [];
-  for (const k of ["wght", "wdth", "slnt", "ital", "opsz"] as const) if (typeof a[k] === "number") parts.push(`'${k}' ${round(a[k]!, 2)}`);
+  for (const k of ["wght", "wdth", "slnt", "ital", "opsz"] as const)
+    if (typeof a[k] === "number") parts.push(`'${k}' ${round(a[k]!, 2)}`);
   for (const [k, v] of Object.entries(a.custom ?? {})) parts.push(`'${k}' ${round(v, 3)}`);
   return parts.length ? parts.join(", ") : undefined;
 }
 
-const FEATURE_NUMERIC: Record<string, string[]> = { tabular: ["tnum"], proportional: ["pnum"], lining: ["lnum"], oldstyle: ["onum"] };
+const FEATURE_NUMERIC: Record<string, string[]> = {
+  tabular: ["tnum"],
+  proportional: ["pnum"],
+  lining: ["lnum"],
+  oldstyle: ["onum"],
+};
 
-function featureString(features: string[] | undefined, numeric: string | undefined): string | undefined {
+function featureString(
+  features: string[] | undefined,
+  numeric: string | undefined,
+): string | undefined {
   const all = [...(features ?? []), ...(FEATURE_NUMERIC[numeric ?? ""] ?? [])];
   return all.length ? all.map((f) => `'${f}' 1`).join(", ") : undefined;
 }
@@ -150,7 +175,14 @@ export function toTextStyle(s: State, rc: RenderCtx, size = s.size): TextStyle {
     letterSpacing: (s.tracking / 1000) * size,
     wordSpacing: (s.wordSpacing / 1000) * size,
     lineHeight: s.leading,
-    textTransform: s.case === "upper" ? "uppercase" : s.case === "lower" ? "lowercase" : s.case === "title" ? "capitalize" : undefined,
+    textTransform:
+      s.case === "upper"
+        ? "uppercase"
+        : s.case === "lower"
+          ? "lowercase"
+          : s.case === "title"
+            ? "capitalize"
+            : undefined,
     fontFeatureSettings: featureString(s.features, s.numeric),
     fontVariationSettings: axesString(s.axes),
     direction: s.direction,
@@ -210,7 +242,10 @@ function gradientAt(stops: Array<[number, string]>, t: number): string {
   }
 }
 
-const isGradient = (f: unknown) => typeof f === "object" && f !== null && ["linear", "radial", "image"].includes((f as { type?: string }).type ?? "");
+const isGradient = (f: unknown) =>
+  typeof f === "object" &&
+  f !== null &&
+  ["linear", "radial", "image"].includes((f as { type?: string }).type ?? "");
 
 // ---------- the renderer ----------
 
@@ -252,7 +287,8 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   }
 
   // layout width and fit
-  const maxW = s.box?.width !== undefined ? rc.px(s.box.width, "x") : rc.px(s.maxWidth ?? "90%", "x");
+  const maxW =
+    s.box?.width !== undefined ? rc.px(s.box.width, "x") : rc.px(s.maxWidth ?? "90%", "x");
   let size = s.size;
   if (s.fit && (s.fit.maxSize || s.fit.minSize || s.fit.maxLines)) {
     const hi = s.fit.maxSize ?? s.size;
@@ -260,7 +296,11 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     const boxH = s.box?.height !== undefined ? rc.px(s.box.height, "y") : undefined;
     const fits = (sz: number) => {
       const m = measure(rc, plain, toTextStyle(s, rc, sz), maxW);
-      return m.lines.length <= (s.fit.maxLines ?? Infinity) && (boxH === undefined || m.height <= boxH + 0.5) && m.width <= maxW + 0.5;
+      return (
+        m.lines.length <= (s.fit.maxLines ?? Infinity) &&
+        (boxH === undefined || m.height <= boxH + 0.5) &&
+        m.width <= maxW + 0.5
+      );
     };
     let a = lo;
     let b = hi;
@@ -295,12 +335,19 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   const fillv = s.fill;
   const srcIndex = new Map(r.chars.map((c, i) => [c, i] as const));
   let charColor: ((i: number) => string) | undefined;
-  if (needed.size && fillv && typeof fillv === "object" && (fillv as { type?: string }).type === "linear") {
+  if (
+    needed.size &&
+    fillv &&
+    typeof fillv === "object" &&
+    (fillv as { type?: string }).type === "linear"
+  ) {
     const g = fillv as { angle?: number | string; stops: Array<[number, string]> };
     const m = measure(rc, plain, toTextStyle(s, rc, size), maxW);
     const glyphs = new Map<number, { x: number; y: number; width: number; height: number }>();
     for (const l of m.lines) for (const gl of l.glyphs) glyphs.set(gl.index, gl);
-    const th = ((typeof g.angle === "number" ? g.angle : parseFloat(String(g.angle ?? 180))) * Math.PI) / 180;
+    const th =
+      ((typeof g.angle === "number" ? g.angle : parseFloat(String(g.angle ?? 180))) * Math.PI) /
+      180;
     const dx = Math.sin(th);
     const dy = -Math.cos(th);
     const W = Math.max(1, m.width);
@@ -309,10 +356,14 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     charColor = (i) => {
       const gl = glyphs.get(i);
       if (!gl) return gradientAt(g.stops, 0.5);
-      const t = ((gl.x + gl.width / 2 - W / 2) * dx + (gl.y + gl.height / 2 - H / 2) * dy) / L + 0.5;
+      const t =
+        ((gl.x + gl.width / 2 - W / 2) * dx + (gl.y + gl.height / 2 - H / 2) * dy) / L + 0.5;
       return gradientAt(g.stops, t);
     };
-  } else if (needed.size && isGradient(fillv)) issues.push("image/radial gradient fills are approximated with the first stop when text is split into units");
+  } else if (needed.size && isGradient(fillv))
+    issues.push(
+      "image/radial gradient fills are approximated with the first stop when text is split into units",
+    );
   // inner markup (split or plain)
   const table: UnitTable = {
     char: [],
@@ -321,13 +372,20 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     target: { char: [], word: [], line: [] },
     charText: [],
     wordText: [],
-    base: { weight: s.weight, tracking: s.tracking, fill: typeof s.fill === "string" ? s.fill : undefined, size },
+    base: {
+      weight: s.weight,
+      tracking: s.tracking,
+      fill: typeof s.fill === "string" ? s.fill : undefined,
+      size,
+    },
     mask,
   };
   let inner = r.html;
   if (needed.size) {
     const needLine = needed.has("line");
-    const lines: StyledChar[][] = needLine ? Array.from({ length: Math.max(1, lineCount) }, () => []) : [r.chars];
+    const lines: StyledChar[][] = needLine
+      ? Array.from({ length: Math.max(1, lineCount) }, () => [])
+      : [r.chars];
     if (needLine) r.chars.forEach((c, i) => lines[lineOf![i]!]!.push(c));
     let ci = 0;
     let wi = 0;
@@ -378,7 +436,9 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
         const lid = `${id}-l${li}`;
         table.line.push(lid);
         table.target.line.push(`${lid}-in`);
-        htmlLines.push(`<span id="${lid}" class="cc-l" style="display:block;${mask ? "overflow:hidden;" : ""}white-space:nowrap"><span id="${lid}-in" style="display:block">${wordHtml.join("")}</span></span>`);
+        htmlLines.push(
+          `<span id="${lid}" class="cc-l" style="display:block;${mask ? "overflow:hidden;" : ""}white-space:nowrap"><span id="${lid}-in" style="display:block">${wordHtml.join("")}</span></span>`,
+        );
       } else htmlLines.push(wordHtml.join(""));
     });
     inner = htmlLines.join("");
@@ -389,10 +449,13 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
 
   // style
   const gradient = isGradient(fillv) && !charColor;
-  if (fillv && typeof fillv === "object" && (fillv as { type?: string }).type === "video") issues.push("video fill clipped to letter shapes is not supported yet; using white");
+  if (fillv && typeof fillv === "object" && (fillv as { type?: string }).type === "video")
+    issues.push("video fill clipped to letter shapes is not supported yet; using white");
   if (s.extrude && s.extrude.depth > 0) issues.push("`extrude` (3D text) is a later tier: ignored");
-  if (s.stroke?.dash?.length) issues.push("dashed text strokes need SVG text and are not supported yet: ignored");
-  if (s.stroke?.align === "inside") issues.push("`stroke.align=\"inside\"` is approximated as centred");
+  if (s.stroke?.dash?.length)
+    issues.push("dashed text strokes need SVG text and are not supported yet: ignored");
+  if (s.stroke?.align === "inside")
+    issues.push('`stroke.align="inside"` is approximated as centred');
 
   const channels: Channel[] = [...r.channels];
   const textSel = `#${tid}`;
@@ -410,7 +473,8 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     direction: s.direction !== "ltr" ? s.direction : undefined,
     hyphens: s.hyphenate ? "auto" : undefined,
     "text-wrap": s.balance ? "balance" : undefined,
-    "white-space": s.wrap === false || needed.has("line") ? "nowrap" : "normal",
+    "white-space":
+      s.overflow === "ellipsis" || s.wrap === false || needed.has("line") ? "nowrap" : "normal",
     "font-feature-settings": featureString(s.features, s.numeric),
     "font-variation-settings": axesString(s.axes),
     "font-kerning": "normal",
@@ -421,11 +485,21 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     top: s.baselineShift ? `${round(-s.baselineShift)}px` : undefined,
     width: s.box?.width !== undefined ? "100%" : undefined,
     ...(CASE[s.case] ?? {}),
-    ...(s.overflow === "ellipsis" ? { "text-overflow": "ellipsis", overflow: "hidden", "white-space": "nowrap" } : s.overflow === "hidden" ? { overflow: "hidden" } : {}),
+    ...(s.overflow === "ellipsis"
+      ? { "text-overflow": "ellipsis", overflow: "hidden" }
+      : s.overflow === "hidden"
+        ? { overflow: "hidden" }
+        : {}),
     ...strokeCss(s.stroke),
   };
   if (gradient) {
-    Object.assign(style, { background: fillCss(fillv as any, rc), "-webkit-background-clip": "text", "background-clip": "text", color: "transparent", "-webkit-text-fill-color": "transparent" });
+    Object.assign(style, {
+      background: fillCss(fillv as any, rc),
+      "-webkit-background-clip": "text",
+      "background-clip": "text",
+      color: "transparent",
+      "-webkit-text-fill-color": "transparent",
+    });
   } else {
     style.color = typeof fillv === "string" ? fillv : "#ffffff";
   }
@@ -439,7 +513,11 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   const shadowAt = (t: number): string => {
     const parts = [...shadowsStatic];
     const rgb = rgbSig ? (evalProp(rgbSig, t) as number) : 0;
-    if (rgb > 0.01 && !gradient) parts.push(`${round(rgb)}px 0 0 rgba(255,0,60,.85)`, `${round(-rgb)}px 0 0 rgba(0,220,255,.85)`);
+    if (rgb > 0.01 && !gradient)
+      parts.push(
+        `${round(rgb)}px 0 0 rgba(255,0,60,.85)`,
+        `${round(-rgb)}px 0 0 rgba(0,220,255,.85)`,
+      );
     return parts.join(", ");
   };
   const blurAt = (t: number): string => {
@@ -453,21 +531,56 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   const dyn = (sg?: Signal) => !!sg && sg.kind !== "const";
   if (!gradient) {
     const sh0 = shadowAt(t0);
-    if (dyn(rgbSig)) channels.push({ target: textSel, prop: "textShadow", signal: exprSignal(shadowAt, "discrete", span), span, format: (v) => String(v) });
+    if (dyn(rgbSig))
+      channels.push({
+        target: textSel,
+        prop: "textShadow",
+        signal: exprSignal(shadowAt, "discrete", span),
+        span,
+        format: (v) => String(v),
+      });
     else if (sh0) style["text-shadow"] = sh0;
   }
   const f0 = blurAt(t0);
-  if (dyn(blurSig)) channels.push({ target: textSel, prop: "filter", signal: exprSignal((t) => blurAt(t) || "none", "discrete", span), span, format: (v) => String(v) });
+  if (dyn(blurSig))
+    channels.push({
+      target: textSel,
+      prop: "filter",
+      signal: exprSignal((t) => blurAt(t) || "none", "discrete", span),
+      span,
+      format: (v) => String(v),
+    });
   else if (f0) style.filter = f0;
-  if (rgbSig && gradient) issues.push("`rgbSplit` needs a solid fill; ignored for gradient/image fills");
-  if (dyn(strokeW)) channels.push({ target: textSel, prop: "webkitTextStrokeWidth", signal: strokeW!, unit: "px", span });
+  if (rgbSig && gradient)
+    issues.push("`rgbSplit` needs a solid fill; ignored for gradient/image fills");
+  if (dyn(strokeW))
+    channels.push({
+      target: textSel,
+      prop: "webkitTextStrokeWidth",
+      signal: strokeW!,
+      unit: "px",
+      span,
+    });
 
   // animatable face props
   const animated = (k: string) => dyn(sigOf(k));
-  const chan = (prop: string, k: string, fn: (v: number) => number | string, unit?: string, vk: "number" | "discrete" = "number") => {
+  const chan = (
+    prop: string,
+    k: string,
+    fn: (v: number) => number | string,
+    unit?: string,
+    vk: "number" | "discrete" = "number",
+  ) => {
     if (!animated(k)) return;
     const sg = sigOf(k)!;
-    channels.push({ target: textSel, prop, signal: exprSignal((t) => fn(evalProp(sg, t) as number), vk, span), unit, span, format: vk === "discrete" ? (v) => String(v) : undefined });
+    channels.push({
+      target: textSel,
+      prop,
+      signal: exprSignal((t) => fn(evalProp(sg, t) as number), vk, span),
+      unit,
+      span,
+      format: vk === "discrete" ? (v) => String(v) : undefined,
+    });
   };
   chan("fontWeight", "weight", (v) => round(v, 1));
   chan("fontSize", "size", (v) => round(v, 2), "px");
@@ -476,17 +589,43 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   chan("lineHeight", "leading", (v) => round(v, 4));
   chan("fontStretch", "width", (v) => `${round(v, 1)}%`, undefined, "discrete");
   chan("top", "baselineShift", (v) => -round(v), "px");
-  const axesProp = rc.node.props.axes as Record<string, Signal | Record<string, number>> | undefined;
-  if (axesProp && Object.entries(axesProp).some(([k, v]) => k !== "custom" && (v as Signal)?.kind && (v as Signal).kind !== "const")) {
-    channels.push({ target: textSel, prop: "fontVariationSettings", signal: exprSignal((t) => axesString(evalProp(axesProp, t) as State["axes"]) ?? "normal", "discrete", span), span, format: (v) => String(v) });
+  const axesProp = rc.node.props.axes as
+    Record<string, Signal | Record<string, number>> | undefined;
+  if (
+    axesProp &&
+    Object.entries(axesProp).some(
+      ([k, v]) => k !== "custom" && (v as Signal)?.kind && (v as Signal).kind !== "const",
+    )
+  ) {
+    channels.push({
+      target: textSel,
+      prop: "fontVariationSettings",
+      signal: exprSignal(
+        (t) => axesString(evalProp(axesProp, t) as State["axes"]) ?? "normal",
+        "discrete",
+        span,
+      ),
+      span,
+      format: (v) => String(v),
+    });
   }
   // glitch jitter (inner element so it never fights the layer transform)
   const gl = sigOf("glitch");
   if (gl && (dyn(gl) || (gl as any).v > 0)) {
     const step = (t: number) => Math.floor(((t - span[0]) * rc.fps) / 2);
     const amt = (t: number) => evalProp(gl, t) as number;
-    channels.push({ target: textSel, prop: "x", signal: exprSignal((t) => round(noise1D(step(t) * 3.7, 11) * 26 * amt(t)), "number", span), span });
-    channels.push({ target: textSel, prop: "skewX", signal: exprSignal((t) => round(noise1D(step(t) * 2.3, 12) * 7 * amt(t)), "number", span), span });
+    channels.push({
+      target: textSel,
+      prop: "x",
+      signal: exprSignal((t) => round(noise1D(step(t) * 3.7, 11) * 26 * amt(t)), "number", span),
+      span,
+    });
+    channels.push({
+      target: textSel,
+      prop: "skewX",
+      signal: exprSignal((t) => round(noise1D(step(t) * 2.3, 12) * 7 * amt(t)), "number", span),
+      span,
+    });
   }
 
   // decorations: whole-text wrappers (not applied in split mode)
@@ -496,7 +635,8 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   const addDeco = (kind: "underline" | "strike") => {
     const d = s[kind];
     if (!d || !Object.keys(d).length || needed.size) {
-      if (d && Object.keys(d).length && needed.size) issues.push(`${kind} is not applied when text is split into animated units`);
+      if (d && Object.keys(d).length && needed.size)
+        issues.push(`${kind} is not applied when text is split into animated units`);
       return;
     }
     const raw = (rc.node.props[kind] as any)?.progress as Signal<number> | undefined;
@@ -504,15 +644,30 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     const c = d.color ?? (typeof fillv === "string" ? fillv : "#fff");
     const th = d.thickness ?? 4;
     if (!animatedP && (d.progress ?? 1) >= 1) {
-      style["text-decoration"] = `${kind === "underline" ? "underline" : "line-through"} ${d.style ?? "solid"} ${c}`;
+      style["text-decoration"] =
+        `${kind === "underline" ? "underline" : "line-through"} ${d.style ?? "solid"} ${c}`;
       style["text-decoration-thickness"] = `${th}px`;
       if (kind === "underline") style["text-underline-offset"] = `${d.offset ?? 6}px`;
     } else {
       const sid = `${id}-${kind}`;
       const pos = kind === "underline" ? "0 100%" : "0 52%";
-      decoOpen.push(`<span id="${sid}" class="cc-deco" style="background:linear-gradient(${c},${c}) no-repeat ${pos}/${round((d.progress ?? 1) * 100, 2)}% ${th}px;padding-bottom:${kind === "underline" ? (d.offset ?? 6) : 0}px">`);
+      decoOpen.push(
+        `<span id="${sid}" class="cc-deco" style="background:linear-gradient(${c},${c}) no-repeat ${pos}/${round((d.progress ?? 1) * 100, 2)}% ${th}px;padding-bottom:${kind === "underline" ? (d.offset ?? 6) : 0}px">`,
+      );
       decoClose.unshift("</span>");
-      if (animatedP) channels.push({ target: `#${sid}`, prop: "backgroundSize", signal: exprSignal((t) => `${round(Math.min(1, Math.max(0, evalProp(raw!, t) as number)) * 100, 2)}% ${th}px`, "discrete", span), span, format: (v) => String(v) });
+      if (animatedP)
+        channels.push({
+          target: `#${sid}`,
+          prop: "backgroundSize",
+          signal: exprSignal(
+            (t) =>
+              `${round(Math.min(1, Math.max(0, evalProp(raw!, t) as number)) * 100, 2)}% ${th}px`,
+            "discrete",
+            span,
+          ),
+          span,
+          format: (v) => String(v),
+        });
     }
   };
   addDeco("underline");
@@ -522,10 +677,24 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     const sid = `${id}-hl`;
     const raw = (rc.node.props.highlight as any)?.progress as Signal<number> | undefined;
     const col = withAlphaColor(hl.color ?? "#ffe14d", hl.opacity ?? 1);
-    decoOpen.push(`<span id="${sid}" class="cc-hl" style="background:linear-gradient(${col},${col}) no-repeat 0 0/${round((hl.progress ?? 1) * 100, 2)}% 100%;padding:${hl.padding ?? 8}px;margin:-${hl.padding ?? 8}px;border-radius:${hl.radius ?? 6}px;-webkit-box-decoration-break:clone;box-decoration-break:clone">`);
+    decoOpen.push(
+      `<span id="${sid}" class="cc-hl" style="background:linear-gradient(${col},${col}) no-repeat 0 0/${round((hl.progress ?? 1) * 100, 2)}% 100%;padding:${hl.padding ?? 8}px;margin:-${hl.padding ?? 8}px;border-radius:${hl.radius ?? 6}px;-webkit-box-decoration-break:clone;box-decoration-break:clone">`,
+    );
     decoClose.unshift("</span>");
-    if (dyn(raw)) channels.push({ target: `#${sid}`, prop: "backgroundSize", signal: exprSignal((t) => `${round(Math.min(1, Math.max(0, evalProp(raw!, t) as number)) * 100, 2)}% 100%`, "discrete", span), span, format: (v) => String(v) });
-  } else if (hl && Object.keys(hl).length) issues.push("highlight is not applied when text is split into animated units");
+    if (dyn(raw))
+      channels.push({
+        target: `#${sid}`,
+        prop: "backgroundSize",
+        signal: exprSignal(
+          (t) => `${round(Math.min(1, Math.max(0, evalProp(raw!, t) as number)) * 100, 2)}% 100%`,
+          "discrete",
+          span,
+        ),
+        span,
+        format: (v) => String(v),
+      });
+  } else if (hl && Object.keys(hl).length)
+    issues.push("highlight is not applied when text is split into animated units");
   content = decoOpen.join("") + content + decoClose.join("");
 
   // outline box
@@ -537,7 +706,16 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   // implicit animator (SplitText)
   if (split) {
     const a = animatorChannels(
-      { by: split.by, preset: split.preset, props: split.props, stagger: split.stagger, unitDuration: split.unitDuration, ease: split.ease, order: split.order, seed: split.seed },
+      {
+        by: split.by,
+        preset: split.preset,
+        props: split.props,
+        stagger: split.stagger,
+        unitDuration: split.unitDuration,
+        ease: split.ease,
+        order: split.order,
+        seed: split.seed,
+      },
       table,
       rc.node.start,
       rc.node.end,
@@ -575,7 +753,10 @@ import { estimateText as estimate } from "@codecut/core";
 
 const textControls = () => ({
   at: atControl(),
-  text: richText({ description: "The text. Children (strings, <Span>, <B>, <I>, <Highlight>, <Underline>) work too." }),
+  text: richText({
+    description:
+      "The text. Children (strings, <Span>, <B>, <I>, <Highlight>, <Underline>) work too.",
+  }),
   markup: richText({ description: 'Inline markup: "**bold** _italic_ ==highlight== ~~strike~~".' }),
   ...typographyControls(),
   ...textStyleControls(),
@@ -610,7 +791,8 @@ export const Title = defineComponent("Title", {
 
 export const SplitText = defineComponent("SplitText", {
   category: "text",
-  description: "The simple form of TextAnimator: splits text into characters, words or lines and staggers a preset or custom props across them.",
+  description:
+    "The simple form of TextAnimator: splits text into characters, words or lines and staggers a preset or custom props across them.",
   children: "any",
   textChildren: "text",
   controls: {
@@ -619,9 +801,30 @@ export const SplitText = defineComponent("SplitText", {
     weight: num({ animatable: true, min: 1, max: 1000, default: 700, step: 1, unit: "wght" }),
     size: num({ animatable: true, min: 1, max: 2000, default: 96, step: 1, unit: "px" }),
     align: enumOf(["left", "center", "right", "justify"], { default: "center" }),
-    by: enumOf(["char", "word", "line"], { description: "Unit to split by (default: the preset's)." }),
-    preset: enumOf(["rise", "typewriter", "wave", "scramble", "slam", "blur-in", "mask-reveal", "weight-pulse", "tracking-in", "counter", "none"], { default: "rise" }),
-    stagger: time({ min: 0, unit: "s", description: "Seconds between units (0.05–0.1 reads well)." }),
+    by: enumOf(["char", "word", "line"], {
+      description: "Unit to split by (default: the preset's).",
+    }),
+    preset: enumOf(
+      [
+        "rise",
+        "typewriter",
+        "wave",
+        "scramble",
+        "slam",
+        "blur-in",
+        "mask-reveal",
+        "weight-pulse",
+        "tracking-in",
+        "counter",
+        "none",
+      ],
+      { default: "rise" },
+    ),
+    stagger: time({
+      min: 0,
+      unit: "s",
+      description: "Seconds between units (0.05–0.1 reads well).",
+    }),
     unitDuration: time({ min: 0, unit: "s" }),
     ease: text({}),
     order: enumOf(["forward", "backward", "center", "edges", "random"], { default: "forward" }),
@@ -645,14 +848,24 @@ export const SplitText = defineComponent("SplitText", {
 
 // ---------- inline components ----------
 
-const inline = <C extends Record<string, any>>(name: string, description: string, controls: C, open: (p: any, rc: RenderCtx) => string, channels?: (p: any, rc: RenderCtx) => Channel[]) =>
+const inline = <C extends Record<string, any>>(
+  name: string,
+  description: string,
+  controls: C,
+  open: (p: any, rc: RenderCtx) => string,
+  channels?: (p: any, rc: RenderCtx) => Channel[],
+) =>
   defineComponent(name, {
     category: "text",
     description,
     traits: ["inline"],
     children: "any",
     controls,
-    render: (p: any, rc: RenderCtx) => ({ html: `${open(p, rc)}{{children}}</span>`, visual: false, channels: channels?.(p, rc) }),
+    render: (p: any, rc: RenderCtx) => ({
+      html: `${open(p, rc)}{{children}}</span>`,
+      visual: false,
+      channels: channels?.(p, rc),
+    }),
   });
 
 export const Span = inline(
@@ -681,8 +894,18 @@ export const Span = inline(
 
 import { list as listCtl } from "@codecut/core";
 
-export const B = inline("B", "Bold run inside Text.", { weight: num({ min: 1, max: 1000, default: 700 }) }, (p, rc) => `<span id="${rc.id}" style="font-weight:${p.weight}">`);
-export const I = inline("I", "Italic run inside Text.", { skew: num({ default: 0 }) }, (_p, rc) => `<span id="${rc.id}" style="font-style:italic">`);
+export const B = inline(
+  "B",
+  "Bold run inside Text.",
+  { weight: num({ min: 1, max: 1000, default: 700 }) },
+  (p, rc) => `<span id="${rc.id}" style="font-weight:${p.weight}">`,
+);
+export const I = inline(
+  "I",
+  "Italic run inside Text.",
+  { skew: num({ default: 0 }) },
+  (_p, rc) => `<span id="${rc.id}" style="font-style:italic">`,
+);
 
 export const Highlight = inline(
   "Highlight",
@@ -700,7 +923,17 @@ export const Highlight = inline(
   (p, rc) => {
     const sg = rc.node.props.progress as Signal<number>;
     if (sg.kind === "const") return [];
-    return [{ target: `#${rc.id}`, prop: "backgroundSize", signal: exprSignal((t) => `${round(Math.min(1, Math.max(0, evalProp(sg, t) as number)) * 100, 2)}% 100%`, "discrete"), format: (v) => String(v) }];
+    return [
+      {
+        target: `#${rc.id}`,
+        prop: "backgroundSize",
+        signal: exprSignal(
+          (t) => `${round(Math.min(1, Math.max(0, evalProp(sg, t) as number)) * 100, 2)}% 100%`,
+          "discrete",
+        ),
+        format: (v) => String(v),
+      },
+    ];
   },
 );
 
@@ -708,7 +941,12 @@ const decoInline = (name: string, pos: string, label: string) =>
   inline(
     name,
     `${label} for an inline run. \`progress\` animates a draw-on from left to right.`,
-    { color: color({ default: "#ffffff" }), thickness: num({ min: 0, default: 4, unit: "px" }), offset: num({ default: 4, unit: "px" }), progress: num({ animatable: true, min: 0, max: 1, default: 1, step: 0.01 }) },
+    {
+      color: color({ default: "#ffffff" }),
+      thickness: num({ min: 0, default: 4, unit: "px" }),
+      offset: num({ default: 4, unit: "px" }),
+      progress: num({ animatable: true, min: 0, max: 1, default: 1, step: 0.01 }),
+    },
     (p, rc) => {
       const prog = rc.at<number>("progress", rc.node.start);
       return `<span id="${rc.id}" class="cc-deco" style="background:linear-gradient(${p.color},${p.color}) no-repeat ${pos}/${round(prog * 100, 2)}% ${p.thickness}px;padding-bottom:${name === "Underline" ? p.offset : 0}px">`;
@@ -716,7 +954,18 @@ const decoInline = (name: string, pos: string, label: string) =>
     (p, rc) => {
       const sg = rc.node.props.progress as Signal<number>;
       if (sg.kind === "const") return [];
-      return [{ target: `#${rc.id}`, prop: "backgroundSize", signal: exprSignal((t) => `${round(Math.min(1, Math.max(0, evalProp(sg, t) as number)) * 100, 2)}% ${p.thickness}px`, "discrete"), format: (v) => String(v) }];
+      return [
+        {
+          target: `#${rc.id}`,
+          prop: "backgroundSize",
+          signal: exprSignal(
+            (t) =>
+              `${round(Math.min(1, Math.max(0, evalProp(sg, t) as number)) * 100, 2)}% ${p.thickness}px`,
+            "discrete",
+          ),
+          format: (v) => String(v),
+        },
+      ];
     },
   );
 export const Underline = decoInline("Underline", "0 100%", "Underline");

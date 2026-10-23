@@ -9,7 +9,15 @@ export interface RunResult {
 }
 
 /** Run the installed HyperFrames CLI. Resolves with output; rejects only on spawn failure. */
-export function runHyperframes(args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; timeoutMs?: number; onLine?: (l: string) => void } = {}): Promise<RunResult> {
+export function runHyperframes(
+  args: string[],
+  opts: {
+    cwd?: string;
+    env?: NodeJS.ProcessEnv;
+    timeoutMs?: number;
+    onLine?: (l: string) => void;
+  } = {},
+): Promise<RunResult> {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [hyperframesBin(), ...args], {
       cwd: opts.cwd,
@@ -30,7 +38,12 @@ export function runHyperframes(args: string[], opts: { cwd?: string; env?: NodeJ
     const timer = opts.timeoutMs
       ? setTimeout(() => {
           child.kill("SIGKILL");
-          reject(new CodeCutError("render_failed", `hyperframes ${args[0]} timed out after ${opts.timeoutMs} ms`));
+          reject(
+            new CodeCutError(
+              "render_failed",
+              `hyperframes ${args[0]} timed out after ${opts.timeoutMs} ms`,
+            ),
+          );
         }, opts.timeoutMs)
       : undefined;
     child.on("close", (code) => {
@@ -40,4 +53,5 @@ export function runHyperframes(args: string[], opts: { cwd?: string; env?: NodeJ
   });
 }
 
+// eslint-disable-next-line no-control-regex
 export const stripAnsi = (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");

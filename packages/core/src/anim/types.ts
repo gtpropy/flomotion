@@ -56,7 +56,9 @@ export interface Ctx {
 export type Expr<T> = (t: number, ctx: Ctx) => T;
 
 /** Partial per-axis animation for vector props (`separate`). */
-export type SeparateVec<T extends number[]> = Partial<Record<"x" | "y" | "z", Animatable<number>>> & {
+export type SeparateVec<T extends number[]> = Partial<
+  Record<"x" | "y" | "z", Animatable<number>>
+> & {
   __separate?: T;
 };
 

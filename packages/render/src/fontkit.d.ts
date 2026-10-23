@@ -1,1 +1,1 @@
-declare module 'fontkit';
+declare module "fontkit";

@@ -19,10 +19,19 @@ import { layoutCachePath, readJson, writeJson } from "./lock.js";
 import { sha256 } from "./inspect.js";
 
 export const fontSalt = (fonts: ResolvedFont[]) =>
-  sha256(fonts.flatMap((f) => f.files.map((x) => `${f.id}:${x.hash}`)).sort().join("|")).slice(0, 16);
+  sha256(
+    fonts
+      .flatMap((f) => f.files.map((x) => `${f.id}:${x.hash}`))
+      .sort()
+      .join("|"),
+  ).slice(0, 16);
 
 /** Measure text in headless Chrome after fonts load: lines, glyph boxes and word boxes. */
-export async function measureInChrome(root: string, fonts: ResolvedFont[], reqs: MeasureRequest[]): Promise<Record<string, TextMetrics>> {
+export async function measureInChrome(
+  root: string,
+  fonts: ResolvedFont[],
+  reqs: MeasureRequest[],
+): Promise<Record<string, TextMetrics>> {
   if (!reqs.length) return {};
   const session = await openFontPage(root, fonts);
   try {
@@ -31,7 +40,9 @@ export async function measureInChrome(root: string, fonts: ResolvedFont[], reqs:
       const results: Record<string, unknown> = {};
       for (const r of requests) {
         const st = r.style as Record<string, any>;
-        const loads = [`${st.fontStyle ?? "normal"} ${st.fontWeight ?? 400} ${st.fontSize}px ${st.fontFamily}`];
+        const loads = [
+          `${st.fontStyle ?? "normal"} ${st.fontWeight ?? 400} ${st.fontSize}px ${st.fontFamily}`,
+        ];
         await Promise.all(loads.map((l) => document.fonts.load(l, r.text || "x")));
         const div = document.createElement("div");
         const s = div.style;
@@ -61,7 +72,14 @@ export async function measureInChrome(root: string, fonts: ResolvedFont[], reqs:
         document.body.appendChild(div);
         const node = div.firstChild as Text | null;
         const box = div.getBoundingClientRect();
-        const glyphs: Array<{ ch: string; x: number; y: number; width: number; height: number; index: number }> = [];
+        const glyphs: Array<{
+          ch: string;
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+          index: number;
+        }> = [];
         if (node) {
           let offset = 0;
           let gi = 0;
@@ -71,19 +89,60 @@ export async function measureInChrome(root: string, fonts: ResolvedFont[], reqs:
             range.setEnd(node, offset + segment.length);
             const rects = range.getClientRects();
             const rc = rects[0];
-            if (rc && !/^\s+$/.test(segment)) glyphs.push({ ch: segment, x: rc.left - box.left, y: rc.top - box.top, width: rc.width, height: rc.height, index: gi });
-            else if (rc) glyphs.push({ ch: segment, x: rc.left - box.left, y: rc.top - box.top, width: rc.width, height: rc.height, index: gi });
+            if (rc && !/^\s+$/.test(segment))
+              glyphs.push({
+                ch: segment,
+                x: rc.left - box.left,
+                y: rc.top - box.top,
+                width: rc.width,
+                height: rc.height,
+                index: gi,
+              });
+            else if (rc)
+              glyphs.push({
+                ch: segment,
+                x: rc.left - box.left,
+                y: rc.top - box.top,
+                width: rc.width,
+                height: rc.height,
+                index: gi,
+              });
             offset += segment.length;
             gi++;
           }
         }
         // group by visual line
-        const lines: Array<{ text: string; x: number; y: number; width: number; height: number; baseline: number; glyphs: typeof glyphs; words: Array<{ text: string; x: number; y: number; width: number; height: number; index: number }> }> = [];
+        const lines: Array<{
+          text: string;
+          x: number;
+          y: number;
+          width: number;
+          height: number;
+          baseline: number;
+          glyphs: typeof glyphs;
+          words: Array<{
+            text: string;
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+            index: number;
+          }>;
+        }> = [];
         for (const g of glyphs) {
           if (g.ch === "\n") continue;
           let line = lines.find((l) => Math.abs(l.y - g.y) < Math.max(2, g.height * 0.3));
           if (!line) {
-            line = { text: "", x: g.x, y: g.y, width: 0, height: g.height, baseline: g.y + g.height * 0.8, glyphs: [], words: [] };
+            line = {
+              text: "",
+              x: g.x,
+              y: g.y,
+              width: 0,
+              height: g.height,
+              baseline: g.y + g.height * 0.8,
+              glyphs: [],
+              words: [],
+            };
             lines.push(line);
           }
           line.glyphs.push(g);
@@ -100,7 +159,14 @@ export async function measureInChrome(root: string, fonts: ResolvedFont[], reqs:
             if (!cur.length) return;
             const a = cur[0]!;
             const z = cur[cur.length - 1]!;
-            l.words.push({ text: cur.map((c) => c.ch).join(""), x: a.x, y: a.y, width: z.x + z.width - a.x, height: a.height, index: a.index });
+            l.words.push({
+              text: cur.map((c) => c.ch).join(""),
+              x: a.x,
+              y: a.y,
+              width: z.x + z.width - a.x,
+              height: a.height,
+              index: a.index,
+            });
             cur = [];
           };
           for (const g of l.glyphs) {
@@ -110,7 +176,12 @@ export async function measureInChrome(root: string, fonts: ResolvedFont[], reqs:
           flush();
           l.text = l.text.replace(/\s+$/, "");
         }
-        results[r.key] = { lines, width: Math.max(0, ...lines.map((l) => l.width)), height: box.height, key: r.key };
+        results[r.key] = {
+          lines,
+          width: Math.max(0, ...lines.map((l) => l.width)),
+          height: box.height,
+          key: r.key,
+        };
         div.remove();
       }
       return results;
@@ -134,21 +205,23 @@ export interface LayoutCompileOptions {
  * misses (cached in .codecut/layout-cache.json by a hash of text, style, font hashes and width), and
  * we recompile until nothing is missing.
  */
-export async function compileWithLayout(root: CCNode, o: LayoutCompileOptions): Promise<CompileResult & { measured: number; cacheHits: number }> {
+export async function compileWithLayout(
+  root: CCNode,
+  o: LayoutCompileOptions,
+): Promise<CompileResult & { measured: number; cacheHits: number }> {
   const salt = fontSalt(o.fonts);
   const cachePath = layoutCachePath(o.projectRoot);
   const cache = readJson<Record<string, TextMetrics>>(cachePath, {});
   let measured = 0;
-  let hits = 0;
   const run = (measurer: CacheMeasurer | CollectingMeasurer) => {
     const proj = resolveProject(structuredCloneNode(root), { ...o.resolve, assignIds: true });
     return compileProject(proj, { ...o.compile, measure: measurer });
   };
   // seed with a collecting pass
-  let collecting = new CollectingMeasurer(salt);
+  const collecting = new CollectingMeasurer(salt);
   run(collecting);
   let need = [...collecting.requests.values()].filter((r) => !cache[r.key]);
-  hits = collecting.requests.size - need.length;
+  const hits = collecting.requests.size - need.length;
   for (let pass = 0; pass < (o.maxPasses ?? 6); pass++) {
     if (need.length) {
       const got = await measureInChrome(o.projectRoot, o.fonts, need);
@@ -166,8 +239,19 @@ export async function compileWithLayout(root: CCNode, o: LayoutCompileOptions): 
 
 function structuredCloneNode(n: CCNode): CCNode {
   // expression props are functions: clone structurally, keep functions by reference
-  const c = (v: unknown): unknown => (Array.isArray(v) ? v.map(c) : v && typeof v === "object" ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, c(x)])) : v);
-  return { $cc: 1, name: n.name, props: c(n.props) as Record<string, unknown>, children: n.children.map((ch) => (typeof ch === "object" ? structuredCloneNode(ch) : ch)) };
+  const c = (v: unknown): unknown =>
+    Array.isArray(v)
+      ? v.map(c)
+      : v && typeof v === "object"
+        ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, c(x)]))
+        : v;
+  return {
+    $cc: 1,
+    name: n.name,
+    props: c(n.props) as Record<string, unknown>,
+    children: n.children.map((ch) => (typeof ch === "object" ? structuredCloneNode(ch) : ch)),
+  };
 }
 
-export const layoutCacheExists = (root: string) => existsSync(join(root, CODECUT_DIR, "layout-cache.json"));
+export const layoutCacheExists = (root: string) =>
+  existsSync(join(root, CODECUT_DIR, "layout-cache.json"));

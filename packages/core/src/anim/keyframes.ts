@@ -98,7 +98,9 @@ function loopTime(track: NormTrack<unknown>, t: number): number {
 const hermite = (p: number, p0: number, p1: number, m0: number, m1: number) => {
   const p2 = p * p;
   const p3 = p2 * p;
-  return (2 * p3 - 3 * p2 + 1) * p0 + (p3 - 2 * p2 + p) * m0 + (-2 * p3 + 3 * p2) * p1 + (p3 - p2) * m1;
+  return (
+    (2 * p3 - 3 * p2 + 1) * p0 + (p3 - 2 * p2 + p) * m0 + (-2 * p3 + 3 * p2) * p1 + (p3 - p2) * m1
+  );
 };
 
 /** Fritsch–Carlson monotone slopes (units per second): smooth, no overshoot. */

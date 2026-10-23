@@ -15,7 +15,11 @@ import {
 } from "../src/index.js";
 import "../src/structure.js";
 
-const el = (name: string, props: Record<string, unknown> = {}, children: CCNode[] = []): CCNode => ({ $cc: 1, name, props, children });
+const el = (
+  name: string,
+  props: Record<string, unknown> = {},
+  children: CCNode[] = [],
+): CCNode => ({ $cc: 1, name, props, children });
 const fresh = (): CCNode =>
   el("Composition", { id: "c", size: [1920, 1080], fps: 30, duration: "20s" }, [
     el("Track", { id: "v1" }, [
@@ -24,7 +28,9 @@ const fresh = (): CCNode =>
       el("Scene", { id: "c3", start: "8s", duration: "2s" }),
     ]),
     el("Track", { id: "v2" }, []),
-    el("Track", { id: "locked", locked: true }, [el("Scene", { id: "lk", start: "0s", duration: "2s" })]),
+    el("Track", { id: "locked", locked: true }, [
+      el("Scene", { id: "lk", start: "0s", duration: "2s" }),
+    ]),
     el("Marker", { id: "m1", at: "5s", label: "drop" }),
   ]);
 const clipTrack = (): CCNode =>
@@ -58,7 +64,11 @@ const roundTrip = (before: CCNode, r: EditResult) => {
 describe("timeline edit operations (each returns { project, undo } and a one-line description)", () => {
   it("insert (ripple): splits the clip under the playhead and shifts the rest", () => {
     const root = fresh();
-    const r = edit.insert(root, { track: "v1", node: el("Scene", { id: "n", duration: "1s" }), at: "2s" });
+    const r = edit.insert(root, {
+      track: "v1",
+      node: el("Scene", { id: "n", duration: "1s" }),
+      at: "2s",
+    });
     expect(times(r.project, "n")).toMatchObject({ start: "2s", duration: "1s" });
     expect(times(r.project, "a").duration).toBe("2s");
     const half = find(r.project, "a_b")!;
@@ -70,18 +80,40 @@ describe("timeline edit operations (each returns { project, undo } and a one-lin
   });
   it("insert without ripple rejects overlaps unless overlap is set", () => {
     const root = fresh();
-    expect(() => edit.insert(root, { track: "v1", node: el("Scene", { id: "n", duration: "1s" }), at: "1s", ripple: false })).toThrow(/overlaps/);
-    const ok = edit.insert(root, { track: "v1", node: el("Scene", { id: "n", duration: "1s" }), at: "1s", ripple: false, overlap: true });
+    expect(() =>
+      edit.insert(root, {
+        track: "v1",
+        node: el("Scene", { id: "n", duration: "1s" }),
+        at: "1s",
+        ripple: false,
+      }),
+    ).toThrow(/overlaps/);
+    const ok = edit.insert(root, {
+      track: "v1",
+      node: el("Scene", { id: "n", duration: "1s" }),
+      at: "1s",
+      ripple: false,
+      overlap: true,
+    });
     roundTrip(root, ok);
     try {
-      edit.insert(root, { track: "v1", node: el("Scene", { id: "n", duration: "1s" }), at: "1s", ripple: false });
+      edit.insert(root, {
+        track: "v1",
+        node: el("Scene", { id: "n", duration: "1s" }),
+        at: "1s",
+        ripple: false,
+      });
     } catch (e) {
       expect((e as CodeCutError).code).toBe("overlap_rejected");
     }
   });
   it("overwrite trims, splits and removes what it covers", () => {
     const root = fresh();
-    const r = edit.overwrite(root, { track: "v1", node: el("Scene", { id: "n", duration: "3s" }), at: "3s" });
+    const r = edit.overwrite(root, {
+      track: "v1",
+      node: el("Scene", { id: "n", duration: "3s" }),
+      at: "3s",
+    });
     expect(times(r.project, "a").duration).toBe("3s");
     expect(find(r.project, "b")).toBeTruthy();
     expect(times(r.project, "b")).toMatchObject({ start: "6s", duration: "2s" });
@@ -207,7 +239,12 @@ describe("timeline edit operations (each returns { project, undo } and a one-lin
     for (const fn of [
       () => edit.lift(root, { id: "lk" }),
       () => edit.trim(root, { id: "lk", end: "1s" }),
-      () => edit.insert(root, { track: "locked", node: el("Scene", { id: "n", duration: "1s" }), at: "5s" }),
+      () =>
+        edit.insert(root, {
+          track: "locked",
+          node: el("Scene", { id: "n", duration: "1s" }),
+          at: "5s",
+        }),
       () => edit.split(root, { id: "lk", at: "1s" }),
     ]) {
       try {
@@ -229,7 +266,32 @@ describe("timeline edit operations (each returns { project, undo } and a one-lin
   });
   it("every op is reachable by name and unknown ops are rejected", () => {
     expect(Object.keys(EDIT_OPS).sort()).toEqual(
-      ["insert", "overwrite", "replace", "lift", "extract", "split", "trim", "roll", "slip", "slide", "move", "link", "unlink", "group", "ungroup", "nest", "setSpeed", "rippleDelete", "snap", "lockTrack", "muteTrack", "soloTrack", "addMarker", "removeMarker"].sort(),
+      [
+        "insert",
+        "overwrite",
+        "replace",
+        "lift",
+        "extract",
+        "split",
+        "trim",
+        "roll",
+        "slip",
+        "slide",
+        "move",
+        "link",
+        "unlink",
+        "group",
+        "ungroup",
+        "nest",
+        "setSpeed",
+        "rippleDelete",
+        "snap",
+        "lockTrack",
+        "muteTrack",
+        "soloTrack",
+        "addMarker",
+        "removeMarker",
+      ].sort(),
     );
     expect(() => runEdit(fresh(), "nope", {})).toThrow(/Unknown edit op/);
     expect(runEdit(fresh(), "lockTrack", { track: "v1" }).project).toBeTruthy();
@@ -237,29 +299,60 @@ describe("timeline edit operations (each returns { project, undo } and a one-lin
 });
 
 describe("keyframe operations", () => {
-  const base = () => el("Composition", { id: "c", size: [1080, 1920], fps: 30, duration: "10s" }, [el("Track", { id: "t" }, [el("Rect", { id: "r", opacity: [[0, 0], [1, 1], [2, 0.5]], position: [[0, [0, 0]], [1, [100, 0]], [2, [100, 100]]] })])]);
+  const base = () =>
+    el("Composition", { id: "c", size: [1080, 1920], fps: 30, duration: "10s" }, [
+      el("Track", { id: "t" }, [
+        el("Rect", {
+          id: "r",
+          opacity: [
+            [0, 0],
+            [1, 1],
+            [2, 0.5],
+          ],
+          position: [
+            [0, [0, 0]],
+            [1, [100, 0]],
+            [2, [100, 100]],
+          ],
+        }),
+      ]),
+    ]);
   const keysOf = (root: CCNode, prop: string) => find(root, "r")!.props[prop] as any;
   it("add / set / move / delete", () => {
     const root = base();
     const a = KEY_OPS.keyAdd(root, { id: "r", prop: "opacity", t: 3, value: 1, ease: "expo.out" });
-    expect(keysOf(a.project, "opacity")).toEqual([[0, 0], [1, 1], [2, 0.5], [3, 1, "expo.out"]]);
+    expect(keysOf(a.project, "opacity")).toEqual([
+      [0, 0],
+      [1, 1],
+      [2, 0.5],
+      [3, 1, "expo.out"],
+    ]);
     roundTrip(root, a);
-    expect(() => KEY_OPS.keyAdd(root, { id: "r", prop: "opacity", t: 1, value: 0.3 })).toThrow(/already has a key/);
+    expect(() => KEY_OPS.keyAdd(root, { id: "r", prop: "opacity", t: 1, value: 0.3 })).toThrow(
+      /already has a key/,
+    );
     const s = KEY_OPS.keySet(root, { id: "r", prop: "opacity", t: 1, value: 0.9 });
     expect(keysOf(s.project, "opacity")[1]).toEqual([1, 0.9]);
     roundTrip(root, s);
     const m = KEY_OPS.keyMove(root, { id: "r", prop: "opacity", from: 2, to: 4 });
     expect(keysOf(m.project, "opacity").map((k: any) => k[0])).toEqual([0, 1, 4]);
-    expect(() => KEY_OPS.keyMove(root, { id: "r", prop: "opacity", from: 2, to: 1 })).toThrow(CodeCutError);
+    expect(() => KEY_OPS.keyMove(root, { id: "r", prop: "opacity", from: 2, to: 1 })).toThrow(
+      CodeCutError,
+    );
     roundTrip(root, m);
     const d = KEY_OPS.keyDelete(root, { id: "r", prop: "opacity", t: 1 });
     expect(keysOf(d.project, "opacity")).toHaveLength(2);
     roundTrip(root, d);
   });
   it("static value becomes the first key when keying later", () => {
-    const root = el("Composition", { id: "c", size: [10, 10], fps: 30, duration: "5s" }, [el("Rect", { id: "r", opacity: 0.4 })]);
+    const root = el("Composition", { id: "c", size: [10, 10], fps: 30, duration: "5s" }, [
+      el("Rect", { id: "r", opacity: 0.4 }),
+    ]);
     const a = KEY_OPS.keyAdd(root, { id: "r", prop: "opacity", t: 2, value: 1 });
-    expect(keysOf(a.project, "opacity")).toEqual([[0, 0.4], [2, 1]]);
+    expect(keysOf(a.project, "opacity")).toEqual([
+      [0, 0.4],
+      [2, 1],
+    ]);
     roundTrip(root, a);
   });
   it("copy / paste", () => {
@@ -278,7 +371,9 @@ describe("keyframe operations", () => {
     roundTrip(root, sc);
     const e = KEY_OPS.keyEase(root, { id: "r", prop: "opacity", t: 1, ease: "back.out(1.7)" });
     expect(keysOf(e.project, "opacity")[1]).toEqual([1, 1, "back.out(1.7)"]);
-    expect(() => KEY_OPS.keyEase(root, { id: "r", prop: "opacity", t: 1, ease: "wiggle" })).toThrow(CodeCutError);
+    expect(() => KEY_OPS.keyEase(root, { id: "r", prop: "opacity", t: 1, ease: "wiggle" })).toThrow(
+      CodeCutError,
+    );
     roundTrip(root, e);
     const md = KEY_OPS.keyMode(root, { id: "r", prop: "opacity", mode: "auto" });
     expect(keysOf(md.project, "opacity").mode).toBe("auto");
@@ -291,7 +386,16 @@ describe("keyframe operations", () => {
     roundTrip(root, lp);
   });
   it("rove / bake / simplify / separate / combine", () => {
-    const root = el("Composition", { id: "c", size: [10, 10], fps: 30, duration: "5s" }, [el("Rect", { id: "r", position: [[0, [0, 0]], [1, [10, 0]], [4, [100, 0]]] })]);
+    const root = el("Composition", { id: "c", size: [10, 10], fps: 30, duration: "5s" }, [
+      el("Rect", {
+        id: "r",
+        position: [
+          [0, [0, 0]],
+          [1, [10, 0]],
+          [4, [100, 0]],
+        ],
+      }),
+    ]);
     const rv = KEY_OPS.keyRove(root, { id: "r", prop: "position" });
     expect(keysOf(rv.project, "position")[1][0]).toBeCloseTo(0.4, 1);
     roundTrip(root, rv);
@@ -310,9 +414,22 @@ describe("keyframe operations", () => {
     roundTrip(sep.project, comb);
   });
   it("refuses expressions and non-literal times with typed errors", () => {
-    const root = el("Composition", { id: "c", size: [10, 10], fps: 30, duration: "5s" }, [el("Rect", { id: "r", opacity: (t: number) => t, x: [["#a.end", 0], [2, 1]] })]);
-    expect(() => KEY_OPS.keyAdd(root, { id: "r", prop: "opacity", t: 1, value: 1 })).toThrow(/expression/);
-    expect(() => KEY_OPS.keyAdd(root, { id: "r", prop: "x", t: 3, value: 1 })).toThrow(/literal times/);
+    const root = el("Composition", { id: "c", size: [10, 10], fps: 30, duration: "5s" }, [
+      el("Rect", {
+        id: "r",
+        opacity: (t: number) => t,
+        x: [
+          ["#a.end", 0],
+          [2, 1],
+        ],
+      }),
+    ]);
+    expect(() => KEY_OPS.keyAdd(root, { id: "r", prop: "opacity", t: 1, value: 1 })).toThrow(
+      /expression/,
+    );
+    expect(() => KEY_OPS.keyAdd(root, { id: "r", prop: "x", t: 3, value: 1 })).toThrow(
+      /literal times/,
+    );
     expect(() => runKeyOp(root, "keyNope", {})).toThrow(/Unknown keyframe op/);
     expect(applyPatches(root, []).project).toBeTruthy();
   });

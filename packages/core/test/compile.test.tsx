@@ -16,7 +16,11 @@ import {
 
 const Block = defineComponent("CTBlock", {
   category: "test",
-  controls: { w: num({ default: 100 }), h: num({ default: 100 }), fillColor: color({ default: "#f36" }) },
+  controls: {
+    w: num({ default: 100 }),
+    h: num({ default: 100 }),
+    fillColor: color({ default: "#f36" }),
+  },
   render: (p, rc) => ({
     html: `<div id="${rc.sub("b")}" style="width:${p.w}px;height:${p.h}px;background:${p.fillColor}"></div>`,
     box: { left: "0px", top: "0px", width: `${p.w}px`, height: `${p.h}px` },
@@ -31,7 +35,14 @@ const Nudge = defineEffect("CTNudge", {
       {
         prop: "x",
         mode: "add",
-        signal: exprSignal((t) => (t >= rc.node.start && t < rc.node.start + 0.5 ? p.amp * (1 - (t - rc.node.start) / 0.5) : 0), "number", [rc.node.start, rc.node.start + 0.5]),
+        signal: exprSignal(
+          (t) =>
+            t >= rc.node.start && t < rc.node.start + 0.5
+              ? p.amp * (1 - (t - rc.node.start) / 0.5)
+              : 0,
+          "number",
+          [rc.node.start, rc.node.start + 0.5],
+        ),
       },
     ],
   }),
@@ -41,7 +52,20 @@ const project = (
   <Composition id="p" size={[400, 300]} fps={30} duration="3s">
     <Track id="v1" kind="video">
       <Scene id="s1" start="0s" duration="2s">
-        <Block id="b1" position={[[0, [0, 0]], [1, [100, 50], "expo.out"]] as any} opacity={[[0, 0], [0.5, 1]]} enter={{ from: "w", distance: 80, duration: 0.5 }}>
+        <Block
+          id="b1"
+          position={
+            [
+              [0, [0, 0]],
+              [1, [100, 50], "expo.out"],
+            ] as any
+          }
+          opacity={[
+            [0, 0],
+            [0.5, 1],
+          ]}
+          enter={{ from: "w", distance: 80, duration: 0.5 }}
+        >
           <Nudge id="n1" amp={20} start="0.5s" />
         </Block>
       </Scene>
@@ -77,7 +101,7 @@ describe("resolve + compile", () => {
     expect(h).toMatch(/id="b1" class="clip cc-l cc-ctblock" data-start="0" data-duration="2"/);
     expect(h).toContain('id="s2" class="clip cc-l cc-scene" data-start="2"');
     expect(h).toContain("window.__timelines[window.__ccId]=tl");
-    expect(h).toContain("<script src=\"vendor/gsap.min.js\">");
+    expect(h).toContain('<script src="vendor/gsap.min.js">');
     // s1 extended while s2 dissolves in (2s..2.3s): host duration 2.3
     expect(h).toMatch(/id="s1"[^>]*data-duration="2.3"/);
     // baked x channel exists for b1 (keys + effect + enter)

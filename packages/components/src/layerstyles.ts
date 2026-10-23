@@ -14,7 +14,7 @@ import {
 } from "@codecut/core";
 import { round } from "./util.js";
 
-const sig = <T>(rc: RenderCtx, prop: string): Signal<T> => (rc.node.props[prop] as Signal<T>);
+const sig = <T>(rc: RenderCtx, prop: string): Signal<T> => rc.node.props[prop] as Signal<T>;
 
 /** Window during which an effect is active, in absolute seconds. */
 export const effectWindow = (rc: RenderCtx): [number, number] => [rc.node.start, rc.node.end];
@@ -46,7 +46,11 @@ export const DropShadow = defineEffect("DropShadow", {
   },
   apply: (p, rc) => ({
     filters: [
-      windowed(rc, (t) => `drop-shadow(${round(evalSignal(sig<number>(rc, "x"), t))}px ${round(evalSignal(sig<number>(rc, "y"), t))}px ${round(evalSignal(sig<number>(rc, "blur"), t))}px ${withAlpha(p.color, evalSignal(sig<number>(rc, "opacity"), t))})`),
+      windowed(
+        rc,
+        (t) =>
+          `drop-shadow(${round(evalSignal(sig<number>(rc, "x"), t))}px ${round(evalSignal(sig<number>(rc, "y"), t))}px ${round(evalSignal(sig<number>(rc, "blur"), t))}px ${withAlpha(p.color, evalSignal(sig<number>(rc, "opacity"), t))})`,
+      ),
     ],
   }),
 });
@@ -80,7 +84,12 @@ export const Blur = defineEffect("Blur", {
   description: "Gaussian blur of the layer.",
   controls: { radius: num({ animatable: true, min: 0, max: 200, default: 8, unit: "px" }) },
   apply: (_p, rc) => ({
-    filters: [windowed(rc, (t) => { const r = evalSignal(sig<number>(rc, "radius"), t); return r > 0.01 ? `blur(${round(r, 2)}px)` : ""; })],
+    filters: [
+      windowed(rc, (t) => {
+        const r = evalSignal(sig<number>(rc, "radius"), t);
+        return r > 0.01 ? `blur(${round(r, 2)}px)` : "";
+      }),
+    ],
   }),
 });
 
@@ -108,10 +117,22 @@ export const Vignette = defineEffect("Vignette", {
   description: "Darkens the edges of the layer.",
   controls: {
     amount: num({ animatable: true, min: 0, max: 1, default: 0.5, step: 0.01 }),
-    size: num({ min: 0, max: 1, default: 0.55, step: 0.01, description: "Radius of the clear centre." }),
+    size: num({
+      min: 0,
+      max: 1,
+      default: 0.55,
+      step: 0.01,
+      description: "Radius of the clear centre.",
+    }),
     softness: num({ min: 0, max: 1, default: 0.5, step: 0.01 }),
     color: color({ default: "#000000" }),
-    roundness: num({ min: 0, max: 1, default: 0.5, step: 0.01, description: "0 = frame-shaped, 1 = circular." }),
+    roundness: num({
+      min: 0,
+      max: 1,
+      default: 0.5,
+      step: 0.01,
+      description: "0 = frame-shaped, 1 = circular.",
+    }),
     feather: bool({ default: true }),
   },
   apply: (p, rc) => {
@@ -123,7 +144,17 @@ export const Vignette = defineEffect("Vignette", {
     return {
       overlay: {
         html: `<div id="${id}" class="cc-vignette" style="position:absolute;inset:0;pointer-events:none;opacity:${round(evalSignal(amount, a))};background:radial-gradient(${p.roundness > 0.5 ? "circle" : "ellipse"} at 50% 50%, rgba(0,0,0,0) ${Math.max(0, inner)}%, ${p.color} ${outer}%)"></div>`,
-        channels: [{ target: `#${id}`, prop: "opacity", signal: exprSignal((t) => (t >= a && t < b ? (evalSignal(amount, t) as number) : 0), "number", [a, b]) }],
+        channels: [
+          {
+            target: `#${id}`,
+            prop: "opacity",
+            signal: exprSignal(
+              (t) => (t >= a && t < b ? (evalSignal(amount, t) as number) : 0),
+              "number",
+              [a, b],
+            ),
+          },
+        ],
       },
     };
   },
