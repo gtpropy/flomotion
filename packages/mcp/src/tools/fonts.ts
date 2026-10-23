@@ -30,28 +30,49 @@ import {
 import type { Context } from "../context.js";
 import { tool, writeResult } from "./util.js";
 
-const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const slug = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
 
 /** Faces for scripts the default Latin fonts do not cover. */
 const SCRIPT_SUGGESTIONS: Array<{ script: string; test: RegExp; families: string[] }> = [
-  { script: "devanagari", test: /[ऀ-ॿ]/, families: ["Noto Sans Devanagari", "Hind", "Mukta", "Poppins"] },
+  {
+    script: "devanagari",
+    test: /[ऀ-ॿ]/,
+    families: ["Noto Sans Devanagari", "Hind", "Mukta", "Poppins"],
+  },
   { script: "arabic", test: /[؀-ۿ]/, families: ["Noto Sans Arabic", "Cairo", "Tajawal"] },
   { script: "hebrew", test: /[֐-׿]/, families: ["Heebo", "Assistant", "Noto Sans Hebrew"] },
   { script: "thai", test: /[฀-๿]/, families: ["Noto Sans Thai", "Prompt", "Sarabun"] },
-  { script: "japanese", test: /[぀-ヿ一-鿿]/, families: ["Noto Sans JP", "M PLUS 1p", "Zen Kaku Gothic New"] },
+  {
+    script: "japanese",
+    test: /[぀-ヿ一-鿿]/,
+    families: ["Noto Sans JP", "M PLUS 1p", "Zen Kaku Gothic New"],
+  },
   { script: "korean", test: /[가-힯]/, families: ["Noto Sans KR", "Gothic A1"] },
   { script: "cyrillic", test: /[Ѐ-ӿ]/, families: ["Inter", "Roboto", "Montserrat", "Manrope"] },
   { script: "greek", test: /[Ͱ-Ͽ]/, families: ["Inter", "Roboto", "Noto Sans"] },
-  { script: "symbols/emoji", test: /[←-⯿\u{1F300}-\u{1FAFF}]/u, families: ["Noto Sans Symbols 2", "Noto Emoji"] },
+  {
+    script: "symbols/emoji",
+    test: /[←-⯿\u{1F300}-\u{1FAFF}]/u,
+    families: ["Noto Sans Symbols 2", "Noto Emoji"],
+  },
 ];
 
-const usedBy = (root: CCNode, id: string, lookTypes: Record<string, { font?: string }>): string[] => {
+const usedBy = (
+  root: CCNode,
+  id: string,
+  lookTypes: Record<string, { font?: string }>,
+): string[] => {
   const out: string[] = [];
   walk(root, (n) => {
     const f = n.props.font;
     if (typeof f !== "string") return;
     const token = f.match(/^\$type\.([\w-]+)$/)?.[1];
-    if (f === id || (token && lookTypes[token]?.font === id)) out.push(String(n.props.id ?? n.name));
+    if (f === id || (token && lookTypes[token]?.font === id))
+      out.push(String(n.props.id ?? n.name));
   });
   return out;
 };
@@ -73,7 +94,8 @@ function resolvedFont(ctx: Context, decls: FontDecl[], id: string) {
 export const fontList = tool({
   name: "font_list",
   title: "List project fonts",
-  description: "Fonts declared in the project (and its Look): where they come from, whether they are downloaded and locked, their licence, and which elements use them.",
+  description:
+    "Fonts declared in the project (and its Look): where they come from, whether they are downloaded and locked, their licence, and which elements use them.",
   input: {},
   readOnly: true,
   async run(_a, ctx) {
@@ -119,7 +141,10 @@ export const fontGet = tool({
   input: {
     id: z.string(),
     weights: z.array(z.number().int().min(1).max(1000)).optional(),
-    axes: z.record(z.string(), z.tuple([z.number(), z.number()])).optional().describe('e.g. { wght: [300, 700] } for a variable font.'),
+    axes: z
+      .record(z.string(), z.tuple([z.number(), z.number()]))
+      .optional()
+      .describe("e.g. { wght: [300, 700] } for a variable font."),
     subsets: z.array(z.string()).optional(),
   },
   async run(a, ctx) {
@@ -155,7 +180,10 @@ export const fontGet = tool({
               node: { $cc: 1, name: "Fonts", props: { id: "fonts" }, children: [node] },
             },
           ];
-      const w = await ctx.store.apply(makeResult(loaded.node, patches, `declare font ${decl.id} (${a.id})`), loaded);
+      const w = await ctx.store.apply(
+        makeResult(loaded.node, patches, `declare font ${decl.id} (${a.id})`),
+        loaded,
+      );
       description = w.description;
       undoToken = w.undoToken;
     } else if (a.weights || a.axes || a.subsets) {
@@ -163,14 +191,27 @@ export const fontGet = tool({
       const fonts = loaded.node.children.find((c): c is CCNode => isNode(c) && c.name === "Fonts");
       const fontEl = fonts?.children.find((c): c is CCNode => isNode(c) && c.props.id === decl!.id);
       if (!el && !fontEl)
-        throw new CodeCutError("opaque_expression", `Font "${decl.id}" comes from the Look, not the project file`, {
-          fix: "Declare it in <Fonts> to change its weights or axes.",
-        });
+        throw new CodeCutError(
+          "opaque_expression",
+          `Font "${decl.id}" comes from the Look, not the project file`,
+          {
+            fix: "Declare it in <Fonts> to change its weights or axes.",
+          },
+        );
       const patches: Patch[] = [];
-      if (a.weights) patches.push({ op: "setProp", id: decl.id, prop: "weights", value: a.weights });
-      if (a.axes) patches.push({ op: "setProp", id: decl.id, prop: "axes", value: a.axes }, { op: "setProp", id: decl.id, prop: "variable", value: true });
-      if (a.subsets) patches.push({ op: "setProp", id: decl.id, prop: "subsets", value: a.subsets });
-      const w = await ctx.store.apply(makeResult(loaded.node, patches, `change font ${decl.id}`), loaded);
+      if (a.weights)
+        patches.push({ op: "setProp", id: decl.id, prop: "weights", value: a.weights });
+      if (a.axes)
+        patches.push(
+          { op: "setProp", id: decl.id, prop: "axes", value: a.axes },
+          { op: "setProp", id: decl.id, prop: "variable", value: true },
+        );
+      if (a.subsets)
+        patches.push({ op: "setProp", id: decl.id, prop: "subsets", value: a.subsets });
+      const w = await ctx.store.apply(
+        makeResult(loaded.node, patches, `change font ${decl.id}`),
+        loaded,
+      );
       description = w.description;
       undoToken = w.undoToken;
       decl = collectFontDecls((await ctx.store.load()).node).decls.find((d) => d.id === decl!.id)!;
@@ -183,7 +224,9 @@ export const fontGet = tool({
       sources: ctx.deps.fontSources,
     });
     const lock = readLock(ctx.root).fonts[decl.id];
-    const ledger = readLedger(ctx.root).entries.filter((e) => e.kind === "font" && e.family === decl!.family);
+    const ledger = readLedger(ctx.root).entries.filter(
+      (e) => e.kind === "font" && e.family === decl!.family,
+    );
     return {
       data: {
         ...(description ? writeResult({ patches: [], description, undoToken: undoToken! }) : {}),
@@ -228,7 +271,12 @@ export const fontSearch = tool({
       .filter((f) => !a.script || f.subsets.includes(a.script))
       .filter((f) => a.variable === undefined || !!f.axes?.length === a.variable)
       .slice(0, a.limit ?? 10);
-    const ctxFont = { projectRoot: ctx.root, cacheDir: "", log: () => {}, fetch: ctx.deps.fetch ?? fetch };
+    const ctxFont = {
+      projectRoot: ctx.root,
+      cacheDir: "",
+      log: () => {},
+      fetch: ctx.deps.fetch ?? fetch,
+    };
     const out = [];
     for (const f of hits) {
       const lic = await googleFamilyLicense(f.family, ctxFont).catch(() => undefined);
@@ -243,7 +291,9 @@ export const fontSearch = tool({
         designer: lic?.author,
       });
     }
-    return { data: { results: out, note: "Pick candidates and use font_preview; ask the user to choose." } };
+    return {
+      data: { results: out, note: "Pick candidates and use font_preview; ask the user to choose." },
+    };
   },
 });
 
@@ -267,7 +317,10 @@ export const fontPreview = tool({
     const size = a.size ?? 96;
     const dir = ctx.store.path(join(CODECUT_DIR, "previews"));
     mkdirSync(dir, { recursive: true });
-    const hash = createHash("sha256").update(JSON.stringify([a.fontId, a.text, size, a.weight])).digest("hex").slice(0, 8);
+    const hash = createHash("sha256")
+      .update(JSON.stringify([a.fontId, a.text, size, a.weight]))
+      .digest("hex")
+      .slice(0, 8);
     const file = join(dir, `font-${a.fontId}-${hash}.png`);
     const session = await openFontPage(ctx.root, [font]);
     try {
@@ -284,14 +337,21 @@ export const fontPreview = tool({
         return document.fonts.check(weight+' '+size+'px "'+fam+'"', text);
       })()`;
       const ok = (await session.page.evaluate(js)) as boolean;
-      if (!ok) throw new CodeCutError("font_error", `Font "${a.fontId}" did not load in the browser`, { fix: "Run font_get to download it again." });
+      if (!ok)
+        throw new CodeCutError("font_error", `Font "${a.fontId}" did not load in the browser`, {
+          fix: "Run font_get to download it again.",
+        });
       const el = await session.page.$("#s");
       await el!.screenshot({ path: file as `${string}.png` });
     } finally {
       await session.close();
     }
     return {
-      data: { path: relative(ctx.root, file), font: font.family, note: "Check legibility only. Ask the user to approve the face." },
+      data: {
+        path: relative(ctx.root, file),
+        font: font.family,
+        note: "Check legibility only. Ask the user to approve the face.",
+      },
       images: [{ path: file, mime: "image/png" }],
     };
   },
@@ -300,7 +360,8 @@ export const fontPreview = tool({
 export const fontCheck = tool({
   name: "font_check",
   title: "Check glyph coverage",
-  description: "List characters in `text` that the font cannot draw, and suggest fonts that cover them (by script).",
+  description:
+    "List characters in `text` that the font cannot draw, and suggest fonts that cover them (by script).",
   input: { text: z.string(), fontId: z.string() },
   readOnly: true,
   async run(a, ctx) {
@@ -309,12 +370,17 @@ export const fontCheck = tool({
     const { decls } = collectFontDecls(node);
     const font = resolvedFont(ctx, decls, a.fontId);
     const missing = missingGlyphs(ctx.root, font, a.text);
-    const suggestions = SCRIPT_SUGGESTIONS.filter((s) => missing.some((m) => s.test.test(m))).map((s) => ({ script: s.script, families: s.families }));
+    const suggestions = SCRIPT_SUGGESTIONS.filter((s) => missing.some((m) => s.test.test(m))).map(
+      (s) => ({ script: s.script, families: s.families }),
+    );
     const covering = decls
       .filter((d) => d.id !== a.fontId)
       .filter((d) => {
         try {
-          return missingGlyphs(ctx.root, resolveFromLock(ctx.root, d, readLock(ctx.root)), a.text).length === 0;
+          return (
+            missingGlyphs(ctx.root, resolveFromLock(ctx.root, d, readLock(ctx.root)), a.text)
+              .length === 0
+          );
         } catch {
           return false;
         }
@@ -326,7 +392,9 @@ export const fontCheck = tool({
         missing,
         suggestions,
         alreadyInProject: covering,
-        fix: missing.length ? "Use a face that covers these characters for this text (a second family counts toward the 3-family limit), or change the text." : undefined,
+        fix: missing.length
+          ? "Use a face that covers these characters for this text (a second family counts toward the 3-family limit), or change the text."
+          : undefined,
       },
     };
   },

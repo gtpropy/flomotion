@@ -16,34 +16,22 @@
       "id": "display",
       "family": "Permanent Marker",
       "source": "google",
-      "weights": [
-        400
-      ],
-      "subsets": [
-        "latin"
-      ]
+      "weights": [400],
+      "subsets": ["latin"]
     },
     {
       "id": "body",
       "family": "Patrick Hand",
       "source": "google",
-      "weights": [
-        400
-      ],
-      "subsets": [
-        "latin"
-      ]
+      "weights": [400],
+      "subsets": ["latin"]
     },
     {
       "id": "mono",
       "family": "Space Mono",
       "source": "google",
-      "weights": [
-        400
-      ],
-      "subsets": [
-        "latin"
-      ]
+      "weights": [400],
+      "subsets": ["latin"]
     }
   ],
   "type": {

@@ -76,9 +76,13 @@ export class RecordingProvider implements VoiceProvider {
     return extname(req.voice ?? ".wav") || ".wav";
   }
   async generate(req: VoiceRequest, dest: string, ctx: { root: string }) {
-    if (!req.voice) throw new CodeCutError("asset_missing", "No recording path given", { fix: "Pass voice: 'recordings/voice.wav'." });
+    if (!req.voice)
+      throw new CodeCutError("asset_missing", "No recording path given", {
+        fix: "Pass voice: 'recordings/voice.wav'.",
+      });
     const src = join(ctx.root, req.voice);
-    if (!existsSync(src)) throw new CodeCutError("asset_missing", `Recording not found: ${req.voice}`);
+    if (!existsSync(src))
+      throw new CodeCutError("asset_missing", `Recording not found: ${req.voice}`);
     mkdirSync(dirname(dest), { recursive: true });
     copyFileSync(src, dest);
     return {};
@@ -95,7 +99,9 @@ export class LocalTtsProvider implements VoiceProvider {
     return {
       credits: 0,
       spends: false,
-      assumptions: ["Free, runs on this machine with macOS `say`. Quality is for timing drafts, not delivery."],
+      assumptions: [
+        "Free, runs on this machine with macOS `say`. Quality is for timing drafts, not delivery.",
+      ],
     };
   }
   ext() {
@@ -120,13 +126,17 @@ const ELEVEN_BASE = "https://api.elevenlabs.io/v1";
 /** ElevenLabs text to speech with character timestamps (converted to word timings). Quote first, then confirm. */
 export class ElevenLabsProvider implements VoiceProvider {
   readonly id = "elevenlabs" as const;
-  constructor(private readonly opts: { apiKey?: string; fetch?: typeof fetch; env?: NodeJS.ProcessEnv } = {}) {}
+  constructor(
+    private readonly opts: { apiKey?: string; fetch?: typeof fetch; env?: NodeJS.ProcessEnv } = {},
+  ) {}
   private get env() {
     return this.opts.env ?? process.env;
   }
   quote(req: VoiceRequest) {
     const model = req.model ?? "eleven_multilingual_v2";
-    const perChar = Number(this.env.ELEVENLABS_CREDITS_PER_CHAR ?? (/flash|turbo/.test(model) ? 0.5 : 1));
+    const perChar = Number(
+      this.env.ELEVENLABS_CREDITS_PER_CHAR ?? (/flash|turbo/.test(model) ? 0.5 : 1),
+    );
     const credits = Math.ceil(req.text.length * perChar);
     const usdRate = this.env.ELEVENLABS_USD_PER_1K_CREDITS;
     return {
@@ -152,7 +162,9 @@ export class ElevenLabsProvider implements VoiceProvider {
         fix: "Export ELEVENLABS_API_KEY, or use provider 'recording' with your own file.",
       });
     if (!req.voice)
-      throw new CodeCutError("invalid_edit", "ElevenLabs needs a voice id", { fix: "Pass voice: '<voice_id>'." });
+      throw new CodeCutError("invalid_edit", "ElevenLabs needs a voice id", {
+        fix: "Pass voice: '<voice_id>'.",
+      });
     const res = await (this.opts.fetch ?? fetch)(
       `${ELEVEN_BASE}/text-to-speech/${encodeURIComponent(req.voice)}/with-timestamps?output_format=mp3_44100_128`,
       {
@@ -163,11 +175,16 @@ export class ElevenLabsProvider implements VoiceProvider {
     );
     if (!res.ok)
       throw new CodeCutError("render_failed", `ElevenLabs returned ${res.status}`, {
-        fix: res.status === 401 ? "Check ELEVENLABS_API_KEY." : "Check the voice id and your credits.",
+        fix:
+          res.status === 401 ? "Check ELEVENLABS_API_KEY." : "Check the voice id and your credits.",
       });
     const j = (await res.json()) as {
       audio_base64: string;
-      alignment?: { characters: string[]; character_start_times_seconds: number[]; character_end_times_seconds: number[] };
+      alignment?: {
+        characters: string[];
+        character_start_times_seconds: number[];
+        character_end_times_seconds: number[];
+      };
     };
     mkdirSync(dirname(dest), { recursive: true });
     writeFileSync(dest, Buffer.from(j.audio_base64, "base64"));
@@ -206,7 +223,11 @@ export class VoiceService {
   private readonly providers: Map<VoiceProviderId, VoiceProvider>;
   constructor(
     private readonly store: ProjectStore,
-    providers: VoiceProvider[] = [new RecordingProvider(), new LocalTtsProvider(), new ElevenLabsProvider()],
+    providers: VoiceProvider[] = [
+      new RecordingProvider(),
+      new LocalTtsProvider(),
+      new ElevenLabsProvider(),
+    ],
   ) {
     this.providers = new Map(providers.map((p) => [p.id, p]));
   }
@@ -263,7 +284,9 @@ export class VoiceService {
       throw new CodeCutError(
         "quote_required",
         `This spends about ${q.credits} ${q.provider} credits${q.usd !== undefined ? ` (~$${q.usd})` : ""}. Nothing was run.`,
-        { fix: "Show the quote to the user. Only after they agree, call voice_generate again with confirm:true." },
+        {
+          fix: "Show the quote to the user. Only after they agree, call voice_generate again with confirm:true.",
+        },
       );
     const p = this.provider(q.provider);
     const id = (a.id ?? "voice").replace(/[^\w-]/g, "_");
@@ -291,7 +314,9 @@ export class VoiceService {
             : "local TTS",
       attributionRequired: false,
       commercialOk:
-        q.provider === "recording" || q.provider === "local-tts" || process.env.ELEVENLABS_COMMERCIAL_OK === "1",
+        q.provider === "recording" ||
+        q.provider === "local-tts" ||
+        process.env.ELEVENLABS_COMMERCIAL_OK === "1",
       duration: info.duration,
       title: q.request.text.slice(0, 60),
     };

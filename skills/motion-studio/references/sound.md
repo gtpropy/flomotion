@@ -4,21 +4,21 @@ You cannot hear. You choose sounds from their tag, description, measured duratio
 
 ## Tags (what each is for)
 
-| Tag | Job | Typical length |
-| --- | --- | --- |
-| `ui/pop` | A small element appears | 0.03 to 0.8 s |
-| `ui/tap` | A tap or press | 0.02 to 0.6 s |
-| `ui/tick` | A counter step, a tiny tick | 0.01 to 0.4 s |
-| `move/whip` | A fast move or whip pan | 0.1 to 1.2 s |
-| `move/whoosh-deep` | A big slow move | 0.4 to 2.5 s |
-| `hit/land` | A heavy element lands | 0.1 to 1.5 s |
-| `hit/punch` | A sharp hit | 0.05 to 1 s |
-| `hit/boom` | A big boom for a reveal | 0.5 to 4 s |
-| `tech/click` | A UI click | 0.01 to 0.5 s |
-| `tech/data` | Data or numbers appear | 0.1 to 2 s |
-| `tech/glass` | A bright glassy accent | 0.2 to 2.5 s |
-| `tech/success` | A success moment | 0.3 to 2.5 s |
-| `tech/glitch` | A glitch or error | 0.1 to 1.5 s |
+| Tag                | Job                         | Typical length |
+| ------------------ | --------------------------- | -------------- |
+| `ui/pop`           | A small element appears     | 0.03 to 0.8 s  |
+| `ui/tap`           | A tap or press              | 0.02 to 0.6 s  |
+| `ui/tick`          | A counter step, a tiny tick | 0.01 to 0.4 s  |
+| `move/whip`        | A fast move or whip pan     | 0.1 to 1.2 s   |
+| `move/whoosh-deep` | A big slow move             | 0.4 to 2.5 s   |
+| `hit/land`         | A heavy element lands       | 0.1 to 1.5 s   |
+| `hit/punch`        | A sharp hit                 | 0.05 to 1 s    |
+| `hit/boom`         | A big boom for a reveal     | 0.5 to 4 s     |
+| `tech/click`       | A UI click                  | 0.01 to 0.5 s  |
+| `tech/data`        | Data or numbers appear      | 0.1 to 2 s     |
+| `tech/glass`       | A bright glassy accent      | 0.2 to 2.5 s   |
+| `tech/success`     | A success moment            | 0.3 to 2.5 s   |
+| `tech/glitch`      | A glitch or error           | 0.1 to 1.5 s   |
 
 `sound_search` with `tag` adds good search words and the length range. Add your own `query` words for flavour ("wooden", "soft").
 

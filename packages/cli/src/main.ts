@@ -69,9 +69,17 @@ const render = defineCommand({
         quality: args.draft ? "draft" : "looks",
         software: !!args.software,
       });
-      const lic = licenseReport(readLedger(dir), b.audio, b.fontsUsed, b.fonts.map((f) => f.family));
+      const lic = licenseReport(
+        readLedger(dir),
+        b.audio,
+        b.fontsUsed,
+        b.fonts.map((f) => f.family),
+      );
       const stem = r.output.replace(/\.mp4$/, "");
-      writeFileSync(`${stem}.licenses.json`, JSON.stringify({ used: lic.used, problems: lic.problems }, null, 2) + "\n");
+      writeFileSync(
+        `${stem}.licenses.json`,
+        JSON.stringify({ used: lic.used, problems: lic.problems }, null, 2) + "\n",
+      );
       if (lic.credits) writeFileSync(`${stem}.credits.txt`, lic.credits);
       for (const p of lic.problems) console.log(`  ! licence: ${p}`);
       console.log(`✔ ${r.output} (${(r.bytes / 1024 / 1024).toFixed(2)} MB)`);
@@ -213,7 +221,8 @@ const docs = defineCommand({
     if (args["looks-dir"]) {
       const dir = resolve(String(args["looks-dir"]));
       mkdirSync(dir, { recursive: true });
-      for (const l of listLooks()) writeFileSync(join(dir, `${l.id}.json`), JSON.stringify(l, null, 2) + "\n");
+      for (const l of listLooks())
+        writeFileSync(join(dir, `${l.id}.json`), JSON.stringify(l, null, 2) + "\n");
     }
     console.log(`wrote ${defs.length} pages to ${out}`);
   },
@@ -296,11 +305,18 @@ const mcp = defineCommand({
 /** Where the shipped motion-studio skill lives: next to the package (published) or in the repo (dev). */
 function skillSource(): string {
   const here = dirname(fileURLToPath(import.meta.url));
-  for (const rel of ["../skills/motion-studio", "../../../skills/motion-studio", "../../skills/motion-studio"]) {
+  for (const rel of [
+    "../skills/motion-studio",
+    "../../../skills/motion-studio",
+    "../../skills/motion-studio",
+  ]) {
     const p = resolve(here, rel);
     if (existsSync(join(p, "SKILL.md"))) return p;
   }
-  throw new CodeCutError("asset_missing", "The motion-studio skill files were not found next to this install");
+  throw new CodeCutError(
+    "asset_missing",
+    "The motion-studio skill files were not found next to this install",
+  );
 }
 
 const skillInstall = defineCommand({
@@ -311,7 +327,9 @@ const skillInstall = defineCommand({
   },
   run({ args }) {
     try {
-      const base = args.global ? join(homedir(), ".claude", "skills") : join(resolve(String(args.dir)), ".claude", "skills");
+      const base = args.global
+        ? join(homedir(), ".claude", "skills")
+        : join(resolve(String(args.dir)), ".claude", "skills");
       const dest = join(base, "motion-studio");
       mkdirSync(base, { recursive: true });
       cpSync(skillSource(), dest, { recursive: true });

@@ -31,7 +31,12 @@ export interface Deps {
   render?: typeof renderProjectDir;
   snapshot?: typeof snapshotFrames;
   /** Google Fonts Developer API (font_search). */
-  googleFonts?: (q: { key: string; family?: string; category?: string; subset?: string }) => Promise<
+  googleFonts?: (q: {
+    key: string;
+    family?: string;
+    category?: string;
+    subset?: string;
+  }) => Promise<
     Array<{
       family: string;
       category: string;
@@ -97,7 +102,10 @@ export class Context {
     const c = this.buildCache;
     if (c && c.key === key && (!opts.mix || c.mix)) return c.result;
     const loaded = await this.store.load();
-    const result = await buildLoaded(loaded, { mix: opts.mix === true, targetLufs: opts.targetLufs });
+    const result = await buildLoaded(loaded, {
+      mix: opts.mix === true,
+      targetLufs: opts.targetLufs,
+    });
     this.buildCache = { key, mix: opts.mix === true, result };
     return result;
   }

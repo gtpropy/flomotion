@@ -37,7 +37,8 @@ export function scaffoldProject(dir: string, o: ScaffoldOptions): { file: string
     throw new CodeCutError("invalid_edit", `${dir} already contains a project`, {
       fix: "Use project_read to inspect it, or start the server in an empty folder.",
     });
-  for (const d of ["assets", "fonts", "recordings", CODECUT_DIR]) mkdirSync(join(dir, d), { recursive: true });
+  for (const d of ["assets", "fonts", "recordings", CODECUT_DIR])
+    mkdirSync(join(dir, d), { recursive: true });
   const id = slug(o.name);
   const [w, h] = o.size;
   const look = o.look ?? "kinetic";
@@ -67,7 +68,11 @@ ${scenes}
   writeFileSync(join(dir, "project.tsx"), src);
   writeFileSync(
     join(dir, "codecut.json"),
-    JSON.stringify({ name: o.name, entry: "project.tsx", soundLicenses: ["CC0", "CC-BY"] }, null, 2) + "\n",
+    JSON.stringify(
+      { name: o.name, entry: "project.tsx", soundLicenses: ["CC0", "CC-BY"] },
+      null,
+      2,
+    ) + "\n",
   );
   writeFileSync(
     join(dir, "tsconfig.json"),
@@ -87,7 +92,10 @@ ${scenes}
       2,
     ) + "\n",
   );
-  writeFileSync(join(dir, ".gitignore"), `${CODECUT_DIR}/build/\n${CODECUT_DIR}/frames/\n${CODECUT_DIR}/sheet/\n${CODECUT_DIR}/tmp/\nrenders/\n`);
+  writeFileSync(
+    join(dir, ".gitignore"),
+    `${CODECUT_DIR}/build/\n${CODECUT_DIR}/frames/\n${CODECUT_DIR}/sheet/\n${CODECUT_DIR}/tmp/\nrenders/\n`,
+  );
   void CODECUT_NAME;
   return { file: join(dir, "project.tsx"), id };
 }

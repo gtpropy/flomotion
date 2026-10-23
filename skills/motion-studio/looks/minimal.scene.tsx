@@ -28,7 +28,15 @@ export default (
     background="$brand.bg"
   >
     <Track id="v1" kind="video">
-      <Scene id="intro" start="0s" duration="3.2s" scale={[[0, 1], [3.2, 1.03]]}>
+      <Scene
+        id="intro"
+        start="0s"
+        duration="3.2s"
+        scale={[
+          [0, 1],
+          [3.2, 1.03],
+        ]}
+      >
         <Rect id="intro-bg" width={1080} height={1920} fill="$brand.bg" />
         <SafeArea id="intro-safe" preset="reels">
           <Text
@@ -68,7 +76,10 @@ export default (
             radius={2}
             fill="$brand.primary"
             anchor={[0, 50]}
-            scale={[[1.2, [0, 1]], [2, [1, 1], "power3.out"]]}
+            scale={[
+              [1.2, [0, 1]],
+              [2, [1, 1], "power3.out"],
+            ]}
           />
           <Text
             id="intro-sub"
@@ -136,7 +147,10 @@ export default (
             at={[300, 980]}
             size={300}
             thickness={22}
-            value={[[0.5, 0], [2.2, 0.82, "power3.out"]]}
+            value={[
+              [0.5, 0],
+              [2.2, 0.82, "power3.out"],
+            ]}
             color="$brand.primary"
             track="rgba(20,20,26,0.08)"
             labelColor="$brand.fg"

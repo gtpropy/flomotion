@@ -1,5 +1,24 @@
 # Changelog
 
+## Phase 2: MCP server, sound, voice, review, skill (unreleased)
+
+- `@codecut/mcp`: 30 tools and 4 resources over stdio (`codecut mcp`), same patches as the edit ops, applied to the
+  TSX with ts-morph (formatting and comments kept, expressions refused, every write re-read and verified, history
+  snapshots with undo tokens). Typed errors with fix hints.
+- Freesound client (token auth, tag search, CC0/CC-BY filter, measured peak, ledger, credits file) with a local
+  catalogue fallback; voice providers (recording, local TTS stub, ElevenLabs quote then `confirm:true`);
+  transcription via whisper.cpp; `align_to_voice`; `sound_auto` for impact cues.
+- Review: 17-point checklist from the compiled animation, lint, ledger, measured mix and the rendered page.
+- `render` presets with credits and licence report; `mix_preview` with measured loudness.
+- `skills/motion-studio`: gated workflow, references (motion, sound, typography, saas-promo, review, generated
+  components), three Looks as data with a finished reference scene each, a finished example.
+- CLI: `mcp`, `skill install`; `render` writes credits and a licence report. Bundle: multi-entry esbuild build with
+  hooks so a published install resolves `@codecut/*` imports and compiles project TSX with no node_modules.
+- Fixed: `RGBSplit` and `Glitch` showed their effect before their start time (baked span began at the jump).
+  `lint` compared `CC0-1.0` with `CC0`. A sound reused for two tags lost its first peak name.
+- Tests: codemods, every tool, review checks, resources, stdio, schema round trip through an MCP call, skill files,
+  Look scenes, and the Gate 2 flow against test doubles.
+
 ## Phase 1: core engine (unreleased)
 
 - Schema system (`defineComponent`/`defineEffect`, 20+ control builders) generating TS types, Zod validators,

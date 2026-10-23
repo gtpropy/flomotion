@@ -17,6 +17,10 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
+    files: ["**/*.mjs"],
+    languageOptions: { globals: { URL: "readonly", console: "readonly", process: "readonly" } },
+  },
+  {
     files: ["packages/core/src/jsx/runtime.ts", "packages/core/src/schema/define.ts"],
     rules: {
       "@typescript-eslint/no-namespace": "off",

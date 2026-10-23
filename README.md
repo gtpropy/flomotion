@@ -47,6 +47,19 @@ pnpm codecut frame examples/saas-promo 9.5    # one PNG
 pnpm codecut sheet examples/saas-promo        # contact sheet
 ```
 
+## Use it from Claude Code (MCP)
+
+```bash
+mkdir my-video && cd my-video
+claude mcp add codecut -e FREESOUND_API_KEY=… -- npx -y codecut mcp --dir .
+npx -y codecut skill install            # copies the motion-studio skill to .claude/skills
+claude                                  # then describe the video you want
+```
+
+The skill runs a gated workflow (intake, script, look, voice, storyboard, build, sound, review, draft, final).
+`docs/gate2-manual-checklist.md` lists what to set up and what to verify by hand (nothing here has been run in a
+real Claude Code session). From a checkout use `node packages/cli/dist/bin.mjs mcp --dir .` after `pnpm build`.
+
 Fonts are the only thing fetched, and only by `fonts sync`. **Renders never use the network**: fonts are locked
 by hash, checked in headless Chrome before the first frame, and a missing or changed file fails the render with
 the font id and path.
@@ -57,9 +70,9 @@ the font id and path.
 packages/core        schema system, JSX runtime, resolver, compiler, keyframes, linter, edit ops
 packages/components  76 components and effects built with defineComponent/defineEffect
 packages/render      HyperFrames wrapper, fonts, Chrome measurement, audio mix, project build
-packages/mcp         MCP server, Freesound client, ledger, voice providers   (phase 2)
+packages/mcp         MCP server (30 tools), codemods, Freesound, voice, review
 packages/cli         the codecut CLI
-skills/motion-studio the director skill                                       (phase 2)
+skills/motion-studio the director skill: workflow, references, Looks
 examples/            saas-promo (30 s, 9:16) and typography (fonts test project)
 tests/               golden frames, e2e, schema round trip
 docs/                spec.md, hyperframes-notes.md, later.md, components/

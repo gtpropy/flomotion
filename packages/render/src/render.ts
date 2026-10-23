@@ -40,10 +40,12 @@ export async function renderProjectDir(
   if (r.code !== 0 || !existsSync(output)) {
     throw new CodeCutError("render_failed", `hyperframes render failed (exit ${r.code})`, {
       fix: "See the details for the HyperFrames log; run `codecut lint` first.",
-      details: log
-        .split("\n")
-        .filter((l) => /error|fail|404|timeout/i.test(l))
-        .slice(0, 20),
+      details: (() => {
+        const lines = log.split("\n").filter((l) => l.trim());
+        const hits = lines.filter((l) => /error|fail|404|timeout/i.test(l)).slice(0, 20);
+        // an out-of-memory kill prints nothing useful: keep the tail so the cause is visible
+        return hits.length ? hits : lines.slice(-15);
+      })(),
     });
   }
   return { output, bytes: statSync(output).size, log };

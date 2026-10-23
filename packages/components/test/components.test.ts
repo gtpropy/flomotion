@@ -496,7 +496,9 @@ describe("every definition has a schema, a renderer, a unit test and a compile s
 describe("effects that jump at their start are neutral before it", () => {
   /** Value the page shows at time t for `target`/`prop`: baked samples once active, else the static value. */
   const pageValue = (html: string, target: string, prop: string, t: number): unknown => {
-    const st = JSON.parse(html.match(/window\.__ccStatic=([\s\S]*?);\nwindow\.__ccBaked/)![1]!) as unknown[][];
+    const st = JSON.parse(
+      html.match(/window\.__ccStatic=([\s\S]*?);\nwindow\.__ccBaked/)![1]!,
+    ) as unknown[][];
     const bk = JSON.parse(html.match(/window\.__ccBaked=([\s\S]*?);\n/)![1]!) as unknown[][];
     const baked = bk.find((b) => b[0] === target && b[1] === prop);
     const stat = st.find((s) => s[0] === target && s[1] === prop);

@@ -2,7 +2,15 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { cleanup, connect, doubles, makeTone, ToolError, tmpProject, type Harness } from "./harness.js";
+import {
+  cleanup,
+  connect,
+  doubles,
+  makeTone,
+  ToolError,
+  tmpProject,
+  type Harness,
+} from "./harness.js";
 import type { HfCheck } from "../src/review.js";
 
 let root: string;
@@ -20,13 +28,33 @@ const fails = async (p: Promise<unknown>, code: string) => {
   throw new Error(`expected ${code} but the call succeeded`);
 };
 const probe = (f: string) =>
-  JSON.parse(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration:stream=codec_name,width,height", "-of", "json", f], { encoding: "utf8" }));
+  JSON.parse(
+    execFileSync(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration:stream=codec_name,width,height",
+        "-of",
+        "json",
+        f,
+      ],
+      { encoding: "utf8" },
+    ),
+  );
 
 beforeAll(async () => {
   root = tmpProject("media");
   const d = doubles(root, { hfCheck: async () => hf });
   h = await connect(root, d.deps);
-  await h.call("project_create", { name: "Media Test", size: "540x960", fps: 30, duration: 4, look: "kinetic" });
+  await h.call("project_create", {
+    name: "Media Test",
+    size: "540x960",
+    fps: 30,
+    duration: 4,
+    look: "kinetic",
+  });
   for (const id of ["display", "body", "mono"]) await h.call("font_get", { id });
   await h.call("sound_get", { id: "9001", tag: "hit/land" });
   await h.call("sound_get", { id: "9002", tag: "move/whip" });
@@ -43,8 +71,16 @@ beforeAll(async () => {
   <Sound id="whip" src="freesound:9002" at="1.5s" peak="whip" gain={-6} tag="move/whip" />
 </Scene>`,
   });
-  await h.call("element_add", { parent: "media-test", type: "Audio", props: { id: "music", src: "assets/music.wav", gain: -12, start: "0s", duration: "4s" } });
-  await h.call("element_add", { parent: "media-test", type: "Voiceover", props: { id: "vo", src: "assets/voice/voice.wav", gain: -3 } });
+  await h.call("element_add", {
+    parent: "media-test",
+    type: "Audio",
+    props: { id: "music", src: "assets/music.wav", gain: -12, start: "0s", duration: "4s" },
+  });
+  await h.call("element_add", {
+    parent: "media-test",
+    type: "Voiceover",
+    props: { id: "vo", src: "assets/voice/voice.wav", gain: -3 },
+  });
 }, 120_000);
 afterAll(async () => {
   await h.close();
@@ -61,7 +97,9 @@ describe("frames", () => {
     expect(existsSync(file)).toBe(true);
     const info = probe(file);
     expect(info.streams[0]).toMatchObject({ width: 270, height: 480 });
-    expect(r.content.some((c) => c.type === "image" && (c as any).mimeType === "image/png")).toBe(true);
+    expect(r.content.some((c) => c.type === "image" && (c as any).mimeType === "image/png")).toBe(
+      true,
+    );
   }, 120_000);
   it("rejects a time after the end", async () => {
     await fails(h.call("frame_render", { time: 99 }), "invalid_time");
@@ -101,7 +139,9 @@ describe("render", () => {
     const file = join(root, r.file);
     const info = probe(file);
     expect(info.format.duration).toBeCloseTo(4, 0);
-    expect(info.streams.map((s: any) => s.codec_name)).toEqual(expect.arrayContaining(["h264", "aac"]));
+    expect(info.streams.map((s: any) => s.codec_name)).toEqual(
+      expect.arrayContaining(["h264", "aac"]),
+    );
     expect(info.streams[0]).toMatchObject({ width: 540, height: 960 });
     expect(r.license.attribution).toEqual([expect.stringContaining("by swishy (CC-BY-4.0)")]);
     const credits = readFileSync(join(root, r.license.credits), "utf8");
@@ -113,13 +153,20 @@ describe("render", () => {
     expect(r.loudness.target).toBe(-14);
   }, 300_000);
   it("blocks the render on lint errors (a sound with no ledger entry)", async () => {
-    await h.call("element_add", { parent: "main", type: "Sound", props: { id: "ghost", src: "freesound:424242", at: "2s" } });
+    await h.call("element_add", {
+      parent: "main",
+      type: "Sound",
+      props: { id: "ghost", src: "freesound:424242", at: "2s" },
+    });
     const e = await fails(h.call("render", { preset: "draft" }), "schema_violation");
     expect(e.message).toMatch(/lint error/);
     await h.call("element_remove", { id: "ghost" });
   }, 120_000);
   it("rejects format variants until phase 5", async () => {
-    const e = await fails(h.call("render", { preset: "draft", variants: ["16:9"] }), "invalid_edit");
+    const e = await fails(
+      h.call("render", { preset: "draft", variants: ["16:9"] }),
+      "invalid_edit",
+    );
     expect(e.fix).toMatch(/later/);
   });
 });
@@ -142,7 +189,25 @@ describe("review", () => {
     expect(r.content.some((c) => c.type === "image")).toBe(true);
   }, 300_000);
   it("uses measured layout findings from the rendered page and fails check 7", async () => {
-    hf = { layout: { findings: [{ code: "text_overlap", severity: "error", message: "#t1 overlaps #q", time: 1.2 }] }, contrast: { findings: [{ code: "contrast_aa_failure", severity: "warning", message: "x", ratio: 2.84, text: "Mon", time: 1 }] } };
+    hf = {
+      layout: {
+        findings: [
+          { code: "text_overlap", severity: "error", message: "#t1 overlaps #q", time: 1.2 },
+        ],
+      },
+      contrast: {
+        findings: [
+          {
+            code: "contrast_aa_failure",
+            severity: "warning",
+            message: "x",
+            ratio: 2.84,
+            text: "Mon",
+            time: 1,
+          },
+        ],
+      },
+    };
     const j = await h.call("review", { checklist: [7, 9], sheetCount: 4 });
     expect(j.checks).toHaveLength(2);
     expect(j.checks[0]).toMatchObject({ n: 7, status: "fail" });

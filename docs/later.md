@@ -2,14 +2,19 @@
 
 Nothing here is implemented. Each item has a typed field or component so projects can already carry it.
 
-| Item                                        | Where                            | Behaviour now                                    | Issue note                                    |
-| ------------------------------------------- | -------------------------------- | ------------------------------------------------ | --------------------------------------------- |
-| `Precomp`, `Adjustment`                     | structure                        | Schema only; compile reports `stub-not-rendered` | issue: nested timelines and adjustment layers |
-| `shader(name)` transition                   | `Scene.transition.type="shader"` | Falls back to dissolve with a warning            | issue: WebGL shader transitions               |
-| `.cube` LUTs                                | `ColorGrade.lut`                 | Ignored with a warning                           | issue: WebGL grading pass + LUT loader        |
-| Text `extrude` (3D)                         | text style                       | Ignored with a warning                           | issue: 3D text (phase 4)                      |
-| Dashed text stroke, `stroke.align="inside"` | text style                       | Dash ignored; inside = centre                    | issue: SVG text rendering                     |
-| Video fill clipped to letters               | text `fill`                      | Falls back to white with a warning               | issue: SVG clipPath + video                   |
-| `Video.reverse`                             | media                            | Plays forward with a warning                     | issue: pre-rendered reversed copies           |
-| Sidecar `*.keys.json`                       | keyframes `keys=`                | Field accepted, file not read                    | issue: sidecar keyframe files                 |
-| Phases 3–5                                  | UI, 3D, pro layer                | Not started                                      | see brief §12                                 |
+| Item                                                      | Where                            | Behaviour now                                    | Issue note                                    |
+| --------------------------------------------------------- | -------------------------------- | ------------------------------------------------ | --------------------------------------------- |
+| `Precomp`, `Adjustment`                                   | structure                        | Schema only; compile reports `stub-not-rendered` | issue: nested timelines and adjustment layers |
+| `shader(name)` transition                                 | `Scene.transition.type="shader"` | Falls back to dissolve with a warning            | issue: WebGL shader transitions               |
+| `.cube` LUTs                                              | `ColorGrade.lut`                 | Ignored with a warning                           | issue: WebGL grading pass + LUT loader        |
+| Text `extrude` (3D)                                       | text style                       | Ignored with a warning                           | issue: 3D text (phase 4)                      |
+| Dashed text stroke, `stroke.align="inside"`               | text style                       | Dash ignored; inside = centre                    | issue: SVG text rendering                     |
+| Video fill clipped to letters                             | text `fill`                      | Falls back to white with a warning               | issue: SVG clipPath + video                   |
+| `Video.reverse`                                           | media                            | Plays forward with a warning                     | issue: pre-rendered reversed copies           |
+| Sidecar `*.keys.json`                                     | keyframes `keys=`                | Field accepted, file not read                    | issue: sidecar keyframe files                 |
+| Phases 3–5                                                | UI, 3D, pro layer                | Not started                                      | see brief §12                                 |
+| `render` `variants` (9:16, 16:9, 1:1, 4:5)                | MCP `render`                     | Rejected with `invalid_edit`                     | issue: format variants (phase 5)              |
+| Editor type hints for `@codecut/*` in a published install | `codecut` package                | Not shipped: projects run, editors show no types | issue: emit `.d.ts` for core and components   |
+| Local TTS off macOS                                       | `voice_quote local-tts`          | `missing_dependency` with install steps          | issue: piper / espeak-ng provider             |
+| Original-quality Freesound files                          | `sound_get`                      | HQ MP3 preview (needs only an API key)           | issue: OAuth2 download flow                   |
+| Voice cost in money                                       | `voice_quote elevenlabs`         | Credits estimate; USD only if you set a rate     | issue: read the account's plan from the API   |

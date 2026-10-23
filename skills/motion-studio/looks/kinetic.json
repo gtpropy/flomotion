@@ -17,43 +17,26 @@
       "id": "display",
       "family": "Space Grotesk",
       "source": "google",
-      "weights": [
-        500,
-        700
-      ],
+      "weights": [500, 700],
       "variable": true,
       "axes": {
-        "wght": [
-          300,
-          700
-        ]
+        "wght": [300, 700]
       },
-      "subsets": [
-        "latin"
-      ]
+      "subsets": ["latin"]
     },
     {
       "id": "body",
       "family": "Inter",
       "source": "google",
-      "weights": [
-        400,
-        600
-      ],
-      "subsets": [
-        "latin"
-      ]
+      "weights": [400, 600],
+      "subsets": ["latin"]
     },
     {
       "id": "mono",
       "family": "JetBrains Mono",
       "source": "google",
-      "weights": [
-        500
-      ],
-      "subsets": [
-        "latin"
-      ]
+      "weights": [500],
+      "subsets": ["latin"]
     }
   ],
   "type": {

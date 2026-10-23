@@ -1,6 +1,15 @@
 import { extname } from "node:path";
 import { z } from "zod";
-import { CodeCutError, edit as coreEdit, findById, isNode, parseTimeLiteral, snapToFrame, type CCNode, type Patch } from "@codecut/core";
+import {
+  CodeCutError,
+  edit as coreEdit,
+  findById,
+  isNode,
+  parseTimeLiteral,
+  snapToFrame,
+  type CCNode,
+  type Patch,
+} from "@codecut/core";
 import { loadVoiceWords, requireFfmpeg } from "@codecut/render";
 import { registry } from "@codecut/components";
 import { writeWords } from "../providers/transcribe.js";
@@ -19,7 +28,8 @@ export const transcribe = tool({
     const abs = ctx.store.path(a.audio);
     requireFfmpeg();
     const words = await ctx.transcriber.transcribe(abs);
-    const file = abs.replace(new RegExp(`${extname(abs).replace(".", "\\.")}$`), "") + ".words.json";
+    const file =
+      abs.replace(new RegExp(`${extname(abs).replace(".", "\\.")}$`), "") + ".words.json";
     writeWords(file, words);
     return {
       data: {
@@ -41,13 +51,21 @@ export const voiceQuote = tool({
   input: {
     provider: z.enum(["recording", "local-tts", "elevenlabs"]),
     text: z.string().describe("The script to speak."),
-    voice: z.string().optional().describe("recording: file path. local-tts: voice name. elevenlabs: voice id."),
+    voice: z
+      .string()
+      .optional()
+      .describe("recording: file path. local-tts: voice name. elevenlabs: voice id."),
     model: z.string().optional(),
   },
   readOnly: true,
   async run(a, ctx) {
     ctx.requireProject();
-    const q = ctx.voice.quote({ provider: a.provider, text: a.text, voice: a.voice, model: a.model });
+    const q = ctx.voice.quote({
+      provider: a.provider,
+      text: a.text,
+      voice: a.voice,
+      model: a.model,
+    });
     return {
       data: {
         ...q,
@@ -90,10 +108,10 @@ export const voiceGenerate = tool({
 const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
 
 function absoluteStart(root: CCNode, id: string, fps: number): number {
-  let total = 0;
   const dfs = (n: CCNode, acc: number): number | undefined => {
     if (n.props.id === id) return acc;
-    const own = n !== root && n.props.start !== undefined ? parseTimeLiteral(n.props.start as never, fps) : 0;
+    const own =
+      n !== root && n.props.start !== undefined ? parseTimeLiteral(n.props.start as never, fps) : 0;
     for (const c of n.children) {
       if (!isNode(c)) continue;
       const r = dfs(c, acc + (n.props.id === id ? 0 : own));
@@ -101,8 +119,7 @@ function absoluteStart(root: CCNode, id: string, fps: number): number {
     }
     return undefined;
   };
-  total = dfs(root, 0) ?? 0;
-  return total;
+  return dfs(root, 0) ?? 0;
 }
 
 export const alignToVoice = tool({
@@ -130,7 +147,9 @@ export const alignToVoice = tool({
     const root = loaded.node;
     const voice = findById(root, a.voiceId);
     if (!voice || voice.node.name !== "Voiceover")
-      throw new CodeCutError("unknown_element", `#${a.voiceId} is not a Voiceover`, { fix: "Add a <Voiceover id=… src=… /> first." });
+      throw new CodeCutError("unknown_element", `#${a.voiceId} is not a Voiceover`, {
+        fix: "Add a <Voiceover id=… src=… /> first.",
+      });
     const words = loadVoiceWords(ctx.root, root).get(a.voiceId);
     if (!words?.length)
       throw new CodeCutError("asset_missing", `No word timings for #${a.voiceId}`, {
@@ -138,7 +157,14 @@ export const alignToVoice = tool({
       });
     const fps = typeof root.props.fps === "number" ? root.props.fps : 30;
     const patches: Patch[] = [];
-    const report: Array<{ id: string; word: string; wordIndex: number; absolute: number; prop: string; value: string }> = [];
+    const report: Array<{
+      id: string;
+      word: string;
+      wordIndex: number;
+      absolute: number;
+      prop: string;
+      value: string;
+    }> = [];
     let cursor = 0;
     for (const m of a.mapping) {
       let i: number;
@@ -149,18 +175,33 @@ export const alignToVoice = tool({
         if (i < 0) i = words.findIndex((w) => norm(w.w) === target);
         if (i < 0)
           throw new CodeCutError("invalid_edit", `The word "${m.word}" is not in the voice`, {
-            fix: `Words: ${words.slice(0, 20).map((w) => w.w).join(" ")}…`,
+            fix: `Words: ${words
+              .slice(0, 20)
+              .map((w) => w.w)
+              .join(" ")}…`,
           });
       }
       const w = words[i];
-      if (!w) throw new CodeCutError("invalid_edit", `The voice has ${words.length} words; no index ${i}`);
+      if (!w)
+        throw new CodeCutError(
+          "invalid_edit",
+          `The voice has ${words.length} words; no index ${i}`,
+        );
       cursor = i + 1;
       const hit = findById(root, m.id);
-      if (!hit) throw new CodeCutError("unknown_element", `No element with id "${m.id}"`, { fix: "Use project_read to list ids." });
+      if (!hit)
+        throw new CodeCutError("unknown_element", `No element with id "${m.id}"`, {
+          fix: "Use project_read to list ids.",
+        });
       const def = registry.get(hit.node.name);
       const prop = m.prop ?? (def?.controls.start ? "start" : "at");
       const abs = snapToFrame((m.edge === "end" ? w.end : w.start) + (m.offset ?? 0), fps);
-      const parentAbs = hit.parent ? absoluteStart(root, String(hit.parent.props.id), fps) + (hit.parent !== root && hit.parent.props.start !== undefined ? parseTimeLiteral(hit.parent.props.start as never, fps) : 0) : 0;
+      const parentAbs = hit.parent
+        ? absoluteStart(root, String(hit.parent.props.id), fps) +
+          (hit.parent !== root && hit.parent.props.start !== undefined
+            ? parseTimeLiteral(hit.parent.props.start as never, fps)
+            : 0)
+        : 0;
       const value = `${Math.round((abs - parentAbs) * 1000) / 1000}s`;
       patches.push({ op: "setProp", id: m.id, prop, value });
       report.push({ id: m.id, word: w.w, wordIndex: i, absolute: abs, prop, value });

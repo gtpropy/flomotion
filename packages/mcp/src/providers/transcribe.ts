@@ -24,7 +24,8 @@ export function normalizeWords(raw: unknown): Word[] {
     const w = String(r.w ?? r.text ?? r.word ?? "").trim();
     const start = Number(r.start ?? r.from);
     const end = Number(r.end ?? r.to);
-    if (w && Number.isFinite(start) && Number.isFinite(end)) out.push({ w, start: round(start), end: round(end) });
+    if (w && Number.isFinite(start) && Number.isFinite(end))
+      out.push({ w, start: round(start), end: round(end) });
   }
   return out;
 }
@@ -47,7 +48,9 @@ export class HyperframesTranscriber implements Transcriber {
         .split("\n")
         .reverse()
         .find((l) => l.trim().startsWith("{"));
-      const j = last ? (JSON.parse(last) as { ok?: boolean; error?: string; transcriptPath?: string }) : undefined;
+      const j = last
+        ? (JSON.parse(last) as { ok?: boolean; error?: string; transcriptPath?: string })
+        : undefined;
       if (r.code !== 0 || !j?.ok) {
         throw new CodeCutError(
           "missing_dependency",
@@ -58,9 +61,11 @@ export class HyperframesTranscriber implements Transcriber {
         );
       }
       const file = j.transcriptPath ? j.transcriptPath : join(dir, "transcript.json");
-      if (!existsSync(file)) throw new CodeCutError("missing_dependency", "Transcript file was not written");
+      if (!existsSync(file))
+        throw new CodeCutError("missing_dependency", "Transcript file was not written");
       const words = normalizeWords(JSON.parse(readFileSync(file, "utf8")));
-      if (!words.length) throw new CodeCutError("missing_dependency", "The transcript has no words");
+      if (!words.length)
+        throw new CodeCutError("missing_dependency", "The transcript has no words");
       return words;
     } finally {
       rmSync(dir, { recursive: true, force: true });

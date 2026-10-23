@@ -14,9 +14,13 @@ export function printExpr(v: unknown, indent = ""): string {
   }
   if (typeof v === "boolean") return String(v);
   if (typeof v === "function" || (typeof v === "object" && v && "$expr" in (v as object)))
-    throw new CodeCutError("opaque_expression", "Expressions cannot be written from structured edits", {
-      fix: "Use scene_write to write a whole element that contains the expression.",
-    });
+    throw new CodeCutError(
+      "opaque_expression",
+      "Expressions cannot be written from structured edits",
+      {
+        fix: "Use scene_write to write a whole element that contains the expression.",
+      },
+    );
   if (Array.isArray(v)) {
     if (!v.length) return "[]";
     const flat = `[${v.map((x) => printExpr(x, indent)).join(", ")}]`;

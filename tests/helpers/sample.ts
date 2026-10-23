@@ -59,4 +59,3 @@ export function sample(c: AnyControl): unknown {
       return undefined;
   }
 }
-

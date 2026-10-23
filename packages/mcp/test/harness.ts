@@ -1,15 +1,34 @@
 import { execFileSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { FontDecl } from "@codecut/core";
-import { formatOf, sha256, type FontContext, type FontSource, type FontSyncResult } from "@codecut/render";
+import {
+  formatOf,
+  sha256,
+  type FontContext,
+  type FontSource,
+  type FontSyncResult,
+} from "@codecut/render";
 import { createServer } from "../src/server.js";
 import type { Deps } from "../src/context.js";
-import { ElevenLabsProvider, RecordingProvider, LocalTtsProvider, type Word } from "../src/providers/voice.js";
+import {
+  ElevenLabsProvider,
+  RecordingProvider,
+  LocalTtsProvider,
+  type Word,
+} from "../src/providers/voice.js";
 import { FreesoundClient } from "../src/providers/sounds.js";
 import type { Transcriber } from "../src/providers/transcribe.js";
 
@@ -27,16 +46,41 @@ export const cleanup = (dir: string) => rmSync(dir, { recursive: true, force: tr
 // ---------- audio fixtures ----------
 
 /** A decaying sine whose loudest moment is at `peak` seconds. */
-export function makeSound(file: string, opts: { peak: number; seconds: number; freq?: number }): void {
+export function makeSound(
+  file: string,
+  opts: { peak: number; seconds: number; freq?: number },
+): void {
   mkdirSync(dirname(file), { recursive: true });
   const expr = `sin(2*PI*${opts.freq ?? 220}*t)*exp(-9*abs(t-${opts.peak}))`;
-  execFileSync("ffmpeg", ["-y", "-v", "error", "-f", "lavfi", "-i", `aevalsrc='${expr}':d=${opts.seconds}:s=44100`, "-ac", "1", file]);
+  execFileSync("ffmpeg", [
+    "-y",
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    `aevalsrc='${expr}':d=${opts.seconds}:s=44100`,
+    "-ac",
+    "1",
+    file,
+  ]);
 }
 
 /** A steady tone standing in for speech or music. */
 export function makeTone(file: string, seconds: number, freq = 180): void {
   mkdirSync(dirname(file), { recursive: true });
-  execFileSync("ffmpeg", ["-y", "-v", "error", "-f", "lavfi", "-i", `sine=f=${freq}:d=${seconds}:r=44100`, "-ac", "1", file]);
+  execFileSync("ffmpeg", [
+    "-y",
+    "-v",
+    "error",
+    "-f",
+    "lavfi",
+    "-i",
+    `sine=f=${freq}:d=${seconds}:r=44100`,
+    "-ac",
+    "1",
+    file,
+  ]);
 }
 
 // ---------- Freesound test double ----------
@@ -53,15 +97,63 @@ export interface FakeSound {
 }
 
 export const FAKE_SOUNDS: FakeSound[] = [
-  { id: 9001, name: "Heavy thud land", license: "http://creativecommons.org/publicdomain/zero/1.0/", username: "foleyfan", tags: ["thud", "impact"], duration: 0.9, peak: 0.3, description: "A heavy thud, good for landing." },
-  { id: 9002, name: "Whip swish", license: "http://creativecommons.org/licenses/by/4.0/", username: "swishy", tags: ["whip", "swish"], duration: 0.7, peak: 0.25, description: "Fast whip." },
-  { id: 9003, name: "Punch hit", license: "http://creativecommons.org/licenses/by-nc/4.0/", username: "boxer", tags: ["punch", "hit"], duration: 0.6, peak: 0.2, description: "Non-commercial only." },
-  { id: 9004, name: "Soft pop", license: "http://creativecommons.org/publicdomain/zero/1.0/", username: "popper", tags: ["pop", "ui"], duration: 0.4, peak: 0.1, description: "A small pop." },
-  { id: 9005, name: "Cinematic boom", license: "http://creativecommons.org/licenses/by/4.0/", username: "boomer", tags: ["boom", "cinematic", "impact"], duration: 1.8, peak: 0.5, description: "Big boom." },
+  {
+    id: 9001,
+    name: "Heavy thud land",
+    license: "http://creativecommons.org/publicdomain/zero/1.0/",
+    username: "foleyfan",
+    tags: ["thud", "impact"],
+    duration: 0.9,
+    peak: 0.3,
+    description: "A heavy thud, good for landing.",
+  },
+  {
+    id: 9002,
+    name: "Whip swish",
+    license: "http://creativecommons.org/licenses/by/4.0/",
+    username: "swishy",
+    tags: ["whip", "swish"],
+    duration: 0.7,
+    peak: 0.25,
+    description: "Fast whip.",
+  },
+  {
+    id: 9003,
+    name: "Punch hit",
+    license: "http://creativecommons.org/licenses/by-nc/4.0/",
+    username: "boxer",
+    tags: ["punch", "hit"],
+    duration: 0.6,
+    peak: 0.2,
+    description: "Non-commercial only.",
+  },
+  {
+    id: 9004,
+    name: "Soft pop",
+    license: "http://creativecommons.org/publicdomain/zero/1.0/",
+    username: "popper",
+    tags: ["pop", "ui"],
+    duration: 0.4,
+    peak: 0.1,
+    description: "A small pop.",
+  },
+  {
+    id: 9005,
+    name: "Cinematic boom",
+    license: "http://creativecommons.org/licenses/by/4.0/",
+    username: "boomer",
+    tags: ["boom", "cinematic", "impact"],
+    duration: 1.8,
+    peak: 0.5,
+    description: "Big boom.",
+  },
 ];
 
 /** A fetch that behaves like the parts of Freesound APIv2 we use. Records every request. */
-export function fakeFreesoundFetch(root: string, log: Array<{ url: string; auth?: string | null }> = []): typeof fetch {
+export function fakeFreesoundFetch(
+  root: string,
+  log: Array<{ url: string; auth?: string | null }> = [],
+): typeof fetch {
   const dir = join(root, ".freesound-fake");
   const audio = (s: FakeSound) => {
     const f = join(dir, `${s.id}.mp3`);
@@ -87,11 +179,16 @@ export function fakeFreesoundFetch(root: string, log: Array<{ url: string; auth?
     log.push({ url, auth: headers.get("authorization") });
     const u = new URL(url);
     if (u.pathname.endsWith("/search/text/")) {
-      if (headers.get("authorization") !== "Token test-key") return new Response("no", { status: 401 });
+      if (headers.get("authorization") !== "Token test-key")
+        return new Response("no", { status: 401 });
       const words = (u.searchParams.get("query") ?? "").toLowerCase().split(/\s+/).filter(Boolean);
       const m = /duration:\[([\d.]+) TO ([\d.]+)\]/.exec(u.searchParams.get("filter") ?? "");
-      const hits = FAKE_SOUNDS.filter((s) => (m ? s.duration >= Number(m[1]) && s.duration <= Number(m[2]) : true)).filter((s) =>
-        words.some((w) => `${s.name} ${s.tags.join(" ")} ${s.description}`.toLowerCase().includes(w)),
+      const hits = FAKE_SOUNDS.filter((s) =>
+        m ? s.duration >= Number(m[1]) && s.duration <= Number(m[2]) : true,
+      ).filter((s) =>
+        words.some((w) =>
+          `${s.name} ${s.tags.join(" ")} ${s.description}`.toLowerCase().includes(w),
+        ),
       );
       return Response.json({ count: hits.length, results: hits.map(row) });
     }
@@ -160,25 +257,31 @@ export class FixtureGoogleSource implements FontSource {
     this.requests.push(decl.family);
     // Families without their own fixture are served as Inter, so Look fonts resolve offline. Test double only.
     const entries = FONT_FILES[decl.family] ?? [{ file: "inter-400.woff2", weight: 400 }];
-    const wanted = entries.filter((e) => typeof e.weight !== "number" || !decl.weights || decl.weights.includes(e.weight));
-    const files = (wanted.length ? wanted : entries.slice(0, 1))
-      .map((e) => {
-        const dest = join(ctx.cacheDir, decl.id, e.file);
-        mkdirSync(dirname(dest), { recursive: true });
-        copyFileSync(join(FIXTURES, "fonts", e.file), dest);
-        return {
-          abs: dest,
-          rel: relative(ctx.projectRoot, dest),
-          hash: sha256(readFileSync(dest)),
-          weight: e.weight,
-          style: "normal",
-          format: formatOf(dest),
-          subset: "latin",
-        };
-      });
+    const wanted = entries.filter(
+      (e) => typeof e.weight !== "number" || !decl.weights || decl.weights.includes(e.weight),
+    );
+    const files = (wanted.length ? wanted : entries.slice(0, 1)).map((e) => {
+      const dest = join(ctx.cacheDir, decl.id, e.file);
+      mkdirSync(dirname(dest), { recursive: true });
+      copyFileSync(join(FIXTURES, "fonts", e.file), dest);
+      return {
+        abs: dest,
+        rel: relative(ctx.projectRoot, dest),
+        hash: sha256(readFileSync(dest)),
+        weight: e.weight,
+        style: "normal",
+        format: formatOf(dest),
+        subset: "latin",
+      };
+    });
     return {
       files,
-      license: { license: "OFL-1.1", url: "https://openfontlicense.org", attributionRequired: false, commercialOk: true },
+      license: {
+        license: "OFL-1.1",
+        url: "https://openfontlicense.org",
+        attributionRequired: false,
+        commercialOk: true,
+      },
       variable: files.some((f) => Array.isArray(f.weight)),
       axes: files.some((f) => Array.isArray(f.weight)) ? { wght: [300, 700] } : undefined,
       route: "fixture",
@@ -200,7 +303,11 @@ export class ScriptTranscriber implements Transcriber {
     this.calls.push(file);
     const ws = this.script.split(/\s+/).filter(Boolean);
     const per = this.seconds / ws.length;
-    return ws.map((w, i) => ({ w, start: Math.round(i * per * 1000) / 1000, end: Math.round((i + 0.9) * per * 1000) / 1000 }));
+    return ws.map((w, i) => ({
+      w,
+      start: Math.round(i * per * 1000) / 1000,
+      end: Math.round((i + 0.9) * per * 1000) / 1000,
+    }));
   }
 }
 
@@ -215,6 +322,9 @@ export interface Harness {
   raw(name: string, args?: Record<string, unknown>): Promise<CallToolResult>;
   close(): Promise<void>;
 }
+
+/** Renders take minutes; the SDK's 60 s default request timeout is for chatty tools. */
+const CALL_OPTIONS = { timeout: 20 * 60_000 };
 
 export class ToolError extends Error {
   constructor(
@@ -243,8 +353,20 @@ export async function connect(root: string, deps: Deps = {}): Promise<Harness> {
   return {
     root,
     client,
-    raw: (name, args = {}) => client.callTool({ name, arguments: args }) as Promise<CallToolResult>,
-    call: async (name, args = {}) => parse((await client.callTool({ name, arguments: args })) as CallToolResult),
+    raw: (name, args = {}) =>
+      client.callTool(
+        { name, arguments: args },
+        undefined,
+        CALL_OPTIONS,
+      ) as Promise<CallToolResult>,
+    call: async (name, args = {}) =>
+      parse(
+        (await client.callTool(
+          { name, arguments: args },
+          undefined,
+          CALL_OPTIONS,
+        )) as CallToolResult,
+      ),
     close: async () => {
       await client.close();
       await server.close();
@@ -260,10 +382,22 @@ export function doubles(root: string, extra: Partial<Deps> = {}) {
   const fsFetch = fakeFreesoundFetch(root, fsLog);
   const elFetch = fakeElevenFetch(root, eleven);
   const deps: Deps = {
-    env: { FREESOUND_API_KEY: "test-key", ELEVENLABS_API_KEY: "el-key", ELEVENLABS_USD_PER_1K_CREDITS: "0.30" } as NodeJS.ProcessEnv,
+    env: {
+      FREESOUND_API_KEY: "test-key",
+      ELEVENLABS_API_KEY: "el-key",
+      ELEVENLABS_USD_PER_1K_CREDITS: "0.30",
+    } as NodeJS.ProcessEnv,
     fetch: fsFetch,
     sound: new FreesoundClient({ apiKey: "test-key", fetch: fsFetch }),
-    voice: [new RecordingProvider(), new LocalTtsProvider(), new ElevenLabsProvider({ apiKey: "el-key", fetch: elFetch, env: { ELEVENLABS_USD_PER_1K_CREDITS: "0.30" } as NodeJS.ProcessEnv })],
+    voice: [
+      new RecordingProvider(),
+      new LocalTtsProvider(),
+      new ElevenLabsProvider({
+        apiKey: "el-key",
+        fetch: elFetch,
+        env: { ELEVENLABS_USD_PER_1K_CREDITS: "0.30" } as NodeJS.ProcessEnv,
+      }),
+    ],
     fontSources: [fonts],
     hfCheck: async () => undefined,
     ...extra,

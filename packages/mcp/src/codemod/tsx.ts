@@ -180,7 +180,9 @@ export class TsxDoc {
     const ins = multiline
       ? `\n${indent}${printAttr(prop, value, indent)}`
       : ` ${printAttr(prop, value, indent)}`;
-    return new TsxDoc(applyReplacements(text, [{ start: last.getEnd(), end: last.getEnd(), text: ins }]));
+    return new TsxDoc(
+      applyReplacements(text, [{ start: last.getEnd(), end: last.getEnd(), text: ins }]),
+    );
   }
 
   /** Read a literal prop value back from the source (undefined when absent or opaque). */
@@ -195,8 +197,7 @@ export class TsxDoc {
     const sf = this.sf();
     const text = this.text;
     const { el } = this.find(sf, parentId);
-    const find = (id?: string) =>
-      id ? tagsOf(sf).find((t) => tagIdOf(t) === id) : undefined;
+    const find = (id?: string) => (id ? tagsOf(sf).find((t) => tagIdOf(t) === id) : undefined);
     const before = find(anchor.before);
     const after = find(anchor.after);
     if (before) {
@@ -233,8 +234,11 @@ export class TsxDoc {
         ]),
       );
     }
-    if (!Node.isJsxElement(el)) throw new CodeCutError("invalid_edit", `Cannot insert into #${parentId}`);
-    const kids = el.getJsxChildren().filter((c) => !(Node.isJsxText(c) && c.getText().trim() === ""));
+    if (!Node.isJsxElement(el))
+      throw new CodeCutError("invalid_edit", `Cannot insert into #${parentId}`);
+    const kids = el
+      .getJsxChildren()
+      .filter((c) => !(Node.isJsxText(c) && c.getText().trim() === ""));
     const closeStart = el.getClosingElement().getStart();
     if (!kids.length) {
       const openEnd = el.getOpeningElement().getEnd();
@@ -267,7 +271,7 @@ export class TsxDoc {
     const { el } = this.find(sf, id);
     const text = this.text;
     let start = el.getStart();
-    let end = el.getEnd();
+    const end = el.getEnd();
     while (start > 0 && (text[start - 1] === " " || text[start - 1] === "\t")) start--;
     if (text[start - 1] === "\n") {
       start--;
@@ -286,7 +290,9 @@ export class TsxDoc {
       .split("\n")
       .map((l, i) => (i === 0 ? l : indent + l))
       .join("\n");
-    return new TsxDoc(applyReplacements(this.text, [{ start: el.getStart(), end: el.getEnd(), text: body }]));
+    return new TsxDoc(
+      applyReplacements(this.text, [{ start: el.getStart(), end: el.getEnd(), text: body }]),
+    );
   }
 
   /** The source text of one element. */
@@ -324,8 +330,9 @@ export class TsxDoc {
     const need = [...new Set(names)].filter((n) => !have.has(n));
     if (!need.length) return this;
     const decl =
-      sf.getImportDeclaration((d) => /^(@codecut\/components|codecut\/components)$/.test(d.getModuleSpecifierValue())) ??
-      undefined;
+      sf.getImportDeclaration((d) =>
+        /^(@codecut\/components|codecut\/components)$/.test(d.getModuleSpecifierValue()),
+      ) ?? undefined;
     if (decl) {
       const named = decl.getNamedImports();
       const last = named[named.length - 1];
@@ -333,21 +340,37 @@ export class TsxDoc {
         const multi = decl.getStartLineNumber() !== decl.getEndLineNumber();
         const sep = multi ? `,\n${lineIndent(this.text, last.getStart())}` : ", ";
         return new TsxDoc(
-          applyReplacements(this.text, [{ start: last.getEnd(), end: last.getEnd(), text: sep + need.join(sep) }]),
+          applyReplacements(this.text, [
+            { start: last.getEnd(), end: last.getEnd(), text: sep + need.join(sep) },
+          ]),
         );
       }
       const open = decl.getText().indexOf("{");
       if (open >= 0) {
         const at = decl.getStart() + open + 1;
-        return new TsxDoc(applyReplacements(this.text, [{ start: at, end: at, text: ` ${need.join(", ")} ` }]));
+        return new TsxDoc(
+          applyReplacements(this.text, [{ start: at, end: at, text: ` ${need.join(", ")} ` }]),
+        );
       }
-      return new TsxDoc(applyReplacements(this.text, [{ start: decl.getEnd(), end: decl.getEnd(), text: `\nimport { ${need.join(", ")} } from "${decl.getModuleSpecifierValue()}";` }]));
+      return new TsxDoc(
+        applyReplacements(this.text, [
+          {
+            start: decl.getEnd(),
+            end: decl.getEnd(),
+            text: `\nimport { ${need.join(", ")} } from "${decl.getModuleSpecifierValue()}";`,
+          },
+        ]),
+      );
     }
     const imports = sf.getImportDeclarations();
     const line = `import { ${need.join(", ")} } from "${moduleName}";`;
     const last = imports[imports.length - 1];
     const at = last ? last.getEnd() : 0;
-    return new TsxDoc(applyReplacements(this.text, [{ start: at, end: at, text: last ? "\n" + line : line + "\n" }]));
+    return new TsxDoc(
+      applyReplacements(this.text, [
+        { start: at, end: at, text: last ? "\n" + line : line + "\n" },
+      ]),
+    );
   }
 
   /** Throws a typed error when the text has syntax errors. */
@@ -356,7 +379,8 @@ export class TsxDoc {
     const diags = project.getProgram().getSyntacticDiagnostics(sf);
     if (diags.length) {
       const d = diags[0]!;
-      const msg = typeof d.getMessageText() === "string" ? (d.getMessageText() as string) : "syntax error";
+      const msg =
+        typeof d.getMessageText() === "string" ? (d.getMessageText() as string) : "syntax error";
       throw new CodeCutError(
         "schema_violation",
         `TSX does not parse: ${msg} (line ${d.getLineNumber() ?? "?"})`,
@@ -439,7 +463,9 @@ export function applyPatchesToSource(text: string, patches: Patch[], tree: CCNod
       doc = doc.insert(p.parent, p.node, {
         before: next && typeof next.props.id === "string" ? next.props.id : undefined,
         after:
-          !next && prev && typeof prev.props.id === "string" ? (prev.props.id as string) : undefined,
+          !next && prev && typeof prev.props.id === "string"
+            ? (prev.props.id as string)
+            : undefined,
       });
     }
     shadow = applyPatches(shadow, [p]).project;

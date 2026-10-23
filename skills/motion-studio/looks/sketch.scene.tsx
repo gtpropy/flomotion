@@ -7,7 +7,6 @@ import {
   Circle,
   Title,
   Text,
-  SplitText,
   Chip,
   Counter,
   Card,
@@ -30,7 +29,15 @@ export default (
     background="$brand.bg"
   >
     <Track id="v1" kind="video">
-      <Scene id="pitch" start="0s" duration="3.2s" scale={[[0, 1], [3.2, 1.04]]}>
+      <Scene
+        id="pitch"
+        start="0s"
+        duration="3.2s"
+        scale={[
+          [0, 1],
+          [3.2, 1.04],
+        ]}
+      >
         <Rect id="pitch-bg" width={1080} height={1920} fill="$brand.bg" />
         <Circle
           id="pitch-blob"
@@ -38,7 +45,10 @@ export default (
           position={[260, -520]}
           fill="$brand.accent"
           opacity={0.16}
-          scale={[[0, 0.6], [1, 1, "elastic.out(1,0.5)"]]}
+          scale={[
+            [0, 0.6],
+            [1, 1, "elastic.out(1,0.5)"],
+          ]}
         />
         <SafeArea id="pitch-safe" preset="reels">
           <Chip
@@ -63,7 +73,14 @@ export default (
             font="$type.display"
             fill="$brand.fg"
             rotation={-2}
-            enter={{ from: "s", distance: 220, ease: "back.out(2)", duration: 0.7, delay: 0.1, rotate: 4 }}
+            enter={{
+              from: "s",
+              distance: 220,
+              ease: "back.out(2)",
+              duration: 0.7,
+              delay: 0.1,
+              rotate: 4,
+            }}
           >
             <Wobble id="pitch-wobble" amp={3} start="0.7s" sound="" />
           </Title>
@@ -76,7 +93,10 @@ export default (
             fill="$brand.primary"
             rotation={-2}
             anchor={[0, 50]}
-            scale={[[1.0, [0, 1]], [1.6, [1, 1], "back.out(1.4)"]]}
+            scale={[
+              [1.0, [0, 1]],
+              [1.6, [1, 1], "back.out(1.4)"],
+            ]}
           />
           <Text
             id="pitch-sub"
@@ -144,7 +164,13 @@ export default (
             maxWidth="100%"
             rotation={-3}
             font="$type.display"
-            enter={{ from: "s", distance: 50, ease: "elastic.out(1,0.5)", duration: 0.8, delay: 1.7 }}
+            enter={{
+              from: "s",
+              distance: 50,
+              ease: "elastic.out(1,0.5)",
+              duration: 0.8,
+              delay: 1.7,
+            }}
           />
         </SafeArea>
       </Scene>

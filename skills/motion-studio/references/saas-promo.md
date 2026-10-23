@@ -2,14 +2,14 @@
 
 `project_create` with `template: "saas-promo"` makes these six scenes, empty, at these times. Change the times only if the script needs it, and keep the total.
 
-| Beat | Scene id | Start | Length | Job |
-| --- | --- | --- | --- | --- |
-| 1. Hook | `hook` | 0 s | 3 s | Stop the scroll. One bold claim or question, in motion on frame 0. |
-| 2. Problem | `problem` | 3 s | 5 s | Name the pain in the viewer's words. Show it, do not explain it. |
-| 3. Reveal | `reveal` | 8 s | 6 s | The product arrives. The biggest move and the biggest sound of the film. |
-| 4. Features | `features` | 14 s | 9 s | Three things, one at a time, each with proof on screen (UI, number, result). |
-| 5. Proof | `proof` | 23 s | 4 s | One number, one quote, or one logo row. Only what the user gave you. |
-| 6. CTA | `cta` | 27 s | 3 s | One action, one URL or button. Hold it. |
+| Beat        | Scene id   | Start | Length | Job                                                                          |
+| ----------- | ---------- | ----- | ------ | ---------------------------------------------------------------------------- |
+| 1. Hook     | `hook`     | 0 s   | 3 s    | Stop the scroll. One bold claim or question, in motion on frame 0.           |
+| 2. Problem  | `problem`  | 3 s   | 5 s    | Name the pain in the viewer's words. Show it, do not explain it.             |
+| 3. Reveal   | `reveal`   | 8 s   | 6 s    | The product arrives. The biggest move and the biggest sound of the film.     |
+| 4. Features | `features` | 14 s  | 9 s    | Three things, one at a time, each with proof on screen (UI, number, result). |
+| 5. Proof    | `proof`    | 23 s  | 4 s    | One number, one quote, or one logo row. Only what the user gave you.         |
+| 6. CTA      | `cta`      | 27 s  | 3 s    | One action, one URL or button. Hold it.                                      |
 
 ## Rules for each beat
 

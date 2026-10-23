@@ -16,50 +16,30 @@
       "id": "display",
       "family": "DM Sans",
       "source": "google",
-      "weights": [
-        500,
-        700
-      ],
+      "weights": [500, 700],
       "variable": true,
       "axes": {
-        "wght": [
-          300,
-          700
-        ]
+        "wght": [300, 700]
       },
-      "subsets": [
-        "latin"
-      ]
+      "subsets": ["latin"]
     },
     {
       "id": "body",
       "family": "DM Sans",
       "source": "google",
-      "weights": [
-        400,
-        500
-      ],
+      "weights": [400, 500],
       "variable": true,
       "axes": {
-        "wght": [
-          300,
-          700
-        ]
+        "wght": [300, 700]
       },
-      "subsets": [
-        "latin"
-      ]
+      "subsets": ["latin"]
     },
     {
       "id": "mono",
       "family": "IBM Plex Mono",
       "source": "google",
-      "weights": [
-        400
-      ],
-      "subsets": [
-        "latin"
-      ]
+      "weights": [400],
+      "subsets": ["latin"]
     }
   ],
   "type": {

@@ -49,7 +49,8 @@ export interface OutlineNode {
 
 export function outlineOf(n: CCNode, depth: number): OutlineNode {
   const props: Record<string, unknown> = {};
-  for (const k of OUTLINE_PROPS) if (n.props[k] !== undefined && typeof n.props[k] !== "function") props[k] = n.props[k];
+  for (const k of OUTLINE_PROPS)
+    if (n.props[k] !== undefined && typeof n.props[k] !== "function") props[k] = n.props[k];
   const kids = n.children.filter(isNode);
   const out: OutlineNode = {
     id: typeof n.props.id === "string" ? n.props.id : undefined,

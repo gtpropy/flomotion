@@ -27,7 +27,11 @@ export default (
 );
 `;
 
-const node = (name: string, props: Record<string, unknown>, children: CCNode["children"] = []): CCNode => ({
+const node = (
+  name: string,
+  props: Record<string, unknown>,
+  children: CCNode["children"] = [],
+): CCNode => ({
   $cc: 1,
   name,
   props,
@@ -36,7 +40,12 @@ const node = (name: string, props: Record<string, unknown>, children: CCNode["ch
 
 describe("codemod: values", () => {
   it("prints literals the way a person would", () => {
-    expect(printExpr([[0, 1], [3, 1.08, "expo.out"]])).toBe('[[0, 1], [3, 1.08, "expo.out"]]');
+    expect(
+      printExpr([
+        [0, 1],
+        [3, 1.08, "expo.out"],
+      ]),
+    ).toBe('[[0, 1], [3, 1.08, "expo.out"]]');
     expect(printExpr({ from: "sw", "dash-x": 1 })).toBe('{ from: "sw", "dash-x": 1 }');
     expect(() => printExpr(() => 1)).toThrow(CodeCutError);
   });
@@ -47,7 +56,10 @@ describe("codemod: values", () => {
   it("classifies expressions", async () => {
     const { Project } = await import("ts-morph");
     const p = new Project({ useInMemoryFileSystem: true });
-    const f = p.createSourceFile("x.ts", 'const a = [[0, -1], {x: 1}]; const b = f(1); const c = {...z};');
+    const f = p.createSourceFile(
+      "x.ts",
+      "const a = [[0, -1], {x: 1}]; const b = f(1); const c = {...z};",
+    );
     const decls = f.getVariableDeclarations().map((d) => d.getInitializer());
     expect(decls.map((d) => isStructuredExpr(d))).toEqual([true, false, false]);
   });
@@ -79,7 +91,9 @@ describe("codemod: structured edits", () => {
   });
   it("adds a prop to a multi-line tag on its own line", () => {
     const out = new TsxDoc(SRC).setProp("t1", "weight", 900).text;
-    expect(out).toContain('          enter={{ from: "sw", distance: 120 }}\n          weight={900}\n');
+    expect(out).toContain(
+      '          enter={{ from: "sw", distance: 120 }}\n          weight={900}\n',
+    );
   });
   it("adds a prop to a single-line tag", () => {
     expect(new TsxDoc(SRC).setProp("hook", "name", "Hook").text).toContain(
@@ -92,12 +106,16 @@ describe("codemod: structured edits", () => {
     expect(out).toContain('id="t1"');
   });
   it("sets a bare boolean", () => {
-    expect(new TsxDoc(SRC).setProp("v1", "locked", true).text).toContain('<Track id="v1" kind="video" locked>');
+    expect(new TsxDoc(SRC).setProp("v1", "locked", true).text).toContain(
+      '<Track id="v1" kind="video" locked>',
+    );
   });
   it("inserts into a self-closing parent, before and after anchors, and last", () => {
     const n = node("Title", { id: "new", text: "x" });
     const into = new TsxDoc(SRC).insert("empty", n, {}).text;
-    expect(into).toContain('<Scene id="empty" start="3s" duration="3s">\n        <Title id="new" text="x" />\n      </Scene>');
+    expect(into).toContain(
+      '<Scene id="empty" start="3s" duration="3s">\n        <Title id="new" text="x" />\n      </Scene>',
+    );
     const before = new TsxDoc(SRC).insert("hook", n, { before: "s1" }).text;
     expect(before.indexOf('id="new"')).toBeGreaterThan(before.indexOf('id="t1"'));
     expect(before.indexOf('id="new"')).toBeLessThan(before.indexOf('id="s1"'));
@@ -117,7 +135,10 @@ describe("codemod: structured edits", () => {
     const src = SRC.replace(' id="t1"', "").replace('\n          id="t1"', "");
     const tree = node("Composition", { id: "main" }, [
       node("Track", { id: "v1" }, [
-        node("Scene", { id: "hook" }, [node("Title", { text: "Hello" }), node("Sound", { id: "s1" })]),
+        node("Scene", { id: "hook" }, [
+          node("Title", { text: "Hello" }),
+          node("Sound", { id: "s1" }),
+        ]),
         node("Scene", { id: "empty" }),
       ]),
     ]);

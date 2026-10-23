@@ -3,7 +3,10 @@ import { CodeCutError, listLooks } from "@codecut/core";
 import { TEMPLATES, scaffoldProject } from "../scaffold.js";
 import { tool } from "./util.js";
 
-const sizeArg = z.union([z.string().regex(/^\d{3,5}x\d{3,5}$/), z.tuple([z.number().int().min(64), z.number().int().min(64)])]);
+const sizeArg = z.union([
+  z.string().regex(/^\d{3,5}x\d{3,5}$/),
+  z.tuple([z.number().int().min(64), z.number().int().min(64)]),
+]);
 
 export const projectCreate = tool({
   name: "project_create",
@@ -20,9 +23,21 @@ export const projectCreate = tool({
   async run(a, ctx) {
     const looks = listLooks().map((l) => l.id);
     if (a.look && !looks.includes(a.look))
-      throw new CodeCutError("schema_violation", `Unknown look "${a.look}"`, { fix: `Looks: ${looks.join(", ")}` });
-    const size = (typeof a.size === "string" ? a.size.split("x").map(Number) : a.size) as [number, number];
-    const r = scaffoldProject(ctx.root, { name: a.name, size, fps: a.fps, template: a.template, look: a.look, duration: a.duration });
+      throw new CodeCutError("schema_violation", `Unknown look "${a.look}"`, {
+        fix: `Looks: ${looks.join(", ")}`,
+      });
+    const size = (typeof a.size === "string" ? a.size.split("x").map(Number) : a.size) as [
+      number,
+      number,
+    ];
+    const r = scaffoldProject(ctx.root, {
+      name: a.name,
+      size,
+      fps: a.fps,
+      template: a.template,
+      look: a.look,
+      duration: a.duration,
+    });
     return {
       data: {
         path: ctx.root,
@@ -49,7 +64,10 @@ export const historyList = tool({
     const all = ctx.store.history();
     if (a.id) {
       const e = all.find((x) => x.id === a.id);
-      if (!e) throw new CodeCutError("invalid_edit", `No snapshot "${a.id}"`, { fix: "Call history_list without id." });
+      if (!e)
+        throw new CodeCutError("invalid_edit", `No snapshot "${a.id}"`, {
+          fix: "Call history_list without id.",
+        });
       const old = ctx.store.snapshotSource(a.id).split("\n");
       const cur = new Set(ctx.store.source().split("\n"));
       const set = new Set(old);
@@ -69,7 +87,8 @@ export const historyList = tool({
 export const historyRestore = tool({
   name: "history_restore",
   title: "Restore a snapshot",
-  description: "Put the project file back to a snapshot. The current file is snapshotted first, so this can be undone too.",
+  description:
+    "Put the project file back to a snapshot. The current file is snapshotted first, so this can be undone too.",
   input: { id: z.string() },
   async run(a, ctx) {
     ctx.requireProject();

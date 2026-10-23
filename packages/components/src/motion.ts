@@ -439,7 +439,9 @@ export const Glitch = defineEffect("Glitch", {
           "mul",
           exprSignal(
             (t) =>
-              t >= rc.node.start && t < span2[1] && noise1D(step(t) * 5.3, p.seed + 2) > 0.7 ? 0.35 : 1,
+              t >= rc.node.start && t < span2[1] && noise1D(step(t) * 5.3, p.seed + 2) > 0.7
+                ? 0.35
+                : 1,
             "number",
             span2,
           ),

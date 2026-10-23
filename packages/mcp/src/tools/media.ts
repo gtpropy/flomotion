@@ -17,8 +17,16 @@ import { tool } from "./util.js";
 /** Export presets: render quality and master loudness. */
 export const PRESETS = {
   draft: { quality: "draft", targetLufs: -14, description: "Fast low-quality check render." },
-  social: { quality: "looks", targetLufs: -14, description: "Standard quality for social platforms (-14 LUFS)." },
-  final: { quality: "delivery", targetLufs: -14, description: "Highest quality. Render only after the user approves the draft." },
+  social: {
+    quality: "looks",
+    targetLufs: -14,
+    description: "Standard quality for social platforms (-14 LUFS).",
+  },
+  final: {
+    quality: "delivery",
+    targetLufs: -14,
+    description: "Highest quality. Render only after the user approves the draft.",
+  },
 } as const;
 export type PresetName = keyof typeof PRESETS;
 
@@ -44,9 +52,13 @@ export const frameRender = tool({
   async run(a, ctx) {
     const b = await ctx.build();
     if (a.time > b.compile.ir.end)
-      throw new CodeCutError("invalid_time", `Time ${a.time}s is after the end (${b.compile.ir.end}s)`, {
-        fix: "Pick a time inside the film.",
-      });
+      throw new CodeCutError(
+        "invalid_time",
+        `Time ${a.time}s is after the end (${b.compile.ir.end}s)`,
+        {
+          fix: "Pick a time inside the film.",
+        },
+      );
     const outDir = ctx.store.path(join(CODECUT_DIR, "frames"));
     const s = await ctx.snapshot(b.dir, { times: [a.time], outDir });
     let file = s.files[0];
@@ -75,14 +87,19 @@ export const contactSheet = tool({
     const end = b.compile.ir.end;
     const times =
       a.times ??
-      Array.from({ length: a.count ?? 12 }, (_, i) =>
-        Math.round(Math.min(end - 0.05, ((i + 0.5) / (a.count ?? 12)) * end) * 100) / 100,
+      Array.from(
+        { length: a.count ?? 12 },
+        (_, i) => Math.round(Math.min(end - 0.05, ((i + 0.5) / (a.count ?? 12)) * end) * 100) / 100,
       );
     const outDir = ctx.store.path(join(CODECUT_DIR, "sheet"));
     const s = await ctx.snapshot(b.dir, { times, outDir });
     if (!s.contactSheet) throw new CodeCutError("render_failed", "No contact sheet was written");
     return {
-      data: { path: rel(ctx.root, s.contactSheet), times, frames: s.files.map((f) => rel(ctx.root, f)) },
+      data: {
+        path: rel(ctx.root, s.contactSheet),
+        times,
+        frames: s.files.map((f) => rel(ctx.root, f)),
+      },
       images: [{ path: s.contactSheet, mime: "image/jpeg" }],
     };
   },
@@ -93,7 +110,12 @@ export const mixPreview = tool({
   title: "Mix the audio",
   description:
     "Mix the project's audio offline (voice, music, sfx buses; music ducks under voice; master loudness) and write a WAV. Returns where each sound lands and the measured loudness. You cannot hear it: ask the user to listen.",
-  input: { range: z.tuple([z.number().min(0), z.number().min(0)]).optional().describe("[start, end] seconds.") },
+  input: {
+    range: z
+      .tuple([z.number().min(0), z.number().min(0)])
+      .optional()
+      .describe("[start, end] seconds."),
+  },
   readOnly: true,
   async run(a, ctx) {
     const b = await ctx.build({ mix: true });
@@ -105,7 +127,18 @@ export const mixPreview = tool({
     mkdirSync(dirname(out), { recursive: true });
     if (a.range) {
       requireFfmpeg();
-      execFileSync("ffmpeg", ["-y", "-v", "error", "-i", b.mix.file, "-ss", String(a.range[0]), "-to", String(a.range[1]), out]);
+      execFileSync("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        b.mix.file,
+        "-ss",
+        String(a.range[0]),
+        "-to",
+        String(a.range[1]),
+        out,
+      ]);
     } else copyFileSync(b.mix.file, out);
     return {
       data: {
@@ -133,26 +166,39 @@ export const renderTool = tool({
   title: "Render the video",
   description: `Render to MP4. Presets: ${Object.entries(PRESETS)
     .map(([k, v]) => `${k} (${v.description})`)
-    .join("; ")}. Lint errors block the render. Writes <name>.credits.txt and <name>.licenses.json next to the video. Render 'final' only after the user approved the draft.`,
+    .join(
+      "; ",
+    )}. Lint errors block the render. Writes <name>.credits.txt and <name>.licenses.json next to the video. Render 'final' only after the user approved the draft.`,
   input: {
     preset: z.enum(["draft", "social", "final"]),
-    range: z.tuple([z.number().min(0), z.number().min(0)]).optional().describe("[start, end] seconds, trimmed after rendering."),
+    range: z
+      .tuple([z.number().min(0), z.number().min(0)])
+      .optional()
+      .describe("[start, end] seconds, trimmed after rendering."),
     variants: z.array(z.string()).optional().describe("Reserved for format variants (phase 5)."),
   },
   async run(a, ctx) {
     ctx.requireProject();
     if (a.variants?.length)
-      throw new CodeCutError("invalid_edit", "Format variants (9:16, 16:9, 1:1, 4:5) are not built yet", {
-        fix: "Render once per format by changing the Composition size. See docs/later.md.",
-      });
+      throw new CodeCutError(
+        "invalid_edit",
+        "Format variants (9:16, 16:9, 1:1, 4:5) are not built yet",
+        {
+          fix: "Render once per format by changing the Composition size. See docs/later.md.",
+        },
+      );
     const preset = PRESETS[a.preset];
     const lint = await lintProjectDir(ctx.root, ctx.store.config().lint);
     if (lint.errors) {
       const first = lint.issues.find((i) => i.severity === "error")!;
-      throw new CodeCutError("schema_violation", `${lint.errors} lint error(s) block the render: ${first.message}`, {
-        fix: first.fix ?? "Run lint and fix the errors.",
-        details: lint.issues.filter((i) => i.severity === "error").slice(0, 10),
-      });
+      throw new CodeCutError(
+        "schema_violation",
+        `${lint.errors} lint error(s) block the render: ${first.message}`,
+        {
+          fix: first.fix ?? "Run lint and fix the errors.",
+          details: lint.issues.filter((i) => i.severity === "error").slice(0, 10),
+        },
+      );
     }
     const b = await ctx.build({ mix: true, targetLufs: preset.targetLufs });
     const id = String(b.loaded.node.props.id);
@@ -163,7 +209,22 @@ export const renderTool = tool({
     if (a.range) {
       requireFfmpeg();
       const trimmed = full.replace(/\.mp4$/, `.${a.range[0]}-${a.range[1]}.mp4`);
-      execFileSync("ffmpeg", ["-y", "-v", "error", "-i", full, "-ss", String(a.range[0]), "-to", String(a.range[1]), "-c:v", "libx264", "-c:a", "aac", trimmed]);
+      execFileSync("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        "-i",
+        full,
+        "-ss",
+        String(a.range[0]),
+        "-to",
+        String(a.range[1]),
+        "-c:v",
+        "libx264",
+        "-c:a",
+        "aac",
+        trimmed,
+      ]);
       file = trimmed;
     }
     const families = b.fonts.map((f) => f.family);
@@ -175,7 +236,10 @@ export const renderTool = tool({
       writeFileSync(creditsFile, lic.credits);
     }
     const reportFile = `${stem}.licenses.json`;
-    writeFileSync(reportFile, JSON.stringify({ used: lic.used, problems: lic.problems }, null, 2) + "\n");
+    writeFileSync(
+      reportFile,
+      JSON.stringify({ used: lic.used, problems: lic.problems }, null, 2) + "\n",
+    );
     const info = probeMedia(file);
     return {
       data: {
@@ -183,12 +247,16 @@ export const renderTool = tool({
         bytes: r.bytes,
         duration: info?.duration,
         size: info?.width ? `${info.width}x${info.height}` : undefined,
-        loudness: b.mix ? { lufs: b.mix.lufs, truePeak: b.mix.truePeak, target: preset.targetLufs } : undefined,
+        loudness: b.mix
+          ? { lufs: b.mix.lufs, truePeak: b.mix.truePeak, target: preset.targetLufs }
+          : undefined,
         license: {
           report: rel(ctx.root, reportFile),
           credits: creditsFile ? rel(ctx.root, creditsFile) : undefined,
           entries: lic.used.length,
-          attribution: lic.attribution.map((e) => `${e.title ?? e.id} by ${e.author} (${e.license})`),
+          attribution: lic.attribution.map(
+            (e) => `${e.title ?? e.id} by ${e.author} (${e.license})`,
+          ),
           problems: lic.problems,
         },
       },
@@ -234,7 +302,12 @@ export const reviewTool = tool({
         audio: b.audio,
         lint: lint.issues,
         ledger,
-        license: licenseReport(ledger, b.audio, b.fontsUsed, b.fonts.map((f) => f.family)),
+        license: licenseReport(
+          ledger,
+          b.audio,
+          b.fontsUsed,
+          b.fonts.map((f) => f.family),
+        ),
         mix,
         hf,
         words: loadVoiceWords(ctx.root, b.loaded.node),
@@ -243,8 +316,14 @@ export const reviewTool = tool({
     );
     const end = b.compile.ir.end;
     const n = a.sheetCount ?? 12;
-    const times = Array.from({ length: n }, (_, i) => Math.round(Math.min(end - 0.05, ((i + 0.5) / n) * end) * 100) / 100);
-    const s = await ctx.snapshot(b.dir, { times, outDir: ctx.store.path(join(CODECUT_DIR, "sheet")) });
+    const times = Array.from(
+      { length: n },
+      (_, i) => Math.round(Math.min(end - 0.05, ((i + 0.5) / n) * end) * 100) / 100,
+    );
+    const s = await ctx.snapshot(b.dir, {
+      times,
+      outDir: ctx.store.path(join(CODECUT_DIR, "sheet")),
+    });
     const summary = summarize(results);
     return {
       data: {
@@ -254,7 +333,9 @@ export const reviewTool = tool({
         checks: results,
         contactSheet: s.contactSheet ? rel(ctx.root, s.contactSheet) : undefined,
         times,
-        next: summary.pass ? SECOND_PASS : `Fix the failing checks (${summary.failing.join(", ")}) first. ${SECOND_PASS}`,
+        next: summary.pass
+          ? SECOND_PASS
+          : `Fix the failing checks (${summary.failing.join(", ")}) first. ${SECOND_PASS}`,
       },
       images: s.contactSheet ? [{ path: s.contactSheet, mime: "image/jpeg" }] : undefined,
     };

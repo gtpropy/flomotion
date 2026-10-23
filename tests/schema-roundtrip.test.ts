@@ -6,7 +6,6 @@ import {
   propsJsonSchema,
   registry,
   validateProps,
-  type AnyControl,
 } from "@codecut/components";
 import { join } from "node:path";
 import { sample } from "./helpers/sample.js";

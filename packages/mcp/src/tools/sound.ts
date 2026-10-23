@@ -22,7 +22,10 @@ export const soundSearch = tool({
     query: z.string().optional(),
     tag: z.string().optional(),
     tags: z.array(z.string()).optional().describe("Freesound tags that must all match."),
-    duration: z.tuple([z.number().min(0), z.number().min(0)]).optional().describe("[min, max] seconds."),
+    duration: z
+      .tuple([z.number().min(0), z.number().min(0)])
+      .optional()
+      .describe("[min, max] seconds."),
     limit: z.number().int().min(1).max(30).optional(),
   },
   readOnly: true,
@@ -37,7 +40,7 @@ export const soundGet = tool({
   name: "sound_get",
   title: "Get a sound",
   description:
-    "Download a sound into .codecut/assets/, measure its peak, and record it in the licence ledger. CC0 and CC-BY only by default (codecut.json soundLicenses). Returns the `ref` to use as <Sound src=… peak=… />. Pass `tag` to name the peak after the job (e.g. hit/land gives peak=\"land\").",
+    'Download a sound into .codecut/assets/, measure its peak, and record it in the licence ledger. CC0 and CC-BY only by default (codecut.json soundLicenses). Returns the `ref` to use as <Sound src=… peak=… />. Pass `tag` to name the peak after the job (e.g. hit/land gives peak="land").',
   input: { id: z.string(), tag: z.string().optional() },
   async run(a, ctx) {
     ctx.requireProject();
@@ -93,11 +96,24 @@ export const soundAuto = tool({
       return found;
     };
 
-    const byTag = new Map<string, { ref: string; peak: string; from: string } | { error: string }>();
-    const plan: Array<{ tag: string; at: number; effect: string; scene: string; sound?: string; error?: string }> = [];
+    const byTag = new Map<
+      string,
+      { ref: string; peak: string; from: string } | { error: string }
+    >();
+    const plan: Array<{
+      tag: string;
+      at: number;
+      effect: string;
+      scene: string;
+      sound?: string;
+      error?: string;
+    }> = [];
     for (const c of cues) {
       if (!isSoundTag(c.tag)) {
-        plan.push({ ...{ tag: c.tag, at: c.at, effect: c.effectId, scene: "" }, error: `Unknown sound tag ${c.tag}` });
+        plan.push({
+          ...{ tag: c.tag, at: c.at, effect: c.effectId, scene: "" },
+          error: `Unknown sound tag ${c.tag}`,
+        });
         continue;
       }
       let pick = byTag.get(c.tag);
@@ -109,13 +125,21 @@ export const soundAuto = tool({
           try {
             const found = await ctx.sound.search({ tag: c.tag, limit: 8 });
             const best = found.results.find((r) => r.allowed);
-            if (!best) throw new CodeCutError("asset_missing", `No allowed sound found for ${c.tag}`, { fix: "Search by hand with sound_search." });
+            if (!best)
+              throw new CodeCutError("asset_missing", `No allowed sound found for ${c.tag}`, {
+                fix: "Search by hand with sound_search.",
+              });
             const got = await ctx.sound.get({ id: best.id, tag: c.tag });
-            pick = { ref: got.ref, peak: got.peakName, from: `${best.source} #${best.id} "${best.name}" (${best.license})` };
+            pick = {
+              ref: got.ref,
+              peak: got.peakName,
+              from: `${best.source} #${best.id} "${best.name}" (${best.license})`,
+            };
           } catch (e) {
             pick = { error: e instanceof Error ? e.message : String(e) };
           }
-        } else pick = { ref: `(search: ${c.tag})`, peak: c.tag.split("/").pop()!, from: "will search" };
+        } else
+          pick = { ref: `(search: ${c.tag})`, peak: c.tag.split("/").pop()!, from: "will search" };
         byTag.set(c.tag, pick);
       }
       const where = sceneOf(c.effectId);
@@ -127,7 +151,14 @@ export const soundAuto = tool({
         ...("error" in pick ? { error: pick.error } : { sound: `${pick.ref} — ${pick.from}` }),
       });
     }
-    if (!a.apply) return { data: { dryRun: true, plan, note: "Call again with apply:true to download and place these." } };
+    if (!a.apply)
+      return {
+        data: {
+          dryRun: true,
+          plan,
+          note: "Call again with apply:true to download and place these.",
+        },
+      };
 
     const patches: Patch[] = [];
     let work = root;
@@ -152,13 +183,25 @@ export const soundAuto = tool({
         },
         children: [],
       };
-      const p: Patch = { op: "insert", parent: String(parent.props.id), index: parent.children.length, node };
+      const p: Patch = {
+        op: "insert",
+        parent: String(parent.props.id),
+        index: parent.children.length,
+        node,
+      };
       patches.push(p);
       work = makeResult(work, [p], "").project;
     }
-    if (!patches.length) throw new CodeCutError("asset_missing", "No sound could be placed", { details: plan });
+    if (!patches.length)
+      throw new CodeCutError("asset_missing", "No sound could be placed", { details: plan });
     const result = makeResult(root, patches, `place ${patches.length} sound(s) on impact cues`);
     const w = await ctx.store.apply(result, loaded);
-    return { data: { ...writeResult(w), plan, note: "Not auditioned. Ask the user to listen to the chosen sounds." } };
+    return {
+      data: {
+        ...writeResult(w),
+        plan,
+        note: "Not auditioned. Ask the user to listen to the chosen sounds.",
+      },
+    };
   },
 });

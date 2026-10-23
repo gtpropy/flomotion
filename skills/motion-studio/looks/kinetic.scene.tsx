@@ -6,7 +6,6 @@ import {
   Rect,
   Title,
   Text,
-  SplitText,
   Chip,
   Counter,
   Card,
@@ -34,12 +33,27 @@ export default (
     background="$brand.bg"
   >
     <Track id="v1" kind="video">
-      <Scene id="claim" start="0s" duration="3s" scale={[[0, 1], [3, 1.06]]}>
+      <Scene
+        id="claim"
+        start="0s"
+        duration="3s"
+        scale={[
+          [0, 1],
+          [3, 1.06],
+        ]}
+      >
         <Rect
           id="claim-bg"
           width={1080}
           height={1920}
-          fill={{ type: "linear", angle: 165, stops: [[0, "#1a0b2e"], [1, "#0b0b12"]] }}
+          fill={{
+            type: "linear",
+            angle: 165,
+            stops: [
+              [0, "#1a0b2e"],
+              [1, "#0b0b12"],
+            ],
+          }}
         />
         <Rect
           id="claim-glow"
@@ -53,7 +67,10 @@ export default (
               [1, "rgba(255,51,102,0)"],
             ],
           }}
-          scale={[[0, 0.7], [1.4, 1.15, "expo.out"]]}
+          scale={[
+            [0, 0.7],
+            [1.4, 1.15, "expo.out"],
+          ]}
           position={[0, -120]}
         />
         <SafeArea id="claim-safe" preset="reels">
@@ -97,7 +114,10 @@ export default (
             height={14}
             radius={7}
             fill="$brand.primary"
-            scale={[[0.8, [0, 1]], [1.4, [1, 1], "expo.out"]]}
+            scale={[
+              [0.8, [0, 1]],
+              [1.4, [1, 1], "expo.out"],
+            ]}
             anchor={[0, 50]}
           />
         </SafeArea>
@@ -109,7 +129,10 @@ export default (
         start="3s"
         duration="3s"
         transition={{ type: "flash", duration: 0.3 }}
-        scale={[[0, 1.04], [3, 1]]}
+        scale={[
+          [0, 1.04],
+          [3, 1],
+        ]}
       >
         <Rect id="stat-bg" width={1080} height={1920} fill="$brand.bg" />
         <SafeArea id="stat-safe" preset="reels">

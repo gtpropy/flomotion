@@ -121,3 +121,29 @@ from Google Fonts`). This is network use at render, so CodeCut always emits its 
   `snapshot` and `render` agree frame for frame.
 - Running under `tsx` injects an esbuild `__name` helper into functions passed to `page.evaluate`; the measurement
   page defines a no-op `window.__name`.
+
+## Verified in phase 2
+
+- `hyperframes check <dir> --json` prints a banner line, then one JSON object with `lint`, `runtime`, `layout`,
+  `motion` and `contrast`, each `{ ok, errorCount, warningCount, findings[] }`. `layout.samples` lists the times
+  it measured (about nine for 30 s); contrast findings carry `text`, `fg`, `bg`, `ratio`, `time`. A 30 s check takes
+  about a minute on this machine. The `lint` block warns `nested_structure_needs_subcomposition` for CodeCut's
+  track wrappers; CodeCut ignores it (renders are correct).
+- `hyperframes transcribe <audio|transcript> -d <dir> --json [--no-runtime-install] [-l lang] [-m model]` writes
+  `transcript.json` in `<dir>`; with `--json` it prints `{ ok, engine, wordCount, transcriptPath, … }` or
+  `{ ok:false, error }` (`--optional` returns `{ skipped, reason:"whisper_unavailable", install }`). Engines: Parakeet
+  if installed, else whisper.cpp. Not run here (no whisper-cpp installed); the word shape is read tolerantly
+  (`text|word|w`, `start`, `end`).
+- Freesound APIv2 (docs.freesound.org, checked): token auth is `Authorization: Token <key>` or `?token=`; text
+  search is `GET /apiv2/search/text/` (the resources page also lists `/search/`) with `query`, `filter`
+  (`duration:[a TO b]`, `tag:x`), `fields`, `page_size` (max 150); sound fields include `previews` with
+  `preview-hq-mp3`; downloading the original file needs OAuth2. Licence values are names ("Creative Commons 0",
+  "Attribution", "Attribution NonCommercial") or Creative Commons URLs; both are mapped. Rate limits are not
+  published numerically. **No live call has been made.**
+- ElevenLabs (checked): `POST /v1/text-to-speech/{voice_id}/with-timestamps?output_format=mp3_44100_128`, body
+  `{ text, model_id }`, response `{ audio_base64, alignment: { characters, character_start_times_seconds,
+character_end_times_seconds } }`. The docs fetched did not state the auth header or per-character credit cost:
+  `xi-api-key` is used and the credit estimate is an assumption. **No live call has been made.**
+- `tsx` applies a tsconfig only to files under the tsconfig's directory and reads it at registration, so a
+  published CodeCut cannot rely on it. The bundled CLI compiles project TSX itself (esbuild, automatic JSX runtime
+  from `@codecut/core`) and maps `@codecut/*` imports with a Node resolve hook.

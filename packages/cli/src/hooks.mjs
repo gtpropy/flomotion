@@ -27,11 +27,17 @@ export async function resolve(specifier, context, nextResolve) {
   const lib = LIBS.get(specifier);
   if (lib) return { url: new URL(lib, here).href, format: "module", shortCircuit: true };
   // relative imports of project files: "./helpers" -> helpers.ts / helpers.tsx / helpers/index.ts, "./a.js" -> a.ts
-  if (/^\.\.?\//.test(specifier) && context.parentURL?.startsWith("file:") && !context.parentURL.includes("/node_modules/")) {
+  if (
+    /^\.\.?\//.test(specifier) &&
+    context.parentURL?.startsWith("file:") &&
+    !context.parentURL.includes("/node_modules/")
+  ) {
     const base = fileURLToPath(new URL(specifier, context.parentURL));
     const tries = [];
-    if (/\.[cm]?js$/.test(base)) tries.push(base.replace(/\.[cm]?js$/, ".ts"), base.replace(/\.[cm]?js$/, ".tsx"));
-    if (!/\.\w+$/.test(base)) tries.push(`${base}.tsx`, `${base}.ts`, `${base}/index.tsx`, `${base}/index.ts`);
+    if (/\.[cm]?js$/.test(base))
+      tries.push(base.replace(/\.[cm]?js$/, ".ts"), base.replace(/\.[cm]?js$/, ".tsx"));
+    if (!/\.\w+$/.test(base))
+      tries.push(`${base}.tsx`, `${base}.ts`, `${base}/index.tsx`, `${base}/index.ts`);
     const hit = tries.find(isFile);
     if (hit && !isFile(base)) return { url: pathToFileURL(hit).href, shortCircuit: true };
   }

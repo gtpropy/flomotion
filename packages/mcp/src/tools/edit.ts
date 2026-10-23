@@ -4,7 +4,6 @@ import {
   EDIT_OPS,
   KEY_OPS,
   findById,
-  isNode,
   runEdit,
   runKeyOp,
   serializeNode,
@@ -26,7 +25,11 @@ const { makeResult, uniqueId, itemsOf, timingOf } = coreEdit;
 const props = z.record(z.string(), z.unknown());
 
 /** Build a typed schema_violation from validation issues. */
-export function schemaError(def: ComponentDef, id: string | undefined, issues: PropIssue[]): CodeCutError {
+export function schemaError(
+  def: ComponentDef,
+  id: string | undefined,
+  issues: PropIssue[],
+): CodeCutError {
   const head = issues[0]!;
   return new CodeCutError("schema_violation", `${id ? `#${id} ` : ""}${head.message}`, {
     fix: head.fix ?? `See codecut://schema/${def.name}`,
@@ -41,12 +44,16 @@ function defOrThrow(name: string, kind: "component" | "effect"): ComponentDef {
       name,
       registry.list(kind).map((d) => d.name),
     );
-    throw new CodeCutError("schema_violation", `Unknown ${kind} "${name}"${s ? `. Did you mean "${s}"?` : ""}`, {
-      fix: `See codecut://schema/<name>. ${kind === "effect" ? "Effects" : "Components"}: ${registry
-        .list(kind)
-        .map((d) => d.name)
-        .join(", ")}`,
-    });
+    throw new CodeCutError(
+      "schema_violation",
+      `Unknown ${kind} "${name}"${s ? `. Did you mean "${s}"?` : ""}`,
+      {
+        fix: `See codecut://schema/<name>. ${kind === "effect" ? "Effects" : "Components"}: ${registry
+          .list(kind)
+          .map((d) => d.name)
+          .join(", ")}`,
+      },
+    );
   }
   if (def.kind !== kind)
     throw new CodeCutError(
@@ -55,9 +62,13 @@ function defOrThrow(name: string, kind: "component" | "effect"): ComponentDef {
       { fix: def.kind === "effect" ? "Use effect_add." : "Use element_add." },
     );
   if (def.stub)
-    throw new CodeCutError("schema_violation", `${name} is a typed stub and cannot be rendered yet`, {
-      fix: "See docs/later.md.",
-    });
+    throw new CodeCutError(
+      "schema_violation",
+      `${name} is a typed stub and cannot be rendered yet`,
+      {
+        fix: "See docs/later.md.",
+      },
+    );
   return def;
 }
 
@@ -65,13 +76,21 @@ function checkParentAccepts(parent: CCNode, def: ComponentDef): void {
   const pdef = registry.get(parent.name);
   const rule = pdef?.children ?? "any";
   if (rule === "none")
-    throw new CodeCutError("schema_violation", `${parent.name} #${parent.props.id} cannot have children`, {
-      fix: "Add it to the parent's parent instead.",
-    });
+    throw new CodeCutError(
+      "schema_violation",
+      `${parent.name} #${parent.props.id} cannot have children`,
+      {
+        fix: "Add it to the parent's parent instead.",
+      },
+    );
   if (rule === "effects" && def.kind !== "effect")
-    throw new CodeCutError("schema_violation", `${parent.name} #${parent.props.id} only accepts effects`, {
-      fix: "Use effect_add, or add the element to a container.",
-    });
+    throw new CodeCutError(
+      "schema_violation",
+      `${parent.name} #${parent.props.id} only accepts effects`,
+      {
+        fix: "Use effect_add, or add the element to a container.",
+      },
+    );
   if (Array.isArray(rule) && !rule.includes(def.name))
     throw new CodeCutError("schema_violation", `${parent.name} only accepts ${rule.join(", ")}`, {
       fix: `Pick one of ${rule.join(", ")}.`,
@@ -110,11 +129,17 @@ export const elementAdd = tool({
     const root = loaded.node;
     const def = defOrThrow(a.type, "component");
     const hit = findById(root, a.parent);
-    if (!hit) throw new CodeCutError("unknown_element", `No element with id "${a.parent}"`, { fix: "Use project_read to list ids." });
+    if (!hit)
+      throw new CodeCutError("unknown_element", `No element with id "${a.parent}"`, {
+        fix: "Use project_read to list ids.",
+      });
     assertUnlocked(root, a.parent);
     checkParentAccepts(hit.node, def);
     const id = typeof a.props.id === "string" ? a.props.id : uniqueId(root, lowerFirst(a.type));
-    if (findById(root, id)) throw new CodeCutError("invalid_edit", `Id "${id}" is already used`, { fix: "Pick another id or omit it." });
+    if (findById(root, id))
+      throw new CodeCutError("invalid_edit", `Id "${id}" is already used`, {
+        fix: "Pick another id or omit it.",
+      });
     const full = { ...a.props, id };
     const issues = validateProps(def, full);
     if (issues.length) throw schemaError(def, id, issues);
@@ -142,20 +167,34 @@ export const elementSet = tool({
     const loaded = await ctx.store.load();
     const root = loaded.node;
     const hit = findById(root, a.id);
-    if (!hit) throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, { fix: "Use project_read to list ids." });
+    if (!hit)
+      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+        fix: "Use project_read to list ids.",
+      });
     assertUnlocked(root, a.id);
     const def = registry.get(hit.node.name);
-    const next = Object.fromEntries(Object.entries(a.props).map(([k, v]) => [k, v === null ? undefined : v]));
+    const next = Object.fromEntries(
+      Object.entries(a.props).map(([k, v]) => [k, v === null ? undefined : v]),
+    );
     if (def) {
       const merged = { ...hit.node.props, ...next };
       const issues = validateProps(def, merged).filter((i) => i.prop in a.props);
       if (issues.length) throw schemaError(def, a.id, issues);
     }
     if ("id" in a.props && a.props.id !== a.id)
-      throw new CodeCutError("invalid_edit", "Ids are stable and cannot be changed with element_set", {
-        fix: "Remove and re-add the element, or edit the source.",
-      });
-    const patches: Patch[] = Object.entries(next).map(([prop, value]) => ({ op: "setProp", id: a.id, prop, value }));
+      throw new CodeCutError(
+        "invalid_edit",
+        "Ids are stable and cannot be changed with element_set",
+        {
+          fix: "Remove and re-add the element, or edit the source.",
+        },
+      );
+    const patches: Patch[] = Object.entries(next).map(([prop, value]) => ({
+      op: "setProp",
+      id: a.id,
+      prop,
+      value,
+    }));
     const result = makeResult(root, patches, `set ${Object.keys(a.props).join(", ")} on #${a.id}`);
     return { data: writeResult(await ctx.store.apply(result, loaded)) };
   },
@@ -170,10 +209,18 @@ export const elementRemove = tool({
     ctx.requireProject();
     const loaded = await ctx.store.load();
     const hit = findById(loaded.node, a.id);
-    if (!hit) throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, { fix: "Use project_read to list ids." });
-    if (!hit.parent) throw new CodeCutError("invalid_edit", "The root Composition cannot be removed");
+    if (!hit)
+      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+        fix: "Use project_read to list ids.",
+      });
+    if (!hit.parent)
+      throw new CodeCutError("invalid_edit", "The root Composition cannot be removed");
     assertUnlocked(loaded.node, a.id);
-    const result = makeResult(loaded.node, [{ op: "remove", id: a.id }], `remove ${hit.node.name} #${a.id}`);
+    const result = makeResult(
+      loaded.node,
+      [{ op: "remove", id: a.id }],
+      `remove ${hit.node.name} #${a.id}`,
+    );
     return { data: writeResult(await ctx.store.apply(result, loaded)) };
   },
 });
@@ -186,14 +233,22 @@ export const elementMove = tool({
   input: {
     id: z.string(),
     target: z.string().optional().describe("New parent id (default: same parent)."),
-    index: z.number().int().min(0).optional().describe("Child index in the target (default: last)."),
+    index: z
+      .number()
+      .int()
+      .min(0)
+      .optional()
+      .describe("Child index in the target (default: last)."),
   },
   async run(a, ctx) {
     ctx.requireProject();
     const loaded = await ctx.store.load();
     const root = loaded.node;
     const hit = findById(root, a.id);
-    if (!hit?.parent) throw new CodeCutError("unknown_element", `No movable element "${a.id}"`, { fix: "Use project_read to list ids." });
+    if (!hit?.parent)
+      throw new CodeCutError("unknown_element", `No movable element "${a.id}"`, {
+        fix: "Use project_read to list ids.",
+      });
     const target = a.target ? findById(root, a.target) : { node: hit.parent };
     if (!target) throw new CodeCutError("unknown_element", `No element with id "${a.target}"`);
     if (subtreeIds(hit.node).has(String(target.node.props.id)))
@@ -209,7 +264,11 @@ export const elementMove = tool({
       { op: "remove", id: a.id },
       { op: "insert", parent: String(target.node.props.id), index, node: hit.node },
     ];
-    const result = makeResult(root, patches, `move ${hit.node.name} #${a.id} to #${target.node.props.id}[${index}]`);
+    const result = makeResult(
+      root,
+      patches,
+      `move ${hit.node.name} #${a.id} to #${target.node.props.id}[${index}]`,
+    );
     return { data: writeResult(await ctx.store.apply(result, loaded)) };
   },
 });
@@ -226,9 +285,15 @@ export const effectAdd = tool({
     const root = loaded.node;
     const def = defOrThrow(a.effect, "effect");
     const hit = findById(root, a.id);
-    if (!hit) throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, { fix: "Use project_read to list ids." });
+    if (!hit)
+      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+        fix: "Use project_read to list ids.",
+      });
     assertUnlocked(root, a.id);
-    const id = typeof a.props.id === "string" ? a.props.id : uniqueId(root, `${a.id}-${lowerFirst(a.effect)}`);
+    const id =
+      typeof a.props.id === "string"
+        ? a.props.id
+        : uniqueId(root, `${a.id}-${lowerFirst(a.effect)}`);
     const issues = validateProps(def, { ...a.props, id });
     if (issues.length) throw schemaError(def, id, issues);
     const node: CCNode = { $cc: 1, name: a.effect, props: { id, ...a.props }, children: [] };
@@ -267,7 +332,10 @@ export const keyframeSet = tool({
     const loaded = await ctx.store.load();
     const root = loaded.node;
     const hit = findById(root, a.id);
-    if (!hit) throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, { fix: "Use project_read to list ids." });
+    if (!hit)
+      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+        fix: "Use project_read to list ids.",
+      });
     assertUnlocked(root, a.id);
     const def = registry.get(hit.node.name);
     const control = def?.controls[a.prop];
@@ -284,20 +352,30 @@ export const keyframeSet = tool({
       const [t, v, ease] = Array.isArray(k) ? [k[0], k[1], k[2]] : [k.t, k.v, k.ease];
       const secs = typeof t === "number" ? t : parseFloat(String(t));
       if (!Number.isFinite(secs) || (typeof t === "string" && !/^-?\d+(\.\d+)?s?$/.test(t.trim())))
-        throw new CodeCutError("invalid_time", `Keyframe time ${JSON.stringify(t)} is not a literal time`, {
-          fix: "Use seconds as a number, e.g. 0.6.",
-        });
+        throw new CodeCutError(
+          "invalid_time",
+          `Keyframe time ${JSON.stringify(t)} is not a literal time`,
+          {
+            fix: "Use seconds as a number, e.g. 0.6.",
+          },
+        );
       return { t: snapToFrame(secs, fps), v, ease: ease as string | undefined };
     });
     keys.sort((x, y) => x.t - y.t);
     for (let i = 1; i < keys.length; i++)
       if (keys[i]!.t === keys[i - 1]!.t)
-        throw new CodeCutError("duplicate_keyframe", `Two keys share ${keys[i]!.t}s on #${a.id}.${a.prop}`, {
-          fix: "Give each key its own time (at least one frame apart).",
-        });
+        throw new CodeCutError(
+          "duplicate_keyframe",
+          `Two keys share ${keys[i]!.t}s on #${a.id}.${a.prop}`,
+          {
+            fix: "Give each key its own time (at least one frame apart).",
+          },
+        );
     const value = keys.map((k) => (k.ease ? [k.t, k.v, k.ease] : [k.t, k.v]));
     if (def) {
-      const issues = validateProps(def, { ...hit.node.props, [a.prop]: value }).filter((i) => i.prop === a.prop);
+      const issues = validateProps(def, { ...hit.node.props, [a.prop]: value }).filter(
+        (i) => i.prop === a.prop,
+      );
       if (issues.length) throw schemaError(def, a.id, issues);
     }
     const result = makeResult(
@@ -317,7 +395,8 @@ export const editTool = tool({
   async run(a, ctx) {
     ctx.requireProject();
     const loaded = await ctx.store.load();
-    const result = a.op in KEY_OPS ? runKeyOp(loaded.node, a.op, a.args) : runEdit(loaded.node, a.op, a.args);
+    const result =
+      a.op in KEY_OPS ? runKeyOp(loaded.node, a.op, a.args) : runEdit(loaded.node, a.op, a.args);
     return { data: writeResult(await ctx.store.apply(result, loaded)) };
   },
 });
@@ -330,9 +409,13 @@ function parseSnippet(tsx: string): void {
   new TsxDoc(`export default (${tsx.trim()});`).assertParses();
   const m = IMPURE.exec(tsx);
   if (m)
-    throw new CodeCutError("impure_expression", `The TSX uses ${m[1]}, which makes the video differ between renders`, {
-      fix: "Use ctx.noise(seed, freq) for randomness and the time t for animation. No clocks, timers or network.",
-    });
+    throw new CodeCutError(
+      "impure_expression",
+      `The TSX uses ${m[1]}, which makes the video differ between renders`,
+      {
+        fix: "Use ctx.noise(seed, freq) for randomness and the time t for animation. No clocks, timers or network.",
+      },
+    );
 }
 
 export const sceneWrite = tool({
@@ -342,31 +425,48 @@ export const sceneWrite = tool({
     "Replace one element (usually a Scene) with TSX you write. The TSX is parsed, written, re-read and linted first; if it does not parse or adds lint errors nothing changes. Missing imports are added. Use this for expressions or many elements at once; use element_* for single edits.",
   input: {
     id: z.string().describe("Id of the element to replace."),
-    tsx: z.string().describe('One JSX element, e.g. <Scene id="hook" start="0s" duration="3s">…</Scene>.'),
+    tsx: z
+      .string()
+      .describe('One JSX element, e.g. <Scene id="hook" start="0s" duration="3s">…</Scene>.'),
   },
   async run(a, ctx) {
     ctx.requireProject();
     parseSnippet(a.tsx);
     const loaded = await ctx.store.load();
     const hit = findById(loaded.node, a.id);
-    if (!hit?.parent) throw new CodeCutError("unknown_element", `No replaceable element "${a.id}"`, { fix: "Use project_read to list ids." });
+    if (!hit?.parent)
+      throw new CodeCutError("unknown_element", `No replaceable element "${a.id}"`, {
+        fix: "Use project_read to list ids.",
+      });
     assertUnlocked(loaded.node, a.id);
     const before = await lintProjectDir(ctx.root, ctx.store.config().lint);
-    const baseline = new Set(before.issues.filter((i) => i.severity === "error").map((i) => `${i.rule}|${i.id}|${i.message}`));
+    const baseline = new Set(
+      before.issues
+        .filter((i) => i.severity === "error")
+        .map((i) => `${i.rule}|${i.id}|${i.message}`),
+    );
     const names: string[] = [];
     const nameRe = /<([A-Z][A-Za-z0-9]*)/g;
     for (let m = nameRe.exec(a.tsx); m; m = nameRe.exec(a.tsx)) names.push(m[1]!);
     let doc = new TsxDoc(ctx.store.source()).replaceElement(a.id, a.tsx);
-    doc = doc.ensureImports(names.filter((n) => registry.has(n) || ["Composition", "Track", "Scene"].includes(n)));
+    doc = doc.ensureImports(
+      names.filter((n) => registry.has(n) || ["Composition", "Track", "Scene"].includes(n)),
+    );
     doc.assertParses();
     const { undoToken } = await ctx.store.write(doc.text, `scene_write #${a.id}`, async () => {
       const lint = await lintProjectDir(ctx.root, ctx.store.config().lint);
-      const fresh = lint.issues.filter((i) => i.severity === "error" && !baseline.has(`${i.rule}|${i.id}|${i.message}`));
+      const fresh = lint.issues.filter(
+        (i) => i.severity === "error" && !baseline.has(`${i.rule}|${i.id}|${i.message}`),
+      );
       if (fresh.length)
-        throw new CodeCutError("schema_violation", `The new TSX adds ${fresh.length} lint error(s): ${fresh[0]!.message}`, {
-          fix: fresh[0]!.fix ?? "Fix the lint errors and write it again.",
-          details: fresh,
-        });
+        throw new CodeCutError(
+          "schema_violation",
+          `The new TSX adds ${fresh.length} lint error(s): ${fresh[0]!.message}`,
+          {
+            fix: fresh[0]!.fix ?? "Fix the lint errors and write it again.",
+            details: fresh,
+          },
+        );
     });
     const ids = await ctx.store.ensureIds();
     const now = await ctx.store.load();
@@ -374,12 +474,23 @@ export const sceneWrite = tool({
     const patches: Patch[] = [
       { op: "remove", id: a.id },
       ...(newHit?.parent
-        ? [{ op: "insert", parent: String(newHit.parent.props.id), index: newHit.index, node: newHit.node } as Patch]
+        ? [
+            {
+              op: "insert",
+              parent: String(newHit.parent.props.id),
+              index: newHit.index,
+              node: newHit.node,
+            } as Patch,
+          ]
         : []),
     ];
     return {
       data: writeResult({
-        patches: JSON.parse(JSON.stringify(patches.map((p) => (p.op === "insert" ? { ...p, node: serializeNode(p.node) } : p)))),
+        patches: JSON.parse(
+          JSON.stringify(
+            patches.map((p) => (p.op === "insert" ? { ...p, node: serializeNode(p.node) } : p)),
+          ),
+        ),
         description: `replace #${a.id} with ${names[0] ?? "new"} TSX`,
         undoToken,
         data: { idsWritten: ids },
@@ -430,7 +541,10 @@ export const projectRead = tool({
     const idsWritten = await ctx.store.ensureIds();
     const loaded = await ctx.store.load();
     const start = a.path ? findById(loaded.node, a.path)?.node : loaded.node;
-    if (!start) throw new CodeCutError("unknown_element", `No element with id "${a.path}"`, { fix: "Use project_read without a path." });
+    if (!start)
+      throw new CodeCutError("unknown_element", `No element with id "${a.path}"`, {
+        fix: "Use project_read without a path.",
+      });
     return {
       data: {
         project: ctx.root,

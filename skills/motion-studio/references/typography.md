@@ -27,11 +27,11 @@ You cannot judge taste from an image, but you can check legibility and mechanica
 
 Use the Look's type tokens through `font="$type.display"` and `$brand.*` colours. Do not hard-code families.
 
-| Look | Display | Body | Mono | Scale (display / body / numerals) | Feel |
-| --- | --- | --- | --- | --- | --- |
-| kinetic | Space Grotesk 700 (variable wght 300 to 700), tracking -25 | Inter 400/600 | JetBrains Mono 500 | 104 / 44 / 160 px | Loud, fast, hard contrast |
-| minimal | DM Sans 600 (variable), tracking -20 | DM Sans 400/500 | IBM Plex Mono 400 | 88 / 40 / 150 px | Calm, precise, lots of air |
-| sketch | Permanent Marker 400 | Patrick Hand 400 | Space Mono 400 | 96 / 48 / 150 px | Hand-drawn, playful |
+| Look    | Display                                                    | Body             | Mono               | Scale (display / body / numerals) | Feel                       |
+| ------- | ---------------------------------------------------------- | ---------------- | ------------------ | --------------------------------- | -------------------------- |
+| kinetic | Space Grotesk 700 (variable wght 300 to 700), tracking -25 | Inter 400/600    | JetBrains Mono 500 | 104 / 44 / 160 px                 | Loud, fast, hard contrast  |
+| minimal | DM Sans 600 (variable), tracking -20                       | DM Sans 400/500  | IBM Plex Mono 400  | 88 / 40 / 150 px                  | Calm, precise, lots of air |
+| sketch  | Permanent Marker 400                                       | Patrick Hand 400 | Space Mono 400     | 96 / 48 / 150 px                  | Hand-drawn, playful        |
 
 Pairing logic: a characterful display face with a neutral body face. Do not pair two characterful faces. Variable fonts let you animate weight (`axes={{ wght: [[0, 300], [0.6, 700, "expo.out"]] }}`) for emphasis instead of switching families.
 

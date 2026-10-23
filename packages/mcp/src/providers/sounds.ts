@@ -20,12 +20,24 @@ export interface SoundTagInfo {
 export const SOUND_TAGS: Record<string, SoundTagInfo> = {
   "ui/pop": { job: "A small element appears", query: "pop bubble ui", duration: [0.03, 0.8] },
   "ui/tap": { job: "A tap or press", query: "tap click soft ui", duration: [0.02, 0.6] },
-  "ui/tick": { job: "A counter step or tiny tick", query: "tick clock tiny", duration: [0.01, 0.4] },
+  "ui/tick": {
+    job: "A counter step or tiny tick",
+    query: "tick clock tiny",
+    duration: [0.01, 0.4],
+  },
   "move/whip": { job: "A fast move or whip pan", query: "whip swish fast", duration: [0.1, 1.2] },
-  "move/whoosh-deep": { job: "A big slow move", query: "whoosh deep cinematic", duration: [0.4, 2.5] },
+  "move/whoosh-deep": {
+    job: "A big slow move",
+    query: "whoosh deep cinematic",
+    duration: [0.4, 2.5],
+  },
   "hit/land": { job: "A heavy element lands", query: "thud land impact", duration: [0.1, 1.5] },
   "hit/punch": { job: "A sharp hit", query: "punch hit impact", duration: [0.05, 1.0] },
-  "hit/boom": { job: "A big boom for a reveal", query: "boom impact cinematic", duration: [0.5, 4] },
+  "hit/boom": {
+    job: "A big boom for a reveal",
+    query: "boom impact cinematic",
+    duration: [0.5, 4],
+  },
   "tech/click": { job: "A UI click", query: "click mouse button", duration: [0.01, 0.5] },
   "tech/data": { job: "Data or numbers appear", query: "data beep computer", duration: [0.1, 2] },
   "tech/glass": { job: "A bright glassy accent", query: "glass ping", duration: [0.2, 2.5] },
@@ -88,7 +100,8 @@ export interface SoundProvider {
   download(hit: SoundHit, dest: string): Promise<void>;
 }
 
-const FIELDS = "id,name,tags,description,username,license,url,duration,previews,avg_rating,num_downloads";
+const FIELDS =
+  "id,name,tags,description,username,license,url,duration,previews,avg_rating,num_downloads";
 
 interface FsSound {
   id: number;
@@ -125,9 +138,7 @@ const toHit = (s: FsSound): SoundHit => ({
  */
 export class FreesoundClient implements SoundProvider {
   readonly name = "freesound";
-  constructor(
-    private readonly opts: { apiKey: string; fetch?: typeof fetch; base?: string },
-  ) {}
+  constructor(private readonly opts: { apiKey: string; fetch?: typeof fetch; base?: string }) {}
   private get f() {
     return this.opts.fetch ?? fetch;
   }
@@ -144,7 +155,11 @@ export class FreesoundClient implements SoundProvider {
       throw new CodeCutError("render_failed", "Freesound rate limit reached", {
         fix: "Wait a minute and retry; results are cached once downloaded.",
       });
-    if (!res.ok) throw new CodeCutError("asset_missing", `Freesound returned ${res.status} for ${url.split("?")[0]}`);
+    if (!res.ok)
+      throw new CodeCutError(
+        "asset_missing",
+        `Freesound returned ${res.status} for ${url.split("?")[0]}`,
+      );
     return (await res.json()) as T;
   }
   async search(q: SoundQuery): Promise<SoundHit[]> {
@@ -165,7 +180,10 @@ export class FreesoundClient implements SoundProvider {
   }
   async download(hit: SoundHit, dest: string): Promise<void> {
     if (!hit.audioUrl)
-      throw new CodeCutError("asset_missing", `Freesound sound ${hit.id} has no downloadable preview`);
+      throw new CodeCutError(
+        "asset_missing",
+        `Freesound sound ${hit.id} has no downloadable preview`,
+      );
     const res = await this.f(hit.audioUrl);
     if (!res.ok) throw new CodeCutError("asset_missing", `Preview download failed (${res.status})`);
     mkdirSync(dirname(dest), { recursive: true });
@@ -183,9 +201,13 @@ export class LocalCatalogProvider implements SoundProvider {
   private catalog(): SoundHit[] {
     const f = join(this.root, "sounds", "catalog.json");
     if (!existsSync(f))
-      throw new CodeCutError("missing_dependency", "No sound source: FREESOUND_API_KEY is not set and sounds/catalog.json does not exist", {
-        fix: "Export FREESOUND_API_KEY (free key at freesound.org/apiv2/apply), or list your own licensed files in sounds/catalog.json: [{ id, name, tags, license, author, url, file }].",
-      });
+      throw new CodeCutError(
+        "missing_dependency",
+        "No sound source: FREESOUND_API_KEY is not set and sounds/catalog.json does not exist",
+        {
+          fix: "Export FREESOUND_API_KEY (free key at freesound.org/apiv2/apply), or list your own licensed files in sounds/catalog.json: [{ id, name, tags, license, author, url, file }].",
+        },
+      );
     const rows = JSON.parse(readFileSync(f, "utf8")) as Array<Record<string, any>>;
     return rows.map((r) => ({
       id: String(r.id),
@@ -206,7 +228,9 @@ export class LocalCatalogProvider implements SoundProvider {
       .filter((h) => (q.tags ?? []).every((t) => h.tags.includes(t)))
       .map((h) => ({
         h,
-        score: words.filter((w) => `${h.name} ${h.tags.join(" ")} ${h.description}`.toLowerCase().includes(w)).length,
+        score: words.filter((w) =>
+          `${h.name} ${h.tags.join(" ")} ${h.description}`.toLowerCase().includes(w),
+        ).length,
       }))
       .filter((x) => !words.length || x.score > 0)
       .sort((a, b) => b.score - a.score || a.h.id.localeCompare(b.h.id))
@@ -224,8 +248,13 @@ export class LocalCatalogProvider implements SoundProvider {
 }
 
 /** Pick the provider: Freesound when FREESOUND_API_KEY is set, otherwise the local catalogue. */
-export function defaultSoundProvider(root: string, env = process.env, f?: typeof fetch): SoundProvider {
-  if (env.FREESOUND_API_KEY) return new FreesoundClient({ apiKey: env.FREESOUND_API_KEY, fetch: f });
+export function defaultSoundProvider(
+  root: string,
+  env = process.env,
+  f?: typeof fetch,
+): SoundProvider {
+  if (env.FREESOUND_API_KEY)
+    return new FreesoundClient({ apiKey: env.FREESOUND_API_KEY, fetch: f });
   return new LocalCatalogProvider(root);
 }
 
@@ -325,17 +354,27 @@ export class SoundService {
       throw new CodeCutError(
         "license_blocked",
         `Sound ${hit.id} is ${hit.license}, which this project does not allow`,
-        { fix: `Allowed: ${this.allowedClasses().join(", ")}. Pick another sound (sound_search marks allowed ones).` },
+        {
+          fix: `Allowed: ${this.allowedClasses().join(", ")}. Pick another sound (sound_search marks allowed ones).`,
+        },
       );
     }
-    const ext = (basename(hit.audioUrl ?? hit.localFile ?? "x.mp3").match(/\.[a-z0-9]+$/i)?.[0] ?? ".mp3").toLowerCase();
+    const ext = (
+      basename(hit.audioUrl ?? hit.localFile ?? "x.mp3").match(/\.[a-z0-9]+$/i)?.[0] ?? ".mp3"
+    ).toLowerCase();
     const rel = join(".codecut", "assets", this.provider.name, `${hit.id}${ext}`);
     const dest = this.store.path(rel);
     await this.provider.download(hit, dest);
     const info = probeMedia(dest);
-    if (!info?.hasAudio) throw new CodeCutError("asset_missing", `Downloaded file for ${hit.id} is not audio`);
+    if (!info?.hasAudio)
+      throw new CodeCutError("asset_missing", `Downloaded file for ${hit.id} is not audio`);
     const m = await measurePeakTime(dest);
     const peakName = a.tag?.split("/").pop() ?? "main";
+    // the same sound can serve several jobs: keep the peak names it already has (e.g. both "land" and "punch")
+    const known = readLedger(this.store.root).entries.find(
+      (e) => e.source === this.provider.name && e.kind === "sound" && e.id === hit.id,
+    );
+    const knownPeaks = known && typeof known.peak === "object" && known.peak ? known.peak : {};
     const entry: LedgerEntry = {
       source: this.provider.name,
       kind: "sound",
@@ -347,7 +386,7 @@ export class SoundService {
       url: hit.url,
       attributionRequired: cls === "CC-BY",
       commercialOk: cls === "CC0" || cls === "CC-BY",
-      peak: { main: m.peak, [peakName]: m.peak },
+      peak: { ...knownPeaks, main: m.peak, [peakName]: m.peak },
       duration: info.duration,
       tags: hit.tags,
       title: hit.name,

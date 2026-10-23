@@ -17,12 +17,12 @@ Rules first, then patterns with the exact CodeCut props. Everything is a pure fu
 
 ## Durations
 
-| What | Seconds |
-| --- | --- |
-| Pop / small UI | 0.25 to 0.4 |
-| Title enter | 0.5 to 0.7 |
-| Scene transition | 0.3 (flash, cut) to 0.6 (dissolve) |
-| Counter | 0.8 to 1.4 |
+| What             | Seconds                                                       |
+| ---------------- | ------------------------------------------------------------- |
+| Pop / small UI   | 0.25 to 0.4                                                   |
+| Title enter      | 0.5 to 0.7                                                    |
+| Scene transition | 0.3 (flash, cut) to 0.6 (dissolve)                            |
+| Counter          | 0.8 to 1.4                                                    |
 | Hold for reading | about 0.25 s per word on screen, minimum 1.2 s for a headline |
 
 ## Patterns
@@ -30,8 +30,12 @@ Rules first, then patterns with the exact CodeCut props. Everything is a pure fu
 Entrance of a headline (props, no effect element needed):
 
 ```tsx
-<Title id="t1" text="Ship videos as code" size={118}
-  enter={{ from: "sw", distance: 120, ease: "expo.out", duration: 0.6 }} />
+<Title
+  id="t1"
+  text="Ship videos as code"
+  size={118}
+  enter={{ from: "sw", distance: 120, ease: "expo.out", duration: 0.6 }}
+/>
 ```
 
 A landing with weight (impact effect as a child of the layer):

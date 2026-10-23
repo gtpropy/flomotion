@@ -27,8 +27,26 @@ export interface CheckResult {
 
 /** Output of `hyperframes check --json` that the review reads (layout and contrast are measured in a real page). */
 export interface HfCheck {
-  layout?: { findings: Array<{ code: string; severity: string; message: string; time?: number; text?: string }> };
-  contrast?: { findings: Array<{ code: string; severity: string; message: string; ratio?: number; text?: string; time?: number; large?: boolean }> };
+  layout?: {
+    findings: Array<{
+      code: string;
+      severity: string;
+      message: string;
+      time?: number;
+      text?: string;
+    }>;
+  };
+  contrast?: {
+    findings: Array<{
+      code: string;
+      severity: string;
+      message: string;
+      ratio?: number;
+      text?: string;
+      time?: number;
+      large?: boolean;
+    }>;
+  };
 }
 
 export interface MixFacts {
@@ -116,7 +134,12 @@ export function activityOf(ir: IRLayer, fps: number): Activity {
 }
 
 /** Stretches with nothing changing on screen, longer than `min` seconds. */
-export function staticGaps(a: Activity, duration: number, fps: number, min = 0.5): Array<[number, number]> {
+export function staticGaps(
+  a: Activity,
+  duration: number,
+  fps: number,
+  min = 0.5,
+): Array<[number, number]> {
   const step = 1 / fps;
   const n = Math.ceil(duration * fps);
   const live = new Uint8Array(n);
@@ -142,7 +165,8 @@ export function staticGaps(a: Activity, duration: number, fps: number, min = 0.5
 }
 
 const round = (n: number) => Math.round(n * 100) / 100;
-const list = (xs: string[], max = 6) => (xs.length > max ? `${xs.slice(0, max).join(", ")} (+${xs.length - max} more)` : xs.join(", "));
+const list = (xs: string[], max = 6) =>
+  xs.length > max ? `${xs.slice(0, max).join(", ")} (+${xs.length - max} more)` : xs.join(", ");
 
 const findAll = (tree: CCNode, names: string[]): CCNode[] => {
   const out: CCNode[] = [];
@@ -152,7 +176,8 @@ const findAll = (tree: CCNode, names: string[]): CCNode[] => {
   return out;
 };
 
-const lintHits = (issues: LintIssue[], rules: string[]) => issues.filter((i) => rules.includes(i.rule));
+const lintHits = (issues: LintIssue[], rules: string[]) =>
+  issues.filter((i) => rules.includes(i.rule));
 
 // ---------- the checklist ----------
 
@@ -188,7 +213,9 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
     const beats = sceneSpans.filter((s) => s.layer).length;
     const carriers = layers.filter((l) => {
       if (/^(Scene|Track|Composition)$/.test(l.name)) return false;
-      const crossed = sceneSpans.filter((s) => s.layer && l.start < s.layer.end - 1e-6 && l.end > s.layer.start + 1e-6);
+      const crossed = sceneSpans.filter(
+        (s) => s.layer && l.start < s.layer.end - 1e-6 && l.end > s.layer.start + 1e-6,
+      );
       return crossed.length >= 4;
     });
     if (beats < 4)
@@ -240,7 +267,13 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
   {
     if (!voices.length) add(5, "skipped", "No Voiceover.");
     else if (captions.length)
-      add(5, "pass", "Captions are driven by the voice word timings, so spoken words and caption words match by construction. Other on-screen words still need a look.", undefined, false);
+      add(
+        5,
+        "pass",
+        "Captions are driven by the voice word timings, so spoken words and caption words match by construction. Other on-screen words still need a look.",
+        undefined,
+        false,
+      );
     else
       add(
         5,
@@ -253,8 +286,12 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
   // 6
   {
     const nums: string[] = [];
-    for (const c of findAll(input.tree, ["Counter"])) nums.push(`#${c.props.id}: ${c.props.from ?? 0} → ${c.props.to}`);
-    for (const c of findAll(input.tree, ["Chart"])) nums.push(`#${c.props.id}: ${JSON.stringify(c.props.data ?? c.props.values ?? "").slice(0, 60)}`);
+    for (const c of findAll(input.tree, ["Counter"]))
+      nums.push(`#${c.props.id}: ${c.props.from ?? 0} → ${c.props.to}`);
+    for (const c of findAll(input.tree, ["Chart"]))
+      nums.push(
+        `#${c.props.id}: ${JSON.stringify(c.props.data ?? c.props.values ?? "").slice(0, 60)}`,
+      );
     add(
       6,
       nums.length ? "manual" : "skipped",
@@ -267,14 +304,26 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
   }
   // 7
   {
-    if (!input.hf) add(7, "manual", "Not measured (layout check skipped). Look for overlapping or cut-off text on the contact sheet.", undefined, false);
+    if (!input.hf)
+      add(
+        7,
+        "manual",
+        "Not measured (layout check skipped). Look for overlapping or cut-off text on the contact sheet.",
+        undefined,
+        false,
+      );
     else {
       const f = input.hf.layout?.findings ?? [];
       const bad = f.filter((x) => x.severity === "error");
       add(
         7,
         bad.length ? "fail" : f.length ? "warn" : "pass",
-        f.length ? list(f.map((x) => `${x.message}${x.time !== undefined ? ` @${x.time}s` : ""}`), 4) : "No overlap or clipping found at the sampled times.",
+        f.length
+          ? list(
+              f.map((x) => `${x.message}${x.time !== undefined ? ` @${x.time}s` : ""}`),
+              4,
+            )
+          : "No overlap or clipping found at the sampled times.",
         "Shorten the text, lower the size, or move one of the elements.",
       );
     }
@@ -282,20 +331,35 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
   // 8
   {
     const hits = lintHits(input.lint, ["text-outside-safe-area"]);
-    add(8, hits.length ? "fail" : "pass", hits.length ? list(hits.map((h) => `#${h.id}`)) + " leave the safe area." : "All text is inside the safe area.", hits[0]?.fix ?? "Move the text inside <SafeArea preset=…>.");
+    add(
+      8,
+      hits.length ? "fail" : "pass",
+      hits.length
+        ? list(hits.map((h) => `#${h.id}`)) + " leave the safe area."
+        : "All text is inside the safe area.",
+      hits[0]?.fix ?? "Move the text inside <SafeArea preset=…>.",
+    );
   }
   // 9
   {
     const lintHit = lintHits(input.lint, ["text-contrast"]);
     const hf = input.hf?.contrast?.findings ?? [];
-    const worse = hf.filter((x) => x.severity === "error" || (x.ratio !== undefined && x.ratio < 2.5));
+    const worse = hf.filter(
+      (x) => x.severity === "error" || (x.ratio !== undefined && x.ratio < 2.5),
+    );
     const bad = lintHit.length + worse.length;
     const warn = hf.length - worse.length;
     add(
       9,
       bad ? "fail" : warn ? "warn" : "pass",
       bad || warn
-        ? list([...lintHit.map((h) => `#${h.id}: ${h.message}`), ...hf.map((x) => `"${x.text}" ${x.ratio}:1 @${x.time}s`)], 4)
+        ? list(
+            [
+              ...lintHit.map((h) => `#${h.id}: ${h.message}`),
+              ...hf.map((x) => `"${x.text}" ${x.ratio}:1 @${x.time}s`),
+            ],
+            4,
+          )
         : input.hf
           ? "Contrast passes at the sampled times."
           : "Contrast passes by the static lint (the rendered check was skipped).",
@@ -327,18 +391,29 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
       const music = m.events.filter((e) => e.bus === "music");
       const voiceGain = Math.min(...voice.map((v) => v.gainDb));
       const problems: string[] = [];
-      if (music.length && m.duckAmount < 6) problems.push(`music ducks only ${m.duckAmount} dB (need 6 or more)`);
+      if (music.length && m.duckAmount < 6)
+        problems.push(`music ducks only ${m.duckAmount} dB (need 6 or more)`);
       const hot = music.filter((e) => e.gainDb - m.duckAmount > voiceGain);
-      if (hot.length) problems.push(`${hot.length} music event(s) stay louder than the voice even when ducked`);
+      if (hot.length)
+        problems.push(`${hot.length} music event(s) stay louder than the voice even when ducked`);
       const loudSfx = m.events.filter((e) => e.bus === "sfx" && e.gainDb > voiceGain + 6);
-      if (loudSfx.length) problems.push(`${loudSfx.length} sound effect(s) are set more than 6 dB above the voice`);
-      add(11, problems.length ? "fail" : "pass", problems.length ? problems.join("; ") + "." : `Music ducks ${m.duckAmount} dB under the voice and no bus is set far above it. (Gains are compared, not heard.)`, "Lower music/sfx gain or raise duckAmount.");
+      if (loudSfx.length)
+        problems.push(`${loudSfx.length} sound effect(s) are set more than 6 dB above the voice`);
+      add(
+        11,
+        problems.length ? "fail" : "pass",
+        problems.length
+          ? problems.join("; ") + "."
+          : `Music ducks ${m.duckAmount} dB under the voice and no bus is set far above it. (Gains are compared, not heard.)`,
+        "Lower music/sfx gain or raise duckAmount.",
+      );
     }
   }
   // 12
   {
     const m = input.mix;
-    if (!m || m.lufs === undefined) add(12, "skipped", m ? "Loudness could not be measured." : "No mix was built.");
+    if (!m || m.lufs === undefined)
+      add(12, "skipped", m ? "Loudness could not be measured." : "No mix was built.");
     else {
       const off = m.lufs - m.targetLufs;
       const tp = m.truePeak !== undefined && m.truePeak > -1;
@@ -355,7 +430,8 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
     const types = new Set<string>();
     for (const s of scenes) {
       const t = s.props.transition as unknown;
-      if (t && typeof t === "object" && "type" in (t as object)) types.add(String((t as { type: unknown }).type));
+      if (t && typeof t === "object" && "type" in (t as object))
+        types.add(String((t as { type: unknown }).type));
       else if (typeof t === "string") types.add(t);
     }
     types.delete("cut");
@@ -387,31 +463,70 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
   }
   // 15
   {
-    if (!captions.length) add(15, voices.length ? "warn" : "skipped", voices.length ? "There is a voice but no captions." : "No captions.");
+    if (!captions.length)
+      add(
+        15,
+        voices.length ? "warn" : "skipped",
+        voices.length ? "There is a voice but no captions." : "No captions.",
+      );
     else {
       const probs: string[] = [];
       for (const c of captions) {
         const w = input.words?.get(String(c.props.voice).replace(/^#/, ""));
         const maxChars = Number(c.props.maxChars ?? 22);
-        if (maxChars > 32) probs.push(`#${c.props.id}: ${maxChars} chars per line is too long (max 32)`);
+        if (maxChars > 32)
+          probs.push(`#${c.props.id}: ${maxChars} chars per line is too long (max 32)`);
         if (!w) continue;
-        const pages = paginateWords(w, { maxChars, maxWords: Number(c.props.maxWords ?? 4), mode: c.props.captionStyle === "word" ? "word" : "line" });
+        const pages = paginateWords(w, {
+          maxChars,
+          maxWords: Number(c.props.maxWords ?? 4),
+          mode: c.props.captionStyle === "word" ? "word" : "line",
+        });
         for (const pg of pages) {
           const chars = pg.words.map((x) => x.w).join(" ").length;
           const secs = Math.max(0.05, pg.end - pg.start + Number(c.props.hold ?? 0.15));
           if (c.props.captionStyle !== "word" && chars / secs > 21)
-            probs.push(`#${c.props.id}: "${pg.words.map((x) => x.w).join(" ")}" reads at ${round(chars / secs)} chars/s (max 21)`);
+            probs.push(
+              `#${c.props.id}: "${pg.words.map((x) => x.w).join(" ")}" reads at ${round(chars / secs)} chars/s (max 21)`,
+            );
         }
       }
-      add(15, probs.length ? "fail" : "pass", probs.length ? list(probs, 4) : "Line lengths and reading speed are within limits.", "Lower maxChars/maxWords or lengthen the hold.");
+      add(
+        15,
+        probs.length ? "fail" : "pass",
+        probs.length ? list(probs, 4) : "Line lengths and reading speed are within limits.",
+        "Lower maxChars/maxWords or lengthen the hold.",
+      );
     }
   }
   // 16
   {
-    const hits = lintHits(input.lint, ["asset-no-ledger", "license-blocked", "asset-missing", "font-no-ledger", "font-unknown-license"]);
-    const problems = [...hits.map((h) => h.message), ...input.license.problems.filter((p) => /no ledger entry/.test(p))];
+    const hits = lintHits(input.lint, [
+      "asset-no-ledger",
+      "license-blocked",
+      "asset-missing",
+      "font-no-ledger",
+      "font-unknown-license",
+    ]);
+    const problems = [
+      ...hits.map((h) => h.message),
+      ...input.license.problems.filter((p) => /no ledger entry/.test(p)),
+    ];
     const uniq = [...new Set(problems)];
-    add(16, uniq.length ? "fail" : "pass", uniq.length ? list(uniq, 4) : `Every sound, voice and font in use has a ledger entry (${input.license.used.length}).`, "Fetch sounds with sound_get and fonts with font_get so they are recorded.");
+    const rights = input.license.problems.filter((p) => !/no ledger entry/.test(p));
+    const own = input.license.own.length
+      ? ` ${input.license.own.length} file(s) you supplied yourself need no entry; the rights are yours to confirm.`
+      : "";
+    add(
+      16,
+      uniq.length ? "fail" : rights.length ? "warn" : "pass",
+      uniq.length
+        ? list(uniq, 4)
+        : rights.length
+          ? `${list(rights, 3)}. Confirm your plan or licence allows this use.`
+          : `Every downloaded sound, voice and font in use has a ledger entry (${input.license.used.length}).${own}`,
+      "Fetch sounds with sound_get and fonts with font_get so they are recorded.",
+    );
   }
   // 17
   {
@@ -419,7 +534,14 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
     if (!att.length) add(17, "pass", "No asset needs attribution.");
     else {
       const bad = att.filter((e) => !e.author || e.author === "unknown");
-      add(17, bad.length || !input.license.credits ? "fail" : "pass", bad.length ? `Missing author for ${list(bad.map((b) => `${b.source}:${b.id}`))}.` : `${att.length} credit(s) will be written to credits.txt on render.`, "Add the author to the ledger entry; re-run sound_get.");
+      add(
+        17,
+        bad.length || !input.license.credits ? "fail" : "pass",
+        bad.length
+          ? `Missing author for ${list(bad.map((b) => `${b.source}:${b.id}`))}.`
+          : `${att.length} credit(s) will be written to credits.txt on render.`,
+        "Add the author to the ledger entry; re-run sound_get.",
+      );
     }
   }
   void isNode;
