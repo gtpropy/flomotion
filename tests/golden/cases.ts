@@ -277,3 +277,29 @@ CASES.push(
     ], [el("Voiceover", { id: "vo", src: "./vo.wav" })]),
   },
 );
+
+CASES.push({
+  name: "media-inline-misc",
+  fonts: true,
+  times: [0.4, 1.4],
+  covers: ["Image, Video, Clip (trim/speed)", "Svg, Title, Sequence, Impact", "inline Span, B, I, Underline, Strike, Highlight"],
+  node: comp("g-media", 2, [
+    scene("s", 0, 2, [
+      el("Rect", { id: "bg", width: 1080, height: 1920, fill: "#10121a" }),
+      el("Image", { id: "img", src: "./pic.png", width: 480, height: 270, at: [40, 60] }),
+      el("Video", { id: "vid", src: "./clip.mp4", width: 480, height: 270, at: [560, 60] }),
+      el("Clip", { id: "clp", src: "./clip.mp4", in: "1s", speed: 2, width: 480, height: 270, at: [40, 380] }),
+      el("Svg", { id: "svg", markup: '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="#ff3366"/><rect x="3" y="3" width="4" height="4" fill="#ffe14d"/></svg>', width: 270, height: 270, at: [560, 380] }),
+      el("Title", { id: "ttl", text: "Title preset", at: [40, 700], align: "left", font: "display", size: 110 }, [el("Impact", { id: "imp", start: "0.2s", amp: 30, damping: 3, sound: "" })]),
+      el("Text", { id: "rich", font: "body", size: 64, at: [40, 900], align: "left", maxWidth: 1000 }, [
+        el("Span", { id: "sp", weight: 700, color: "#27e0ff" }, ["Span "]),
+        el("B", { id: "bb" }, ["bold "]),
+        el("I", { id: "ii" }, ["italic "]),
+        el("Underline", { id: "un", color: "#ffe14d" }, ["under "]),
+        el("Strike", { id: "st", color: "#ff3366" }, ["strike "]),
+        el("Highlight", { id: "hl", color: "#5b6bff" }, ["marker"]),
+      ]),
+      el("Sequence", { id: "seq", gap: 0.2 }, [el("Rect", { id: "q1", width: 200, height: 200, fill: "#ff3366", at: [40, 1200], duration: "0.6s" }), el("Rect", { id: "q2", width: 200, height: 200, fill: "#27e0ff", at: [260, 1200], duration: "1s" })]),
+    ]),
+  ]),
+});

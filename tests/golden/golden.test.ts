@@ -23,6 +23,9 @@ const root = join(here, ".root");
 mkdirSync(root, { recursive: true });
 // a silent voiceover and its (hand-written) word timings, for the captions case
 if (!existsSync(join(root, "vo.wav"))) execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=48000:cl=mono", "-t", "3", join(root, "vo.wav")]);
+// media fixtures for the Image / Video / Clip golden
+if (!existsSync(join(root, "pic.png"))) execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc2=s=480x270:d=1", "-frames:v", "1", join(root, "pic.png")]);
+if (!existsSync(join(root, "clip.mp4"))) execFileSync("ffmpeg", ["-y", "-loglevel", "error", "-f", "lavfi", "-i", "testsrc=s=480x270:r=30:d=4", "-pix_fmt", "yuv420p", "-g", "15", join(root, "clip.mp4")]);
 writeFileSync(join(root, "vo.words.json"), JSON.stringify([{ w: "Ship", start: 0.4, end: 0.8 }, { w: "videos", start: 0.9, end: 1.4 }, { w: "as", start: 1.5, end: 1.7 }, { w: "code", start: 1.8, end: 2.4 }, { w: "today", start: 2.5, end: 2.9 }]));
 
 describe("golden frames (perceptual hash, tolerance " + TOLERANCE + "/256 bits)", () => {
