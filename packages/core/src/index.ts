@@ -27,3 +27,6 @@ export * from "./resolve/resolve.js";
 export * from "./compile/index.js";
 export { z } from "zod";
 export * from "./ledger.js";
+export * from "./lint/index.js";
+export * as edit from "./edit/index.js";
+export { applyPatches, undoEdit, runEdit, runKeyOp, EDIT_OPS, KEY_OPS, type EditResult, type Patch, type EditOpName, type KeyOpName } from "./edit/index.js";

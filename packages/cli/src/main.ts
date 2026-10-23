@@ -11,6 +11,7 @@ import {
   snapshotFrames,
   syncFonts,
   hyperframesVersion,
+  lintProjectDir,
 } from "@codecut/render";
 import "@codecut/components";
 
@@ -100,6 +101,24 @@ const fontsSync = defineCommand({
     }
   },
 });
+const lint = defineCommand({
+  meta: { name: "lint", description: "Lint a project (schema, determinism, fonts, ledger, text rules)" },
+  args: { dir: dirArg, json: { type: "boolean" } },
+  async run({ args }) {
+    try {
+      const r = await lintProjectDir(String(args.dir));
+      if (args.json) console.log(JSON.stringify(r.issues, null, 2));
+      else {
+        for (const i of r.issues) console.log(`${i.severity === "error" ? "✖" : i.severity === "warning" ? "!" : "·"} [${i.rule}] ${i.message}${i.fix ? `\n    fix: ${i.fix}` : ""}`);
+        console.log(`${r.errors} error(s), ${r.warnings} warning(s)`);
+      }
+      if (r.errors) process.exit(1);
+    } catch (e) {
+      fail(e);
+    }
+  },
+});
+
 const fonts = defineCommand({ meta: { name: "fonts", description: "Font tools" }, subCommands: { sync: fontsSync } });
 
 const init = defineCommand({
@@ -137,5 +156,5 @@ export default (
 
 export const main = defineCommand({
   meta: { name: "codecut", description: `${CODECUT_NAME}: a code-first video editor` },
-  subCommands: { render, frame, sheet, fonts, init },
+  subCommands: { render, frame, sheet, fonts, init, lint },
 });

@@ -6,3 +6,4 @@ export * from "./fonts/index.js";
 export * from "./audio.js";
 export * from "./media-probe.js";
 export * from "./project.js";
+export * from "./lint.js";
