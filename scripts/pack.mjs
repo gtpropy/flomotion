@@ -46,7 +46,7 @@ const pkg = {
     "remotion-alternative",
   ],
   engines: { node: ">=22" },
-  bin: { codecut: "./dist/bin.mjs", flomotion: "./dist/bin.mjs" },
+  bin: { codecut: "dist/bin.mjs", flomotion: "dist/bin.mjs" },
   exports: {
     "./components": "./dist/components.mjs",
     "./core": "./dist/core.mjs",
