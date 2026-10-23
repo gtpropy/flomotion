@@ -169,8 +169,12 @@ export interface BuildResult {
 
 /** Load, resolve, lay out, compile and write a HyperFrames project directory. */
 export async function buildProject(dir: string, opts: BuildOptions = {}): Promise<BuildResult> {
+  return buildLoaded(await loadProject(dir), opts);
+}
+
+/** Build from an already evaluated element tree (used by tests and the MCP server). */
+export async function buildLoaded(loaded: LoadedProject, opts: BuildOptions = {}): Promise<BuildResult> {
   const log = opts.log ?? (() => {});
-  const loaded = await loadProject(dir);
   const { root, node } = loaded;
   const ledger = readLedger(root);
   const { decls } = collectFontDecls(node);

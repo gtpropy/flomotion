@@ -273,22 +273,40 @@ export const Svg = defineComponent("Svg", {
 
 // ---------- masks ----------
 
-let _maskUnused = 0;
-void _maskUnused;
-
 type MaskShape = "rect" | "roundrect" | "ellipse";
 
-/** Fractional-box geometry for a shape inside an SVG mask (objectBoundingBox units). */
-function maskShapeMarkup(id: string, shape: MaskShape, cx: number, cy: number, w: number, h: number, radius: number, fillColor: string, filter?: string): string {
-  const common = `id="${id}" fill="${fillColor}"${filter ? ` filter="url(#${filter})"` : ""}`;
-  if (shape === "ellipse") return `<ellipse ${common} cx="${cx}" cy="${cy}" rx="${w / 2}" ry="${h / 2}"/>`;
-  return `<rect ${common} x="${cx - w / 2}" y="${cy - h / 2}" width="${w}" height="${h}" rx="${shape === "roundrect" ? radius : 0}" ry="${shape === "roundrect" ? radius : 0}"/>`;
+/** Percent-encode an SVG so it can sit inside url('…') inside a style="…" attribute. */
+const svgUrl = (svg: string) =>
+  `url('data:image/svg+xml,${encodeURIComponent(svg).replace(/'/g, "%27").replace(/\(/g, "%28").replace(/\)/g, "%29")}')`;
+
+/**
+ * An SVG (viewBox 0 0 1 1, stretched to the layer box) used as a CSS mask image. Geometry is in layer-box
+ * fractions. Alpha mode: opaque inside the shape. `invert` makes it opaque everywhere else.
+ */
+export function maskImageSvg(o: { shape: MaskShape; cx: number; cy: number; w: number; h: number; radius: number; feather: number; invert: boolean; luma: boolean }): string {
+  const f = Math.max(0, o.feather);
+  const shape =
+    o.shape === "ellipse"
+      ? `<ellipse cx="${o.cx}" cy="${o.cy}" rx="${o.w / 2}" ry="${o.h / 2}" fill="#fff"${f ? ' filter="url(#b)"' : ""}/>`
+      : `<rect x="${o.cx - o.w / 2}" y="${o.cy - o.h / 2}" width="${o.w}" height="${o.h}" rx="${o.shape === "roundrect" ? o.radius : 0}" ry="${o.shape === "roundrect" ? o.radius : 0}" fill="#fff"${f ? ' filter="url(#b)"' : ""}/>`;
+  const blur = f ? `<filter id="b" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="${f}"/></filter>` : "";
+  const fillIn = o.invert ? "#000" : "#fff";
+  const fillOut = o.invert ? "#fff" : "#000";
+  const body = shape.replace(/fill="#fff"/, `fill="${fillIn}"`);
+  if (o.luma) {
+    // luminance masks read brightness directly
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" preserveAspectRatio="none"><defs>${blur}</defs><rect width="1" height="1" fill="${fillOut}"/>${body}</svg>`;
+  }
+  // alpha masks: build a luminance mask inside the SVG and paint opaque through it
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1" preserveAspectRatio="none"><defs>${blur}<mask id="m" maskContentUnits="userSpaceOnUse" x="0" y="0" width="1" height="1"><rect width="1" height="1" fill="${fillOut}"/>${body}</mask></defs><rect width="1" height="1" fill="#000" mask="url(#m)"/></svg>`;
 }
+
+const MASK_STATIC = { "mask-size": "100% 100%", "mask-repeat": "no-repeat", "-webkit-mask-size": "100% 100%", "-webkit-mask-repeat": "no-repeat" };
 
 export const Mask = defineEffect("Mask", {
   category: "shapes",
   description:
-    "Masks its parent layer with a shape. Geometry is a fraction of the layer box (0..1), so size 0 to 1 reveals the whole layer.",
+    "Masks its parent layer with a shape. Geometry is a fraction of the layer box (0..1), so size 0 to 1 reveals the whole layer. Implemented as a CSS mask image.",
   controls: {
     shape: enumOf(["rect", "roundrect", "ellipse"], { default: "rect" }),
     center: vec2({ animatable: true, default: [0.5, 0.5], step: 0.01, unit: "box" }),
@@ -299,38 +317,20 @@ export const Mask = defineEffect("Mask", {
     mode: enumOf(["alpha", "luma"], { default: "alpha", description: "Read the mask's alpha or its luminance." }),
   },
   apply: (p, rc) => {
-    const id = `${rc.id}-mask`;
-    const [cx, cy] = at0Vec(rc, "center", [0.5, 0.5]);
-    const [w, h] = at0Vec(rc, "size", [1, 1]);
-    const r0 = rc.at<number>("radius", rc.node.start);
-    const f0 = rc.at<number>("feather", rc.node.start);
-    const inside = p.invert ? "black" : "white";
-    const outside = p.invert ? "white" : "black";
-    const shapeId = `${id}-s`;
-    const defs = `<filter id="${id}-f" x="-50%" y="-50%" width="200%" height="200%" primitiveUnits="objectBoundingBox"><feGaussianBlur id="${id}-b" stdDeviation="${f0}"/></filter><mask id="${id}" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" x="-0.5" y="-0.5" width="2" height="2" style="mask-type:${p.mode === "luma" ? "luminance" : "alpha"}"><rect x="-0.5" y="-0.5" width="2" height="2" fill="${outside}"/>${maskShapeMarkup(shapeId, p.shape, cx, cy, w, h, r0, inside, `${id}-f`)}</mask>`;
-    const attrCh = (name: string, sig: Signal): Channel => ({ target: `#${shapeId}`, prop: `attr:${name}`, signal: sig });
-    const comp = (f: (t: number) => number) => exprSignal(f, "number");
-    const center = p.center as Signal;
-    const size = p.size as Signal;
-    const channels: Channel[] = [];
-    if (center.kind !== "const" || size.kind !== "const") {
-      const cxF = (t: number) => (evalAt(center, t) as number[])[0]!;
-      const cyF = (t: number) => (evalAt(center, t) as number[])[1]!;
-      const wF = (t: number) => (evalAt(size, t) as number[])[0]!;
-      const hF = (t: number) => (evalAt(size, t) as number[])[1]!;
-      if (p.shape === "ellipse") {
-        channels.push(attrCh("cx", comp(cxF)), attrCh("cy", comp(cyF)), attrCh("rx", comp((t) => wF(t) / 2)), attrCh("ry", comp((t) => hF(t) / 2)));
-      } else {
-        channels.push(attrCh("x", comp((t) => cxF(t) - wF(t) / 2)), attrCh("y", comp((t) => cyF(t) - hF(t) / 2)), attrCh("width", comp(wF)), attrCh("height", comp(hF)));
-      }
-    }
-    if ((p.feather as Signal).kind !== "const") {
-      channels.push({ target: `#${id}-b`, prop: "attr:stdDeviation", signal: p.feather as Signal });
-    }
-    if (p.shape === "roundrect" && (p.radius as Signal).kind !== "const") {
-      channels.push(attrCh("rx", p.radius as Signal), attrCh("ry", p.radius as Signal));
-    }
-    return { defs, style: { mask: `url(#${id})`, "-webkit-mask": `url(#${id})` }, channels };
+    const sigs = { center: p.center as Signal, size: p.size as Signal, radius: p.radius as Signal, feather: p.feather as Signal };
+    const at = (t: number) => {
+      const c = evalAt(sigs.center, t) as number[];
+      const s = evalAt(sigs.size, t) as number[];
+      return maskImageSvg({ shape: p.shape, cx: c[0]!, cy: c[1]!, w: s[0]!, h: s[1]!, radius: evalAt(sigs.radius, t) as number, feather: evalAt(sigs.feather, t) as number, invert: p.invert, luma: p.mode === "luma" });
+    };
+    const t0 = rc.node.start;
+    const animated = Object.values(sigs).some((x) => x.kind !== "const");
+    const style: Record<string, string> = { "mask-image": svgUrl(at(t0)), "-webkit-mask-image": svgUrl(at(t0)), ...MASK_STATIC };
+    if (p.mode === "luma") style["mask-mode"] = "luminance";
+    const channels: Channel[] = animated
+      ? [{ target: `#${rc.node.parent!.id}-xf`, prop: "maskImage", signal: exprSignal((t) => svgUrl(at(t)), "discrete", [rc.node.start, rc.node.end]), span: [rc.node.start, rc.node.end], format: (v) => String(v) }]
+      : [];
+    return { style, channels };
   },
 });
 
@@ -344,7 +344,7 @@ const MATTE_SOURCES = ["Rect", "RoundRect", "Circle", "Polygon"];
 export const Matte = defineEffect("Matte", {
   category: "shapes",
   description:
-    "Uses another shape layer as a track matte (alpha or luma) for its parent. The source must be a Rect, RoundRect, Circle or Polygon; set the source layer `hidden` to avoid drawing it.",
+    "Uses another shape layer as a track matte (alpha or luma) for its parent. The source must be a Rect, RoundRect, Circle or Polygon; its shape is stretched over the parent's box. Set the source layer `hidden` to avoid drawing it.",
   controls: {
     source: ref({ required: true }),
     mode: enumOf(["alpha", "luma"], { default: "alpha" }),
@@ -353,16 +353,14 @@ export const Matte = defineEffect("Matte", {
   apply: (p, rc) => {
     const srcId = String(p.source).replace(/^#/, "");
     const src = rc.project.byId.get(srcId);
-    const id = `${rc.id}-matte`;
     if (!src || !MATTE_SOURCES.includes(src.name)) {
-      return { css: `/* Matte ${rc.id}: source ${srcId} is not a supported shape */` };
+      return { issues: [`source ${p.source} must be a Rect, RoundRect, Circle or Polygon layer`] };
     }
-    const inside = p.invert ? "black" : "white";
-    const outside = p.invert ? "white" : "black";
     const shape: MaskShape = src.name === "Circle" ? "ellipse" : src.name === "RoundRect" ? "roundrect" : "rect";
-    const radius = src.name === "RoundRect" ? 0.1 : 0;
-    const defs = `<mask id="${id}" maskUnits="objectBoundingBox" maskContentUnits="objectBoundingBox" x="-0.5" y="-0.5" width="2" height="2" style="mask-type:${p.mode === "luma" ? "luminance" : "alpha"}"><rect x="-0.5" y="-0.5" width="2" height="2" fill="${outside}"/>${maskShapeMarkup(`${id}-s`, shape, 0.5, 0.5, 1, 1, radius, inside)}</mask>`;
-    return { defs, style: { mask: `url(#${id})`, "-webkit-mask": `url(#${id})` } };
+    const svg = maskImageSvg({ shape, cx: 0.5, cy: 0.5, w: 1, h: 1, radius: src.name === "RoundRect" ? 0.1 : 0, feather: 0, invert: p.invert, luma: p.mode === "luma" });
+    const style: Record<string, string> = { "mask-image": svgUrl(svg), "-webkit-mask-image": svgUrl(svg), ...MASK_STATIC };
+    if (p.mode === "luma") style["mask-mode"] = "luminance";
+    return { style };
   },
 });
 

@@ -422,7 +422,7 @@ function pushChannel(
 /** Merge effect styles; masks stack with intersect, filters never come through here. */
 function mergeStyle(into: Record<string, string>, add: Record<string, string>): void {
   for (const [k, v] of Object.entries(add)) {
-    if ((k === "mask" || k === "-webkit-mask") && into[k]) {
+    if ((k === "mask-image" || k === "-webkit-mask-image") && into[k]) {
       into[k] = `${into[k]}, ${v}`;
       into["mask-composite"] = "intersect";
       into["-webkit-mask-composite"] = "source-in";
