@@ -93,7 +93,7 @@ rippleDelete snap lockTrack muteTrack soloTrack addMarker removeMarker`, as `edi
 
 ## 8. MCP server (§10.1)
 
-`codecut mcp --dir <project>` (or `npx -y codecut mcp`) serves 30 tools over stdio for one project folder. All
+`codecut mcp --dir <project>` (or `npx -y flomotion mcp`) serves 30 tools over stdio for one project folder. All
 paths are checked to stay inside it (`path_outside_project`). Every write returns `{ description, patches,
 undoToken }`; the undo token is the id of the history snapshot taken before the write (`history_restore`).
 Errors are `{ error: { code, message, fix, details } }` with `isError: true`. Codes: `schema_violation`,

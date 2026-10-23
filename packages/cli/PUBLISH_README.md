@@ -1,4 +1,6 @@
-# codecut
+# flomotion (CodeCut)
+
+The npm package is **`flomotion`**. The tool is called CodeCut and its command is `codecut` (`flomotion` works as an alias).
 
 A code-first video editor. A video is one TSX file; every control a normal editor has is a typed prop or
 function. Claude edits it through an MCP server; rendering is done by
@@ -20,8 +22,8 @@ Optional: `whisper-cpp` for transcription (`brew install whisper-cpp`). Optional
 
 ```bash
 mkdir my-video && cd my-video
-claude mcp add codecut -e FREESOUND_API_KEY=… -- npx -y codecut mcp --dir .
-npx -y codecut skill install        # copies the motion-studio skill to .claude/skills
+claude mcp add codecut -e FREESOUND_API_KEY=… -- npx -y flomotion mcp --dir .
+npx -y flomotion skill install        # copies the motion-studio skill to .claude/skills
 claude                              # describe the video you want
 ```
 
@@ -44,7 +46,7 @@ codecut docs                    # reference docs for every component, from the s
 ```
 
 A project is `project.tsx` exporting a `<Composition>`; components are imported from `@codecut/components`
-(or `codecut/components`). Renders never use the network: fonts are locked by hash and checked before the first
+(or `flomotion/components`). Renders never use the network: fonts are locked by hash and checked before the first
 frame; a missing or changed font file fails the render with the font id and path.
 
 ## Limits

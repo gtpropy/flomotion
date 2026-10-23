@@ -28,7 +28,7 @@ From a checkout of this repo:
 pnpm i && pnpm build
 ```
 
-After it is published to npm you can use `npx -y codecut …` instead of the path below.
+After it is published to npm you can use `npx -y flomotion …` (the npm package is `flomotion`; the command is `codecut`) instead of the path below.
 
 Make an empty folder for the video and register the server **in that folder's scope**:
 

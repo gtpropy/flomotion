@@ -19,6 +19,10 @@ const LIBS = new Map([
   ["codecut/components", "components.mjs"],
   ["codecut/jsx-runtime", "jsx-runtime.mjs"],
   ["codecut/jsx-dev-runtime", "jsx-dev-runtime.mjs"],
+  ["flomotion/core", "core.mjs"],
+  ["flomotion/components", "components.mjs"],
+  ["flomotion/jsx-runtime", "jsx-runtime.mjs"],
+  ["flomotion/jsx-dev-runtime", "jsx-dev-runtime.mjs"],
 ]);
 const TS = /\.(tsx?|jsx|mts)$/;
 const isFile = (p) => existsSync(p) && statSync(p).isFile();

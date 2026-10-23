@@ -51,8 +51,8 @@ pnpm codecut sheet examples/saas-promo        # contact sheet
 
 ```bash
 mkdir my-video && cd my-video
-claude mcp add codecut -e FREESOUND_API_KEY=… -- npx -y codecut mcp --dir .
-npx -y codecut skill install            # copies the motion-studio skill to .claude/skills
+claude mcp add codecut -e FREESOUND_API_KEY=… -- npx -y flomotion mcp --dir .
+npx -y flomotion skill install            # copies the motion-studio skill to .claude/skills
 claude                                  # then describe the video you want
 ```
 

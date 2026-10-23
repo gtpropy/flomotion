@@ -13,7 +13,7 @@
 - `skills/motion-studio`: gated workflow, references (motion, sound, typography, saas-promo, review, generated
   components), three Looks as data with a finished reference scene each, a finished example.
 - CLI: `mcp`, `skill install`; `render` writes credits and a licence report. Bundle: multi-entry esbuild build with
-  hooks so a published install resolves `@codecut/*` imports and compiles project TSX with no node_modules.
+  hooks so a published install (npm package `flomotion`) resolves `@codecut/*` imports and compiles project TSX with no node_modules.
 - Fixed: `RGBSplit` and `Glitch` showed their effect before their start time (baked span began at the jump).
   `lint` compared `CC0-1.0` with `CC0`. A sound reused for two tags lost its first peak name.
 - Tests: codemods, every tool, review checks, resources, stdio, schema round trip through an MCP call, skill files,

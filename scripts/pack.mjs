@@ -30,7 +30,7 @@ const v = (name) => {
   return x;
 };
 const pkg = {
-  name: "codecut",
+  name: "flomotion",
   version,
   description:
     "A code-first video editor: a video is one TSX file, edited by Claude through MCP and rendered with HyperFrames.",
@@ -46,7 +46,7 @@ const pkg = {
     "remotion-alternative",
   ],
   engines: { node: ">=22" },
-  bin: { codecut: "./dist/bin.mjs" },
+  bin: { codecut: "./dist/bin.mjs", flomotion: "./dist/bin.mjs" },
   exports: {
     "./components": "./dist/components.mjs",
     "./core": "./dist/core.mjs",
@@ -67,4 +67,4 @@ const pkg = {
   },
 };
 writeFileSync(`${OUT}/package.json`, JSON.stringify(pkg, null, 2) + "\n");
-console.log(`assembled ${OUT} (codecut@${version})`);
+console.log(`assembled ${OUT} (flomotion@${version})`);
