@@ -232,10 +232,11 @@ export function evalVec(track: NormTrack<number[]>, tIn: number): number[] {
   if (track.spatial === "linear") return a.v.map((x, c) => lerp(x, b.v[c]!, pe));
   // spatial path: Catmull-Rom through key positions, parameterised by key index, eased in time
   const pts = ks.map((k) => k.v);
-  const p0 = pts[Math.max(0, i - 1)]!;
   const p1 = a.v;
   const p2 = b.v;
-  const p3 = pts[Math.min(pts.length - 1, i + 2)]!;
+  // at the ends, extrapolate linearly so a two-key path is a straight line at constant velocity
+  const p0 = i > 0 ? pts[i - 1]! : p1.map((x, c) => 2 * x - p2[c]!);
+  const p3 = i + 2 < pts.length ? pts[i + 2]! : p2.map((x, c) => 2 * x - p1[c]!);
   const out: number[] = [];
   for (let c = 0; c < dim; c++) {
     const m1 = (p2[c]! - p0[c]!) / 2;

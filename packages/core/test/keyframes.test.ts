@@ -95,6 +95,11 @@ describe("vec / color / spatial", () => {
     expect(mid[0]).toBeCloseTo(100);
     expect(mid[1]).toBeCloseTo(0);
   });
+  it("a two-key spatial path is a straight line at constant velocity", () => {
+    const t = norm<number[]>({ keys: [[0, [0, 0]], [1, [300, 60]]], spatial: "auto" });
+    expect(evalVec(t, 0.25)).toEqual([75, 15]);
+    expect(evalVec(t, 0.5)).toEqual([150, 30]);
+  });
   it("orients along the path", () => {
     const line = norm<number[]>({ keys: [[0, [0, 0]], [1, [10, 10]]], spatial: "linear" });
     expect(pathAngle(line, 0.5)).toBeCloseTo(45, 0);
