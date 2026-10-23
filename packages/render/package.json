@@ -1,0 +1,20 @@
+{
+  "name": "@codecut/render",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@codecut/core": "workspace:*",
+    "@codecut/components": "workspace:*",
+    "puppeteer-core": "latest",
+    "gsap": "3.14.2",
+    "hyperframes": "0.8.186",
+    "fontkit": "latest"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ../../tsconfig.json --noEmit"
+  }
+}

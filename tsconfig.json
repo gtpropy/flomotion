@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": { "noEmit": true, "types": ["node"] },
+  "include": ["packages/*/src", "packages/*/test", "tests", "examples", "skills"],
+  "exclude": ["**/node_modules", "**/dist", "**/.codecut"]
+}

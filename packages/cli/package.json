@@ -1,0 +1,23 @@
+{
+  "name": "codecut",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@codecut/core": "workspace:*",
+    "@codecut/components": "workspace:*",
+    "@codecut/render": "workspace:*",
+    "@codecut/mcp": "workspace:*",
+    "tsx": "latest",
+    "citty": "latest"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ../../tsconfig.json --noEmit"
+  },
+  "bin": {
+    "codecut": "./src/bin.ts"
+  }
+}

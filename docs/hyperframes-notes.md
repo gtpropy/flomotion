@@ -1,0 +1,107 @@
+# HyperFrames notes (verified facts)
+
+Verified against `hyperframes@0.8.186` on 2026-10-23 (macOS arm64, Node v25.9, system Chrome 152,
+FFmpeg 7.1.1). Sources: `npx hyperframes --help`, `docs <topic>`, scaffold from `init`, the shipped
+skills in `node_modules/hyperframes/dist/skills/` (`hyperframes`, `hyperframes-cli`, `media-use`),
+and real test renders. **Installed version wins over the prompt.** Differences are listed at the end.
+
+## CLI used by CodeCut
+
+| Need | Command |
+| --- | --- |
+| Render | `hyperframes render <dir> -o out.mp4 [-f 30] [-q draft\|looks\|delivery] [-w 1] --quiet` |
+| Lint+runtime check | `hyperframes check <dir> --json` (also `lint --json`, `validate`) |
+| Still frames | `hyperframes snapshot <dir> --at 1.5,3 -o <outdir> --no-end` (exact instants) |
+| Timeline listing | `hyperframes timeline <dir> --json` |
+| Beats / transcribe / tts | `beats`, `transcribe` (whisper-cpp), `tts` (Kokoro, local) exist; optional |
+| Env health | `hyperframes doctor` (reports FFmpeg, Chrome, whisper-cpp, memory) |
+
+Render writes `renders/<name>.mp4` by default; `-o` overrides. Telemetry: set
+`HYPERFRAMES_NO_TELEMETRY=1` and `DO_NOT_TRACK=1` for child processes (CodeCut does).
+
+## Project / composition contract
+
+- A project is a directory with `index.html` (+ optional `hyperframes.json`, `meta.json`,
+  `assets/`, `compositions/`). `hyperframes.json` is written by `init`; render works without
+  sub-compositions.
+- Root: `<div id="root" data-composition-id="main" data-start="0" data-duration="<s>" data-width="W" data-height="H">`.
+  Root `data-duration` is the film length; overrun is cut, early end holds last frame.
+- Timed element: `class="clip"` + `data-start` + `data-duration` (seconds). Visible over
+  `[start, start+duration)`; an end-state landing exactly on the end is never rendered.
+- **`data-track-index` is a Studio lane only.** Render never reads it. Paint order = CSS `z-index`.
+- Timeline: one paused GSAP timeline per composition, registered *after* its tweens:
+  `window.__timelines = window.__timelines || {}; window.__timelines["<composition-id>"] = tl;`
+- Supported GSAP methods: `set`, `to`, `from`, `fromTo`. Prefer `fromTo` (seek-back safe).
+  Absolute positions as 3rd arg.
+- Forbidden: `Date.now()`, unseeded `Math.random()`, network fetches, timers, `repeat:-1`,
+  tweening `display`/`visibility`/`autoAlpha` on a `.clip`, CSS `transform` on a GSAP-transformed
+  element (`gsap_css_transform_conflict`), tween of the `.clip` element itself
+  (`gsap_animates_clip_element`: animate a child or its `opacity`).
+- Nested timed clips: a clip inside another timed element takes `data-start` from the
+  *composition*, not the parent, and shows only while the parent shows. CodeCut avoids this:
+  timed wrappers (scenes) have *untimed* children, or all layers are flat siblings.
+- Seek protocol for non-GSAP drawing: `window.addEventListener("hf-seek", e => draw(e.detail.time))`
+  (`e.detail.waitUntil(promise)` for async). No rAF clock. Heavy setup:
+  `window.__hf.buildReady["key"] = promise`.
+- Media: `<audio id=... data-start data-duration data-volume data-media-start>`; every `<audio>`
+  needs an `id`; no `crossorigin`; `<video>` needs `muted` or `data-has-audio="true"`.
+  `data-volume` 1 = 0 dB, up to 3.98. Edge fades `data-fade-in/out`.
+- Asset paths root-relative (`assets/...`). Images without `data-duration` last 3 s.
+- Variables: `data-composition-variables` on `<html>`, `--variables '{}'` on render.
+  (CodeCut does not use these in phase 1/2.)
+- Sub-compositions: files in `compositions/` wrapped in `<template>`, mounted with
+  `data-composition-src`. Host id == scene root id == timeline key, else 45 s wait per scene.
+  CodeCut phase 1 emits one flat `index.html` and does not use sub-compositions.
+
+## GSAP loading
+
+The scaffold loads GSAP from jsDelivr CDN. **CodeCut instead vendors the file**:
+`<script src="vendor/gsap.min.js">` with a copy of `gsap@3.14.2/dist/gsap.min.js` written into the
+project at compile time (render verified with a local script, no CDN). The `gsap` npm package is
+a `@codecut/render` dependency.
+
+## Fonts (important for determinism)
+
+- Bundled by name (no @font-face needed): Inter, Montserrat, Outfit, Nunito, Oswald, League Gothic,
+  Archivo Black, Space Mono, IBM Plex Mono, JetBrains Mono, EB Garamond, Playfair Display,
+  Source Code Pro, Noto Sans JP, Roboto, Open Sans, Lato, Poppins.
+- **For bundled names HyperFrames fetches from Google Fonts at render and caches in
+  `~/.cache/hyperframes/fonts/<family>/`** (observed log: `Fetched 11 font face(s) for "Inter"
+  from Google Fonts`). This is network use at render, so CodeCut always emits its own
+  `@font-face` for every used family and refuses bare-name use of bundled families.
+- A local `@font-face` with `src:url('assets/fonts/x.woff2')` is embedded as a data URI
+  (`Embedded local font file ... → data URI`) and makes no network request. Verified.
+- **A missing font file does NOT fail HyperFrames**: the render succeeds (exit 0) with a
+  fallback face and only logs `[FileServer] 404 Not Found: /assets/fonts/x.woff2`. Therefore
+  CodeCut must do its own pre-render font gate (file exists, hash matches lock, `document.fonts.load`
+  succeeds in headless Chrome). Implemented in `@codecut/render` (`fontGate`).
+- `hyperframes lint` rule `font_family_without_font_face` fires for unbundled families without
+  `@font-face`.
+- `window.__hyperframes.fitTextFontSize(...)` and `.pretext` exist; CodeCut uses its own
+  Chrome measurement instead so results are cached/hashed.
+
+## Rendering behaviours observed
+
+- Same project rendered twice on one machine gives **byte-identical MP4** (md5 equal). MP4 tags:
+  `hyperframes_version`, `hyperframes_renderer`, `encoder=Lavf61.7.100` — no timestamps.
+  Docker mode (`--docker`) is the documented route for cross-machine determinism.
+- Output: H.264, `yuv420p`, 30 fps default, size from root `data-width/height`.
+- 8 GB machine triggers *low-memory profile*: 1 capture worker, screenshot capture.
+  First render downloads/caches fonts and takes ~1.5 min; warm render of 2 s took ~5 s.
+- Static-frame dedup reuses identical frames (speeds up holds).
+- `check` runs lint + runtime + layout + contrast; warns `first_frame_empty`, `line_unread`,
+  `sweep_static` etc. (useful input for CodeCut `review`.)
+- Chrome: uses system Chrome if found, GPU probe `hardware` (Metal) on this machine.
+  `--no-browser-gpu` forces SwiftShader (more deterministic across machines).
+
+## Differences from the prompt
+
+| Prompt | Installed reality | CodeCut decision |
+| --- | --- | --- |
+| `data-track-index` positions layers | Studio lane only; z-index paints | Compiler emits both; z-index from track order |
+| Fonts from `document.fonts.load` fail-hard | HF itself silently falls back | Own `fontGate` pre-render step |
+| GSAP "loaded the way HF expects" (CDN) | CDN in scaffold; local script works | Vendor GSAP locally |
+| No network at render | HF auto-fetches Google fonts for bundled names | Always emit own `@font-face`, lint bare bundled names |
+| Byte-identical double render | True on same machine (no timestamps) | Compare bytes; fall back to frame hashes if a future version embeds timestamps |
+| Audio mix by HF | HF mixes `<audio>` tags itself | CodeCut mixes offline with FFmpeg and emits one `<audio id="mix">` |
+| Transcribe | `hyperframes transcribe` (whisper-cpp) exists | Prefer `whisper-cpp` via HF; error if missing |

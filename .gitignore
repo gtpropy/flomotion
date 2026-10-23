@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.codecut/
+renders/
+*.log
+.DS_Store
+.idea/
+.hyperframes/
+coverage/
+.vitest/
