@@ -43,6 +43,7 @@ export const projectCreate = tool({
         path: ctx.root,
         file: "project.tsx",
         id: r.id,
+        ...(ctx.uiUrl ? { ui: ctx.uiUrl } : {}),
         next: [
           "Fetch the Look's fonts: font_list, then font_get for each font id.",
           "Use project_read to see the scene ids, then element_add / scene_write to build.",

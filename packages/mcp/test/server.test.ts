@@ -50,9 +50,16 @@ describe("resources", () => {
     expect(r.type).toBe("Composition");
     expect(r.children[0].children).toHaveLength(6);
   });
-  it("codecut://looks has the three Looks as data", async () => {
+  it("codecut://looks has every Look as data", async () => {
     const r = text(await h.client.readResource({ uri: "codecut://looks" }));
-    expect(r.map((l: any) => l.id)).toEqual(["kinetic", "minimal", "sketch"]);
+    expect(r.map((l: any) => l.id)).toEqual([
+      "clean-light",
+      "dark-product",
+      "bold-kinetic",
+      "kinetic",
+      "minimal",
+      "sketch",
+    ]);
     for (const l of r) {
       expect(l.palette).toBeTruthy();
       expect(l.fonts.length).toBeGreaterThanOrEqual(3);

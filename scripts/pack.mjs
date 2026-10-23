@@ -7,13 +7,13 @@ import { bundle } from "./bundle.mjs";
 const OUT = ".publish";
 const root = JSON.parse(readFileSync("package.json", "utf8"));
 const cli = JSON.parse(readFileSync("packages/cli/package.json", "utf8"));
-const version = cli.publishVersion ?? "0.2.0";
+const version = "0.3.0";
 
 await bundle();
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
 cpSync("packages/cli/dist", `${OUT}/dist`, { recursive: true });
-cpSync("skills/motion-studio", `${OUT}/skills/motion-studio`, { recursive: true });
+cpSync("skills/flomotion-studio", `${OUT}/skills/flomotion-studio`, { recursive: true });
 cpSync("packages/cli/PUBLISH_README.md", `${OUT}/README.md`);
 cpSync("LICENSE", `${OUT}/LICENSE`);
 cpSync("CHANGELOG.md", `${OUT}/CHANGELOG.md`);

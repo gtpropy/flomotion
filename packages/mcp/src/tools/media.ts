@@ -325,18 +325,25 @@ export const reviewTool = tool({
       outDir: ctx.store.path(join(CODECUT_DIR, "sheet")),
     });
     const summary = summarize(results);
+    const data = {
+      ...summary,
+      lint: { errors: lint.errors, warnings: lint.warnings },
+      measured: { layoutAndContrast: !!hf },
+      checks: results,
+      contactSheet: s.contactSheet ? rel(ctx.root, s.contactSheet) : undefined,
+      times,
+      next: summary.pass
+        ? SECOND_PASS
+        : `Fix the failing checks (${summary.failing.join(", ")}) first. ${SECOND_PASS}`,
+    };
+    // the live view shows the latest review
+    mkdirSync(ctx.store.path(join(CODECUT_DIR, "review")), { recursive: true });
+    writeFileSync(
+      ctx.store.path(join(CODECUT_DIR, "review", "last.json")),
+      JSON.stringify({ at: Date.now(), ...data }, null, 2) + "\n",
+    );
     return {
-      data: {
-        ...summary,
-        lint: { errors: lint.errors, warnings: lint.warnings },
-        measured: { layoutAndContrast: !!hf },
-        checks: results,
-        contactSheet: s.contactSheet ? rel(ctx.root, s.contactSheet) : undefined,
-        times,
-        next: summary.pass
-          ? SECOND_PASS
-          : `Fix the failing checks (${summary.failing.join(", ")}) first. ${SECOND_PASS}`,
-      },
+      data,
       images: s.contactSheet ? [{ path: s.contactSheet, mime: "image/jpeg" }] : undefined,
     };
   },

@@ -15,7 +15,7 @@
     "format": "prettier --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "codecut": "tsx packages/cli/src/bin.ts",
-    "gen:docs": "tsx packages/cli/src/bin.ts docs --out docs/components --skill-ref skills/motion-studio/references/components.md --looks-dir skills/motion-studio/looks"
+    "gen:docs": "tsx packages/cli/src/bin.ts docs --out docs/components --skill-ref skills/flomotion-studio/references/components.md"
   },
   "devDependencies": {
     "@codecut/components": "workspace:*",

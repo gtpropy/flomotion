@@ -2,6 +2,6 @@ node_modules
 dist
 docs/components
 tests/golden
-skills/motion-studio/references/components.md
 pnpm-lock.yaml
 PROMPT.md
+skills/flomotion-studio/

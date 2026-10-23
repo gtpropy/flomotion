@@ -6,7 +6,7 @@ A code-first video editor. A video is one TSX file; every control a normal edito
 function. Claude edits it through an MCP server; rendering is done by
 [HyperFrames](https://github.com/heygen-com/hyperframes) (HTML + GSAP → headless Chrome + FFmpeg → MP4).
 
-> **Status: early (0.2).** The engine, the MCP server and the `motion-studio` skill are built and tested against
+> **Status: early (0.3).** The engine, the MCP server, the `flomotion-studio` skill and the live view are built and tested against
 > test doubles for Freesound, ElevenLabs and Whisper. Nothing has been run in a real Claude Code session yet:
 > see `docs/gate2-manual-checklist.md` in the repository. Editor type hints for project files are not shipped
 > yet (projects run; editors will not resolve `@codecut/*` types).
@@ -21,21 +21,32 @@ Optional: `whisper-cpp` for transcription (`brew install whisper-cpp`). Optional
 ## Use it from Claude Code
 
 ```bash
+npx -y flomotion install skill      # installs the flomotion-studio skill for all your projects (~/.claude/skills)
 mkdir my-video && cd my-video
-claude mcp add codecut -e FREESOUND_API_KEY=… -- npx -y flomotion mcp --dir .
-npx -y flomotion skill install        # copies the motion-studio skill to .claude/skills
+claude mcp add flomotion -e FREESOUND_API_KEY=… -- npx -y flomotion mcp --dir . --ui
 claude                              # describe the video you want
 ```
 
-The skill runs a gated workflow: intake, script, look, voice, storyboard, build, sound, review, draft, final. It
-stops for your OK at each gate. Sounds and fonts are fetched into a licence ledger; CC-BY credits are written next
-to the render. The agent cannot hear audio or judge taste, so it asks you to listen and approve.
+`flomotion install skill --project` installs into the current folder only. The skill runs a gated workflow:
+interview (extensive, with a read-back), direction, script, style frames, storyboard, draft, final. It stops for
+your OK at each gate. Sounds and fonts are fetched into a licence ledger; CC-BY credits are written next to the
+render. The agent cannot hear audio or judge taste, so it lists what you need to review.
+
+## Live view
+
+`--ui` on the MCP server (or `flomotion ui` in the project folder) serves a small page on `127.0.0.1:4317`. It shows,
+in real time: each tool call Claude makes with its result, progress through the gates, the scene outline and
+timeline, a preview you can scrub (rendered on demand from the file on disk), the code with the latest change
+highlighted, review results, the sounds and fonts used with their licences, renders you can play, and the
+history with a Restore button. It is a viewer with undo, not an editor yet. It listens on localhost only and loads
+nothing from the network.
 
 ## CLI
 
 ```bash
-codecut mcp --dir .             # MCP server over stdio (30 tools, 4 resources)
-codecut skill install [--global]
+codecut mcp --dir . [--ui]      # MCP server over stdio (30 tools, 4 resources); --ui also serves the live view
+codecut ui [--open]             # the live view for this folder
+codecut install skill [--project]
 codecut init my-video           # scaffold a project
 codecut fonts sync my-video     # download and lock fonts (the only network use besides sound/voice tools)
 codecut lint my-video

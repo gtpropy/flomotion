@@ -550,6 +550,7 @@ export const projectRead = tool({
         project: ctx.root,
         file: loaded.entry.replace(ctx.root + "/", ""),
         ...(idsWritten.length ? { idsWritten } : {}),
+        ...(ctx.uiUrl ? { ui: ctx.uiUrl } : {}),
         outline: outlineOf(start, a.depth ?? 3),
       },
     };

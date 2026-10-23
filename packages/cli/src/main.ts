@@ -1,4 +1,5 @@
-import { cpSync, mkdirSync, writeFileSync, existsSync, copyFileSync } from "node:fs";
+import { cpSync, mkdirSync, rmSync, writeFileSync, existsSync, copyFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,7 +20,7 @@ import {
   readLedger,
 } from "@codecut/render";
 import { registry, docsMarkdown, docsIndexMarkdown } from "@codecut/components";
-import { serveStdio } from "@codecut/mcp";
+import { serveStdio, startUi } from "@codecut/mcp";
 
 const fail = (e: unknown): never => {
   if (isCodeCutError(e)) {
@@ -291,61 +292,157 @@ const mcp = defineCommand({
     name: "mcp",
     description: "Run the MCP server over stdio for a project folder (add it to Claude Code)",
   },
-  args: { dir: { type: "string", default: ".", description: "Project folder (default: cwd)" } },
+  args: {
+    dir: { type: "string", default: ".", description: "Project folder (default: cwd)" },
+    ui: {
+      type: "boolean",
+      description: "Also serve the live view and print its address to stderr",
+    },
+    port: { type: "string", description: "Live view port (default 4317)" },
+  },
   async run({ args }) {
     try {
       // stdout belongs to the protocol: nothing else may print there
-      await serveStdio(resolve(String(args.dir)));
+      await serveStdio(
+        resolve(String(args.dir)),
+        {},
+        { ui: args.ui ? { port: args.port ? Number(args.port) : undefined } : false },
+      );
     } catch (e) {
       fail(e);
     }
   },
 });
 
-/** Where the shipped motion-studio skill lives: next to the package (published) or in the repo (dev). */
+const ui = defineCommand({
+  meta: {
+    name: "ui",
+    description: "Open the live view: watch what Claude is doing to the project, in a browser",
+  },
+  args: {
+    dir: { type: "string", default: ".", description: "Project folder (default: cwd)" },
+    port: { type: "string", description: "Port (default 4317; the next free one is used)" },
+    open: { type: "boolean", description: "Open the browser" },
+  },
+  async run({ args }) {
+    try {
+      const server = await startUi(resolve(String(args.dir)), {
+        port: args.port ? Number(args.port) : undefined,
+        strictPort: !!args.port,
+      });
+      console.log(`flomotion live view for ${resolve(String(args.dir))}`);
+      console.log(`  ${server.url}`);
+      console.log("Leave this running; the page updates as Claude works. Ctrl+C to stop.");
+      if (args.open) {
+        const cmd =
+          process.platform === "darwin"
+            ? "open"
+            : process.platform === "win32"
+              ? "cmd"
+              : "xdg-open";
+        spawn(cmd, process.platform === "win32" ? ["/c", "start", server.url] : [server.url], {
+          stdio: "ignore",
+          detached: true,
+        }).unref();
+      }
+      await new Promise<void>((done) => {
+        process.once("SIGINT", () => void server.close().then(done));
+        process.once("SIGTERM", () => void server.close().then(done));
+      });
+    } catch (e) {
+      fail(e);
+    }
+  },
+});
+
+/** The skill that ships with this install: next to the package (published) or in the repo (dev). */
+export const SKILL_NAME = "flomotion-studio";
 function skillSource(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   for (const rel of [
-    "../skills/motion-studio",
-    "../../../skills/motion-studio",
-    "../../skills/motion-studio",
+    `../skills/${SKILL_NAME}`,
+    `../../../skills/${SKILL_NAME}`,
+    `../../skills/${SKILL_NAME}`,
   ]) {
     const p = resolve(here, rel);
     if (existsSync(join(p, "SKILL.md"))) return p;
   }
   throw new CodeCutError(
     "asset_missing",
-    "The motion-studio skill files were not found next to this install",
+    "The flomotion-studio skill files were not found next to this install",
   );
 }
 
-const skillInstall = defineCommand({
-  meta: { name: "install", description: "Copy the motion-studio skill into .claude/skills" },
-  args: {
-    global: { type: "boolean", description: "Install for all projects (~/.claude/skills)" },
-    dir: { type: "string", default: ".", description: "Project folder for a project install" },
+/** Copy the skill into a Claude Code skills folder and say what to do next. */
+function installSkill(args: { project?: boolean; dir?: string }) {
+  const base = args.project
+    ? join(resolve(String(args.dir ?? ".")), ".claude", "skills")
+    : join(process.env.HOME ?? homedir(), ".claude", "skills");
+  const dest = join(base, SKILL_NAME);
+  mkdirSync(base, { recursive: true });
+  rmSync(dest, { recursive: true, force: true }); // a reinstall replaces the old copy, never merges into it
+  cpSync(skillSource(), dest, { recursive: true });
+  console.log(`✔ Installed the ${SKILL_NAME} skill to ${dest}`);
+  const old = join(base, "motion-studio");
+  if (existsSync(old))
+    console.log(
+      `  ! An older skill "motion-studio" is also installed (${old}). ${SKILL_NAME} replaces it: remove it with  rm -rf "${old}"`,
+    );
+  console.log("");
+  console.log("Next, in your video folder:");
+  console.log("  claude mcp add flomotion -- npx -y flomotion mcp --dir . --ui");
+  console.log("  claude");
+  console.log(
+    'Then ask for a video. Open the live view address the server prints (or run "flomotion ui") to watch it being made.',
+  );
+}
+
+const skillArgs = {
+  project: {
+    type: "boolean",
+    description: "Install for this folder only (./.claude/skills) instead of for all projects",
   },
+  dir: { type: "string", default: ".", description: "Project folder for --project" },
+} as const;
+
+const installSkillCmd = defineCommand({
+  meta: {
+    name: "skill",
+    description: "Install the flomotion-studio skill for Claude Code (all projects, or --project)",
+  },
+  args: skillArgs,
   run({ args }) {
     try {
-      const base = args.global
-        ? join(homedir(), ".claude", "skills")
-        : join(resolve(String(args.dir)), ".claude", "skills");
-      const dest = join(base, "motion-studio");
-      mkdirSync(base, { recursive: true });
-      cpSync(skillSource(), dest, { recursive: true });
-      console.log(`Installed the motion-studio skill to ${dest}`);
+      installSkill(args);
     } catch (e) {
       fail(e);
     }
   },
 });
 
+const install = defineCommand({
+  meta: { name: "install", description: "Install parts of flomotion into Claude Code" },
+  subCommands: { skill: installSkillCmd },
+});
+
+/** Older spelling from 0.2.0: `codecut skill install` (project-level by default, as before). */
+const skillInstallLegacy = defineCommand({
+  meta: { name: "install", description: "Same as `install skill` (kept from 0.2.0)" },
+  args: { ...skillArgs, global: { type: "boolean", description: "Install for all projects" } },
+  run({ args }) {
+    try {
+      installSkill({ project: !args.global, dir: args.dir });
+    } catch (e) {
+      fail(e);
+    }
+  },
+});
 const skill = defineCommand({
-  meta: { name: "skill", description: "The motion-studio director skill for Claude Code" },
-  subCommands: { install: skillInstall },
+  meta: { name: "skill", description: "Skill commands (see `install skill`)" },
+  subCommands: { install: skillInstallLegacy },
 });
 
 export const main = defineCommand({
   meta: { name: "codecut", description: `${CODECUT_NAME}: a code-first video editor` },
-  subCommands: { render, frame, sheet, fonts, init, lint, docs, mcp, skill },
+  subCommands: { render, frame, sheet, fonts, init, lint, docs, mcp, ui, install, skill },
 });

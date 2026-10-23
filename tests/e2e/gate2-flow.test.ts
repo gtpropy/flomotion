@@ -1,7 +1,7 @@
 /**
- * Gate 2: the motion-studio skill flow, step by step, driven through the MCP SDK client against test doubles.
+ * Gate 2: the flomotion-studio skill flow, step by step, driven through the MCP SDK client against test doubles.
  *
- * It plays the part of Claude following skills/motion-studio/SKILL.md (intake, script, look, voice quote and
+ * It plays the part of Claude following skills/flomotion-studio/SKILL.md (gates G0 to G6) (intake, script, look, voice quote and
  * confirm, storyboard, build scene by scene with lint, sound, review rounds, draft, then final) and the
  * user answering at each "OK" gate. Freesound, ElevenLabs, Whisper and Google Fonts are doubles; everything
  * else is real: the MCP server over the SDK's in-memory transport, the codemods, lint, FFmpeg mixing,
@@ -106,7 +106,7 @@ const SCENES: Record<string, string> = {
     <Stagger id="problem-stack" each={0.45}>
       <Chip id="problem-c1" at={[0, 760]} label="Chat" dot="$brand.primary" fill="$brand.surface" textColor="$brand.fg" size={52} enter={{ from: "w", distance: 80, ease: "expo.out", duration: 0.5, delay: 0.8 }} />
       <Chip id="problem-c2" at={[0, 900]} label="Email" dot="$brand.accent" fill="$brand.surface" textColor="$brand.fg" size={52} enter={{ from: "w", distance: 80, ease: "expo.out", duration: 0.5, delay: 0.8 }} />
-      <Chip id="problem-c3" at={[0, 1040]} label="Spreadsheets" dot="$brand.cyan" fill="$brand.surface" textColor="$brand.fg" size={52} enter={{ from: "w", distance: 80, ease: "expo.out", duration: 0.5, delay: 0.8 }} />
+      <Chip id="problem-c3" at={[0, 1040]} label="Spreadsheets" dot="$brand.signal" fill="$brand.surface" textColor="$brand.fg" size={52} enter={{ from: "w", distance: 80, ease: "expo.out", duration: 0.5, delay: 0.8 }} />
     </Stagger>
     <Text id="problem-note" at={[0, 1280]} text="and nobody reads them." size={56} fill="$brand.muted" align="left" maxWidth="100%" font="$type.body" enter={{ from: "s", distance: 40, ease: "expo.out", duration: 0.5, delay: 3 }} />`,
   )}
@@ -147,7 +147,7 @@ const SCENES: Record<string, string> = {
       </GlassCard>
       <GlassCard id="f3" at={[0, 1140]} width={920} height={300} enter={{ from: "s", distance: 100, ease: "expo.out", duration: 0.6, delay: 0.5 }}>
         <Text id="f3-t" text="Deadline alerts" size={64} weight={700} align="left" maxWidth="100%" font="$type.display" />
-        <Chip id="f3-c" label="early" dot="$brand.cyan" fill="$brand.surface" textColor="$brand.fg" size={36} enter={{ from: "s", distance: 30, duration: 0.4, delay: 1.2 }} />
+        <Chip id="f3-c" label="early" dot="$brand.signal" fill="$brand.surface" textColor="$brand.fg" size={36} enter={{ from: "s", distance: 30, duration: 0.4, delay: 1.2 }} />
       </GlassCard>
     </Stagger>`,
   )}
@@ -193,7 +193,7 @@ afterAll(async () => {
   cleanup(root);
 });
 
-describe("Gate 2: the motion-studio flow against test doubles", () => {
+describe("Gate 2: the flomotion-studio flow against test doubles", () => {
   it("1. Intake (OK): the agent repeats back only what the user said and waits", () => {
     step("intake");
     const brief = [BRIEF.what, BRIEF.who, BRIEF.where, ...BRIEF.facts, BRIEF.cta].join(". ");
@@ -217,13 +217,20 @@ describe("Gate 2: the motion-studio flow against test doubles", () => {
     const looks = JSON.parse(
       ((await h.client.readResource({ uri: "codecut://looks" })).contents[0] as any).text,
     );
-    expect(looks.map((l: any) => l.id)).toEqual(["kinetic", "minimal", "sketch"]);
+    expect(looks.map((l: any) => l.id)).toEqual([
+      "clean-light",
+      "dark-product",
+      "bold-kinetic",
+      "kinetic",
+      "minimal",
+      "sketch",
+    ]);
     const created = await call("project_create", {
       name: "Pulse Promo",
       size: "1080x1920",
       fps: 30,
       template: "saas-promo",
-      look: "kinetic",
+      look: "dark-product",
     });
     expect(created.id).toBe("pulse-promo");
     const fonts = await call("font_list");
@@ -483,7 +490,7 @@ describe("Gate 2: the motion-studio flow against test doubles", () => {
   it("the project is plain TSX and diffs cleanly", () => {
     const text = src();
     expect(text).toContain('<Composition id="pulse-promo"');
-    expect(text).toContain('theme="$look.kinetic"');
+    expect(text).toContain('theme="$look.dark-product"');
     expect(text.split("\n").length).toBeGreaterThan(100);
     expect(existsSync(join(root, ".codecut/history/index.json"))).toBe(true);
   });

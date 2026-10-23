@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Video brief (output of the interview)",
+  "description": "Every field is an object {value, source, status}. source: user | asset | assumption. status: confirmed | assumed | unknown.",
+  "type": "object",
+  "definitions": {
+    "field": {
+      "type": "object",
+      "required": ["value", "source", "status"],
+      "properties": {
+        "value": {},
+        "source": { "type": "string", "enum": ["user", "asset", "assumption"] },
+        "status": { "type": "string", "enum": ["confirmed", "assumed", "unknown"] },
+        "quote": { "type": ["string", "null"], "description": "the person's own words, if any" },
+        "note": { "type": ["string", "null"] }
+      }
+    }
+  },
+  "required": ["product", "audience", "goal", "message", "proof", "format", "taste", "voice", "constraints", "clarity"],
+  "properties": {
+    "product": {
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "#/definitions/field" },
+        "oneLiner": { "$ref": "#/definitions/field" },
+        "pain": { "$ref": "#/definitions/field" },
+        "wowFeature": { "$ref": "#/definitions/field" },
+        "features": { "$ref": "#/definitions/field" },
+        "competitors": { "$ref": "#/definitions/field" }
+      }
+    },
+    "audience": {
+      "type": "object",
+      "properties": {
+        "primary": { "$ref": "#/definitions/field" },
+        "buyerVsUser": { "$ref": "#/definitions/field" },
+        "awareness": { "$ref": "#/definitions/field" },
+        "triggerMoment": { "$ref": "#/definitions/field" },
+        "language": { "$ref": "#/definitions/field" }
+      }
+    },
+    "goal": {
+      "type": "object",
+      "properties": {
+        "action": { "$ref": "#/definitions/field" },
+        "cta": { "$ref": "#/definitions/field" },
+        "destination": { "$ref": "#/definitions/field" },
+        "offer": { "$ref": "#/definitions/field" },
+        "deadline": { "$ref": "#/definitions/field" }
+      }
+    },
+    "message": {
+      "type": "object",
+      "properties": {
+        "promise": { "$ref": "#/definitions/field" },
+        "oneSentenceToRemember": { "$ref": "#/definitions/field" },
+        "avoid": { "$ref": "#/definitions/field" }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "text", "source"],
+            "properties": {
+              "type": { "type": "string", "enum": ["number", "credential", "quote", "logo", "press", "award"] },
+              "text": { "type": "string" },
+              "source": { "type": "string" },
+              "permission": { "type": ["boolean", "null"] }
+            }
+          }
+        },
+        "noProof": { "type": "boolean" }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "logo": { "$ref": "#/definitions/field" },
+        "brandColors": { "$ref": "#/definitions/field" },
+        "fonts": { "$ref": "#/definitions/field" },
+        "screens": { "$ref": "#/definitions/field" },
+        "footage": { "$ref": "#/definitions/field" },
+        "music": { "$ref": "#/definitions/field" },
+        "voice": { "$ref": "#/definitions/field" },
+        "forbiddenToShow": { "$ref": "#/definitions/field" }
+      }
+    },
+    "format": {
+      "type": "object",
+      "properties": {
+        "platform": { "$ref": "#/definitions/field" },
+        "aspect": { "$ref": "#/definitions/field" },
+        "lengthSeconds": { "$ref": "#/definitions/field" },
+        "deliverables": { "$ref": "#/definitions/field" }
+      }
+    },
+    "taste": {
+      "type": "object",
+      "properties": {
+        "adjectivesYes": { "$ref": "#/definitions/field" },
+        "adjectivesNo": { "$ref": "#/definitions/field" },
+        "tone": { "$ref": "#/definitions/field" },
+        "likedRefs": { "$ref": "#/definitions/field" },
+        "dislikedRefs": { "$ref": "#/definitions/field" },
+        "styleFamilyRanking": { "$ref": "#/definitions/field" },
+        "lookChoice": { "$ref": "#/definitions/field" },
+        "motionTaste": { "$ref": "#/definitions/field" },
+        "typeTaste": { "$ref": "#/definitions/field" }
+      }
+    },
+    "voice": {
+      "type": "object",
+      "properties": {
+        "plan": { "$ref": "#/definitions/field" },
+        "language": { "$ref": "#/definitions/field" },
+        "pronunciations": { "$ref": "#/definitions/field" },
+        "musicMood": { "$ref": "#/definitions/field" },
+        "soundAppetite": { "$ref": "#/definitions/field" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "legalLines": { "$ref": "#/definitions/field" },
+        "platformRules": { "$ref": "#/definitions/field" },
+        "approver": { "$ref": "#/definitions/field" },
+        "revisionTolerance": { "$ref": "#/definitions/field" },
+        "budgetNotes": { "$ref": "#/definitions/field" }
+      }
+    },
+    "assumptions": { "type": "array", "items": { "type": "string" } },
+    "openItems": { "type": "array", "items": { "type": "string" } },
+    "clarity": {
+      "type": "object",
+      "required": ["mustHaveTotal", "confirmed", "score", "readbackApproved"],
+      "properties": {
+        "mustHaveTotal": { "type": "integer" },
+        "confirmed": { "type": "integer" },
+        "score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "readbackApproved": { "type": "boolean" }
+      }
+    }
+  }
+}

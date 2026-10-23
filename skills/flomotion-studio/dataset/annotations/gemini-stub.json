@@ -1,0 +1,33 @@
+{
+  "id": "gemini-stub",
+  "brand": "Google Gemini (stub)",
+  "source": "one frame only: bold white 'powerful tools' over a dark mascot silhouette on violet; overlay '#8 Google Gemini'",
+  "url": null,
+  "format": "16:9",
+  "duration_s": null,
+  "platform": null,
+  "style_family": "unknown",
+  "confidence": "L",
+  "rating": null,
+  "rating_notes": "need more frames to annotate",
+  "beats": [
+    { "n": 1, "role": "other", "block": null, "text": "powerful tools", "notes": "giant white geometric text over a dark mascot shape on violet" }
+  ],
+  "pain_share": null,
+  "turn": null,
+  "motif": null,
+  "palette_source": null,
+  "palette_notes": "violet, near-black",
+  "type_notes": "heavy white geometric sans, tight tracking, overlaps a dark shape",
+  "text_emphasis": null,
+  "grain": null,
+  "blur_on_motion": null,
+  "sentence_split": null,
+  "human_presence": null,
+  "ui_fidelity": null,
+  "transitions": null,
+  "proof_type": null,
+  "sound_notes": null,
+  "patterns": [2],
+  "lessons": []
+}

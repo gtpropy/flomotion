@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reference ad annotation",
+  "description": "One record per reference ad. Store annotations, never the video or its assets. Unknown values are null.",
+  "type": "object",
+  "required": ["id", "brand", "style_family", "beats", "confidence"],
+  "properties": {
+    "id": { "type": "string" },
+    "brand": { "type": "string" },
+    "source": { "type": "string" },
+    "url": { "type": ["string", "null"] },
+    "format": { "type": ["string", "null"], "enum": ["9:16", "16:9", "1:1", "4:5", null] },
+    "duration_s": { "type": ["number", "null"] },
+    "platform": { "type": ["string", "null"] },
+    "style_family": { "type": "string", "enum": ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "unknown"] },
+    "confidence": { "type": "string", "enum": ["H", "M", "L"], "description": "confidence of annotation from stills only" },
+    "rating": { "type": ["integer", "null"], "minimum": 1, "maximum": 5 },
+    "rating_notes": { "type": ["string", "null"] },
+    "beats": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["n", "role"],
+        "properties": {
+          "n": { "type": "integer" },
+          "role": { "type": "string", "enum": ["hook", "pain", "turn", "promise", "product", "proof", "brand", "cta", "bridge", "other"] },
+          "block": { "type": ["string", "null"] },
+          "text": { "type": ["string", "null"] },
+          "t_start_s": { "type": ["number", "null"] },
+          "t_end_s": { "type": ["number", "null"] },
+          "notes": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "pain_share": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "turn": { "type": ["string", "null"], "description": "technique of the problem-to-solution switch" },
+    "motif": { "type": ["string", "null"] },
+    "palette_source": { "type": ["string", "null"], "enum": ["brand", "single-accent", "per-scene-blocks", "gradient", "mixed", null] },
+    "palette_notes": { "type": ["string", "null"] },
+    "type_notes": { "type": ["string", "null"] },
+    "text_emphasis": { "type": ["array", "null"], "items": { "type": "string" } },
+    "grain": { "type": ["string", "null"], "enum": ["none", "light", "heavy", null] },
+    "blur_on_motion": { "type": ["boolean", "null"] },
+    "sentence_split": { "type": ["integer", "null"], "description": "number of scenes one sentence spans" },
+    "human_presence": { "type": ["string", "null"], "enum": ["none", "b-roll", "talking-head", "story", null] },
+    "ui_fidelity": { "type": ["string", "null"], "enum": ["skeleton", "stylized", "real", "none", null] },
+    "transitions": { "type": ["array", "null"], "items": { "type": "string" } },
+    "proof_type": { "type": ["string", "null"] },
+    "sound_notes": { "type": ["string", "null"] },
+    "patterns": { "type": ["array", "null"], "items": { "type": "integer" }, "description": "pattern ids from references/patterns.md" },
+    "lessons": { "type": ["array", "null"], "items": { "type": "string" } }
+  }
+}

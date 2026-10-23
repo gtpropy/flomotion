@@ -12,6 +12,7 @@ import {
 import { registry } from "@codecut/components";
 import { readLedger } from "@codecut/render";
 import { Context, type Deps } from "./context.js";
+import { logActivity, summarizeArgs, summarizeResult } from "./activity.js";
 import { outlineOf, type ToolDef } from "./tools/util.js";
 import {
   elementAdd,
@@ -92,9 +93,9 @@ export interface CodeCutServer {
 export function createServer(root: string, deps: Deps = {}): CodeCutServer {
   const ctx = new Context(root, deps);
   const server = new McpServer(
-    { name: CODECUT_NAME.toLowerCase(), version: "0.2.0" },
+    { name: "flomotion", version: "0.3.0" },
     {
-      instructions: `${CODECUT_NAME} edits a video that is one TSX file. Every tool works on the project in ${ctx.root}. Writes return a patch, a description and an undo token. Errors are typed with a fix hint. You cannot hear audio or judge taste: describe what you measured and ask the user to listen and approve.`,
+      instructions: `${CODECUT_NAME} (flomotion) edits a video that is one TSX file. Every tool works on the project in ${ctx.root}. Writes return a patch, a description and an undo token. Errors are typed with a fix hint. You cannot hear audio or judge taste: describe what you measured and ask the user to listen and approve.`,
     },
   );
 
@@ -108,8 +109,19 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
         annotations: { readOnlyHint: !!t.readOnly, destructiveHint: false },
       },
       async (args: unknown): Promise<CallToolResult> => {
+        const began = Date.now();
         try {
           const out = await t.run(args as never, ctx);
+          const data = out.data as { description?: unknown; undoToken?: unknown } | undefined;
+          logActivity(ctx.root, {
+            t: began,
+            tool: t.name,
+            args: summarizeArgs(args),
+            ok: true,
+            ms: Date.now() - began,
+            summary: summarizeResult(t.name, out.data),
+            undo: typeof data?.undoToken === "string" ? data.undoToken : undefined,
+          });
           const content: CallToolResult["content"] = [
             { type: "text", text: JSON.stringify(out.data, null, 2) },
           ];
@@ -127,6 +139,19 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
           }
           return { content };
         } catch (e) {
+          const err = isCodeCutError(e)
+            ? `${e.code}: ${e.message}`
+            : e instanceof Error
+              ? e.message
+              : String(e);
+          logActivity(ctx.root, {
+            t: began,
+            tool: t.name,
+            args: summarizeArgs(args),
+            ok: false,
+            ms: Date.now() - began,
+            summary: err.slice(0, 300),
+          });
           return errorResult(e);
         }
       },

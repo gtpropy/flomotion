@@ -57,8 +57,13 @@ export class Context {
   readonly voice: VoiceService;
   readonly transcriber: Transcriber;
   private buildCache?: { key: string; mix: boolean; result: BuildResult };
+  /** Address of the live view, when it is running in this process. */
+  uiUrl?: string;
+  /** Where builds go (the live view uses its own so it never fights the agent's frame renders). */
+  readonly buildDir?: string;
 
-  constructor(root: string, deps: Deps = {}) {
+  constructor(root: string, deps: Deps = {}, opts: { buildDir?: string } = {}) {
+    this.buildDir = opts.buildDir;
     this.store = new ProjectStore(root);
     this.deps = deps;
     const env = deps.env ?? process.env;
@@ -105,6 +110,7 @@ export class Context {
     const result = await buildLoaded(loaded, {
       mix: opts.mix === true,
       targetLufs: opts.targetLufs,
+      outDir: this.buildDir,
     });
     this.buildCache = { key, mix: opts.mix === true, result };
     return result;

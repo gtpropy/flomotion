@@ -1,6 +1,6 @@
 # Gate 2: manual checklist (a real Claude Code session)
 
-**Status: unverified.** Nothing in this repository has been run in a real Claude Code session with the `motion-studio` skill. The automated flow test (`tests/e2e/gate2-flow.test.ts`) plays the skill's steps through the MCP SDK client against test doubles. It proves the tools compose in the skill's order and enforce its gates. It does not prove that Claude follows the skill, writes good scenes, or that the live services behave like the doubles. Run this checklist to find out, and tell me what breaks.
+**Status: unverified.** Nothing in this repository has been run in a real Claude Code session with the `flomotion-studio` skill. The automated flow test (`tests/e2e/gate2-flow.test.ts`) plays the skill's steps through the MCP SDK client against test doubles. It proves the tools compose in the skill's order and enforce its gates. It does not prove that Claude follows the skill, writes good scenes, or that the live services behave like the doubles. Run this checklist to find out, and tell me what breaks.
 
 Allow about an hour and a cheap amount of money: the only paid step is the optional ElevenLabs voice.
 
@@ -34,14 +34,14 @@ Make an empty folder for the video and register the server **in that folder's sc
 
 ```bash
 mkdir ~/videos/pulse && cd ~/videos/pulse
-claude mcp add codecut \
+claude mcp add flomotion \
   -e FREESOUND_API_KEY=$FREESOUND_API_KEY \
   -e ELEVENLABS_API_KEY=$ELEVENLABS_API_KEY \
-  -- node /ABSOLUTE/PATH/TO/codeCut/packages/cli/dist/bin.mjs mcp --dir .
-node /ABSOLUTE/PATH/TO/codeCut/packages/cli/dist/bin.mjs skill install      # copies the skill to ./.claude/skills/motion-studio
+  -- node /ABSOLUTE/PATH/TO/codeCut/packages/cli/dist/bin.mjs mcp --dir . --ui
+node /ABSOLUTE/PATH/TO/codeCut/packages/cli/dist/bin.mjs install skill      # copies the skill to ~/.claude/skills/flomotion-studio (add --project for ./.claude/skills)
 ```
 
-Leave out the `-e` lines for keys you do not have. Then start `claude` in that folder and run `/mcp`: the `codecut` server must be connected and list 30 tools. Run `/skills` (or ask "what skills do you have?"): `motion-studio` must be there.
+Leave out the `-e` lines for keys you do not have. Then start `claude` in that folder and run `/mcp`: the `flomotion` server must be connected and list 30 tools. Run `/skills` (or ask "what skills do you have?"): `flomotion-studio` must be there. The server was started with `--ui`: its stderr line `live view: http://127.0.0.1:4317` (also in the `ui` field of `project_read`) is the live view address; open it before you start and keep it beside the terminal.
 
 Pass: server connected, 30 tools, skill listed. If the server is not connected, run the command after `mcp` by hand in a terminal and read its stderr.
 
@@ -73,6 +73,7 @@ Watch for each item. Write "pass", "fail" or "n/a" and a note.
 4. **Check `renders/<id>-final.licenses.json`** for `problems`. A generated ElevenLabs voice shows "not cleared for commercial use" unless you set `ELEVENLABS_COMMERCIAL_OK=1`; confirm your plan before publishing.
 5. **Open `project.tsx`.** Is it readable? Would it diff cleanly in git? Run `git init && git add . && git commit` and make a one-line change by hand; render again.
 6. **Undo works:** ask Claude to undo its last change (it uses `history_restore`), check the file went back.
+7. **The live view tells the truth.** While Claude works, the activity list should show each tool call within about a second, with the same description Claude reports; the progress list should follow the gate files Claude writes (`brief.json`, `script.json`, `storyboard.json`); the preview scrubber should render the current file; the Restore button on the History tab should put an earlier version back. Note anything that lags, shows stale data, or disagrees with what Claude says it did.
 
 ## 4. Live services: what each test double hides
 

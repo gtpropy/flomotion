@@ -145,3 +145,25 @@ master LUFS (-14).
 17 checks decided from the compiled project (baked channels give motion and static gaps), the lint, the ledger,
 the measured mix, and `hyperframes check` for layout and contrast. Statuses: pass, fail, warn, manual, skipped.
 Manual items are for the agent's second pass over the contact sheet; the tool never marks them as passed.
+
+## 9. Live view (`flomotion ui`, `flomotion mcp --ui`)
+
+A small local web page that shows what the agent is doing while it makes the video. `codecut ui` serves it for a
+folder; `codecut mcp --ui` serves it from the MCP process (the address goes to stderr and into the `ui` field of
+`project_read` and `project_create`). It binds `127.0.0.1` only and answers only requests whose `Host` is
+localhost (no DNS rebinding); the page loads nothing from the network.
+
+- **Activity:** every tool call is appended to `.codecut/activity.jsonl` by the MCP server (tool, shortened
+  arguments, ok, duration, one-line summary, undo token). The page lists them newest first.
+- **State:** `GET /api/state` gives the outline and timeline (from evaluating the TSX; a file that fails to load
+  keeps the last good picture and shows the error), history, activity, the ledger, the last `review` result
+  (`.codecut/review/last.json`), gate files (`interview.md brief.json script.json storyboard.json LOG.md`), renders
+  and frames. Changes reach the page over Server-Sent Events (`/events`), which polls the files twice a second.
+- **Preview:** `GET /api/frame?t=` builds the project in its own folder (`.codecut/ui-build`, never the agent's)
+  and snapshots one frame, one build at a time, cached while the files are unchanged.
+- **Files:** `/files/...` serves only frames, sheets, previews, renders and assets (with range requests for video).
+  Source, ledger internals, history and the activity log are never served.
+- **Restore:** `POST /api/restore {id}` (requires a custom header so other sites cannot call it) restores a snapshot
+  and is logged and undoable like any write.
+
+It is a viewer with undo, not an editor: edits are made by the agent (or by hand in the file).
