@@ -29,6 +29,7 @@ flomotion-studio/
     review.md                   review protocol and rubric
     anti-patterns.md            mistakes with before/after
     mcp-tools.md                the real tool list and call order
+    assets.md                   where graphics come from, the asset plan, permission rules
     block-recipes.md            TSX recipes for the 13 core blocks (linted by tests)
     components.md               generated from the schemas
   looks/
@@ -61,7 +62,7 @@ Claude loads `SKILL.md` on a video request and reads references only when a step
 ## What is verified and what is not
 
 - Verified: all JSON files parse; file structure is complete.
-- Reconciled with the real tool list (v0.3.0): `references/mcp-tools.md` now names the 30 tools the server exposes, and `references/checks.md` says which checks `review` computes and which you compute. The three looks exist in the engine as `theme="$look.clean-light"` etc. The recipes in `references/block-recipes.md` are linted by the package's tests.
+- Reconciled with the real tool list (v0.3.0): `references/mcp-tools.md` named the 30 tools the server had then (39 from v0.4.0), and `references/checks.md` says which checks `review` computes and which you compute. The three looks exist in the engine as `theme="$look.clean-light"` etc. The recipes in `references/block-recipes.md` are linted by the package's tests.
 - Not verified: nothing here has been run in a real Claude Code session yet (see `docs/gate2-manual-checklist.md` in the package).
 - The reference annotations come from **still frames only**. Timings, sound and exact motion are inferred or marked `null`. Fill them from your own viewing.
 - All thresholds are starting guesses. Tune them from your ratings (see `evals/README.md`).

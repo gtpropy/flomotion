@@ -155,6 +155,35 @@ export class ElevenLabsProvider implements VoiceProvider {
   ext() {
     return ".mp3";
   }
+  /** The account's character allowance, from `GET /v1/user/subscription`. Read-only; never spends anything. */
+  async account(): Promise<
+    { tier?: string; used: number; limit: number; remaining: number } | undefined
+  > {
+    const key = this.opts.apiKey ?? this.env.ELEVENLABS_API_KEY;
+    if (!key) return undefined;
+    try {
+      const res = await (this.opts.fetch ?? fetch)(`${ELEVEN_BASE}/user/subscription`, {
+        headers: { "xi-api-key": key },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (!res.ok) return undefined;
+      const j = (await res.json()) as {
+        tier?: string;
+        character_count?: number;
+        character_limit?: number;
+      };
+      if (typeof j.character_limit !== "number") return undefined;
+      const used = j.character_count ?? 0;
+      return {
+        tier: j.tier,
+        used,
+        limit: j.character_limit,
+        remaining: Math.max(0, j.character_limit - used),
+      };
+    } catch {
+      return undefined;
+    }
+  }
   async generate(req: VoiceRequest, dest: string) {
     const key = this.opts.apiKey ?? this.env.ELEVENLABS_API_KEY;
     if (!key)
@@ -237,6 +266,16 @@ export class VoiceService {
   }
   private quotes(): Record<string, VoiceQuote & { used?: boolean }> {
     return existsSync(this.quotesFile) ? JSON.parse(readFileSync(this.quotesFile, "utf8")) : {};
+  }
+
+  /** What the account can afford, for providers that can say (ElevenLabs). */
+  async account(id: string) {
+    const p = this.providers.get(id as VoiceProviderId) as
+      { account?: () => Promise<unknown> } | undefined;
+    return p?.account
+      ? ((await p.account()) as
+          { tier?: string; used: number; limit: number; remaining: number } | undefined)
+      : undefined;
   }
 
   private provider(id: string): VoiceProvider {

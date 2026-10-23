@@ -7,7 +7,7 @@ import { bundle } from "./bundle.mjs";
 const OUT = ".publish";
 const root = JSON.parse(readFileSync("package.json", "utf8"));
 const cli = JSON.parse(readFileSync("packages/cli/package.json", "utf8"));
-const version = "0.3.0";
+const version = "0.4.0";
 
 await bundle();
 rmSync(OUT, { recursive: true, force: true });

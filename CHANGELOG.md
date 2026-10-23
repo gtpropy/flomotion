@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.0: setup, your own material, and assets (unreleased)
+
+- **`flomotion setup`:** a guided setup (also `setup show | check | set | unset | sounds`, and `--yes`). You choose
+  how you supply the voiceover, the word timings, the sound effects and the graphics (your own recording,
+  transcript, sound files, logos and screenshots, or Freesound, ElevenLabs, Whisper, Pexels), and enter the keys that
+  go with it. Each key is checked with its real service (read-only) and saved only on your computer (`~/.config/
+flomotion/config.json`, mode 0600). It can also install the skill and add flomotion to Claude Code.
+- **Your own material:** `voice_import`, `transcript_import` (SRT, VTT, word-level JSON, lines with times, or plain
+  text, with an honest precision: word, cue, estimated), `sound_import`, a searchable library of your own sound
+  folder, and `asset_import`. Files may be anywhere on your computer; credentials and key folders are never read.
+- **Assets:** `asset_search` and `asset_get` for icons, emoji, brand logos (trademark: needs permission), photos and
+  illustrations (Iconify, Openverse, Pexels); `asset_capture` for sharp screenshots of your own product;
+  `brand_extract` for your site's colours, fonts and logos. Licences are classified, share-alike and
+  non-commercial refused, CC-BY credited, everything in the ledger; `lint` and the licence report cover images.
+- `setup_status` tool: the agent checks what exists before it plans, and tells you what is missing.
+- ElevenLabs quotes show your account's remaining characters. The server identifies itself as `flomotion` 0.4.0.
+- Skill: `flomotion-studio` 0.4.0 (Round 0 of the interview, `assets.md`, asset plan at G4, own material).
+- Tested: every tool, the wizard (scripted and piped), the key checks against local servers, Iconify and Openverse
+  for real, screenshots and brand extraction against a local site.
+- Not verified: Freesound, ElevenLabs and Pexels with real keys, Whisper, and the hidden key prompt on a real terminal.
+
 ## 0.3.0: the flomotion-studio skill, install command and live view (unreleased)
 
 - **Skill:** `skills/flomotion-studio` (the main director skill: extensive interview, gates G0 to G6, looks, scene

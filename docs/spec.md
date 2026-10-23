@@ -93,7 +93,7 @@ rippleDelete snap lockTrack muteTrack soloTrack addMarker removeMarker`, as `edi
 
 ## 8. MCP server (§10.1)
 
-`codecut mcp --dir <project>` (or `npx -y flomotion mcp`) serves 30 tools over stdio for one project folder. All
+`codecut mcp --dir <project>` (or `npx -y flomotion mcp`) serves 39 tools over stdio for one project folder. All
 paths are checked to stay inside it (`path_outside_project`). Every write returns `{ description, patches,
 undoToken }`; the undo token is the id of the history snapshot taken before the write (`history_restore`).
 Errors are `{ error: { code, message, fix, details } }` with `isError: true`. Codes: `schema_violation`,
@@ -101,20 +101,23 @@ Errors are `{ error: { code, message, fix, details } }` with `isError: true`. Co
 `unknown_element`, `duplicate_keyframe`, `invalid_time`, `impure_expression`, `missing_dependency`,
 `path_outside_project`, `font_error`, `render_failed`, `invalid_edit`.
 
-| Tool                                                                     | Does                                                                                                             |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| `project_create` `project_read`                                          | scaffold (blank, saas-promo) and outline (`path` = element id, `depth`); first read writes stable `cc_` ids      |
-| `element_add` `element_set` `element_remove` `element_move` `effect_add` | structured edits, props validated by the component schema                                                        |
-| `keyframe_set`                                                           | replaces all keys of an animatable prop; times snap to the frame grid                                            |
-| `edit`                                                                   | any timeline op (§7) or keyframe op (§6)                                                                         |
-| `scene_write`                                                            | replace an element with TSX you write: parsed, impurity-scanned, imports added, linted; restored if it fails     |
-| `lint`                                                                   | schema, determinism, fonts, ledger, text rules; `scope` limits to a subtree                                      |
-| `frame_render` `contact_sheet`                                           | exact-time PNG, tiled JPG (images are returned to the model)                                                     |
-| `sound_search` `sound_get` `sound_auto`                                  | Freesound (key) or `sounds/catalog.json`; CC0/CC-BY by default; peak measured; ledger                            |
-| `font_search` `font_get` `font_list` `font_preview` `font_check`         | Google Fonts metadata (key), download + lock + ledger, usage, PNG sample, glyph coverage                         |
-| `transcribe` `voice_quote` `voice_generate` `align_to_voice`             | whisper.cpp via hyperframes, quote then `confirm:true`, retime to spoken words                                   |
-| `mix_preview` `render` `review`                                          | offline mix with measured loudness; presets draft/social/final with credits + licence report; 17-point checklist |
-| `history_list` `history_restore`                                         | snapshots of the TSX file                                                                                        |
+| Tool                                                                     | Does                                                                                                                                         |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `project_create` `project_read`                                          | scaffold (blank, saas-promo) and outline (`path` = element id, `depth`); first read writes stable `cc_` ids                                  |
+| `element_add` `element_set` `element_remove` `element_move` `effect_add` | structured edits, props validated by the component schema                                                                                    |
+| `keyframe_set`                                                           | replaces all keys of an animatable prop; times snap to the frame grid                                                                        |
+| `edit`                                                                   | any timeline op (§7) or keyframe op (§6)                                                                                                     |
+| `scene_write`                                                            | replace an element with TSX you write: parsed, impurity-scanned, imports added, linted; restored if it fails                                 |
+| `lint`                                                                   | schema, determinism, fonts, ledger, text rules; `scope` limits to a subtree                                                                  |
+| `frame_render` `contact_sheet`                                           | exact-time PNG, tiled JPG (images are returned to the model)                                                                                 |
+| `sound_search` `sound_get` `sound_auto`                                  | Freesound (key) or `sounds/catalog.json`; CC0/CC-BY by default; peak measured; ledger                                                        |
+| `font_search` `font_get` `font_list` `font_preview` `font_check`         | Google Fonts metadata (key), download + lock + ledger, usage, PNG sample, glyph coverage                                                     |
+| `transcribe` `voice_quote` `voice_generate` `align_to_voice`             | whisper.cpp via hyperframes, quote then `confirm:true`, retime to spoken words                                                               |
+| `mix_preview` `render` `review`                                          | offline mix with measured loudness; presets draft/social/final with credits + licence report; 17-point checklist                             |
+| `history_list` `history_restore`                                         | snapshots of the TSX file                                                                                                                    |
+| `setup_status`                                                           | what is set up and what is missing, by job; never returns a key                                                                              |
+| `voice_import` `transcript_import` `sound_import` `asset_import`         | the person's own recording, transcript or captions, sound files, images and video, from anywhere on their computer, with their stated rights |
+| `asset_search` `asset_get` `asset_capture` `brand_extract`               | icons, emoji, logos, photos, illustrations from open sources; screenshots and brand from the person's own site                               |
 
 Resources: `codecut://schema/{component}` (JSON schema + docs), `codecut://project/outline`, `codecut://ledger`,
 `codecut://looks`.
@@ -167,3 +170,39 @@ localhost (no DNS rebinding); the page loads nothing from the network.
   and is logged and undoable like any write.
 
 It is a viewer with undo, not an editor: edits are made by the agent (or by hand in the file).
+
+## 10. Setup, the person's own material, and assets
+
+**`flomotion setup`** asks how the person wants to supply voice, word timings, sound effects and graphics, and saves
+the keys that go with their choices to `~/.config/flomotion/config.json` (or `$FLOMOTION_CONFIG`; mode 0600; never
+in the project, never sent to the model). Every key is optional and checked against its service with one read-only
+request (Freesound search, ElevenLabs `GET /v1/user/subscription`, Google Fonts, Pexels). Real environment
+variables win over saved keys. `setup show | check | set <name> [key] | unset <name> | sounds <folder> --rights`,
+and `setup --yes` to save keys that are already in the environment. A folder of the person's own sounds is indexed by
+name (tags from file and folder names) into `sound-library.json` next to the config; lengths are measured when a
+sound is found, not when indexed.
+
+**Voice and timings.** `voice_import` copies a recording in (assets/voice) and records it as the person's;
+`transcript_import` turns SRT, VTT, word-level JSON (Whisper, ElevenLabs alignment, hyperframes), segment JSON,
+lines starting with a time, or plain text into `<audio>.words.json` and reports the **precision**: `word` (exact),
+`cue` (a time per line; words spread by length), `estimated` (plain text spread over the audio length). The
+quote for a paid voice shows the real remaining allowance of the account.
+
+**Sounds.** Your own files (project `sounds/catalog.json`, the library index, `sound_import`) are searched first,
+then Freesound. They are used as `local:ID`. A row with a stated `rights` is always allowed; the person's statement
+is recorded in the ledger as `rights asserted by the person`, never verified.
+
+**Assets.** Sources: Iconify (icons, emoji, brand logos; per-set SPDX licence from its API; no key), Openverse
+(photos and illustrations, filtered to CC0, PDM and CC-BY; no key), Pexels (key). Allowed licence classes by default:
+CC0, permissive (MIT, Apache, ISC, BSD, OFL), CC-BY; share-alike, non-commercial and unknown are refused
+(`codecut.json` `assetLicenses` narrows it). Brand logos are trademarks and need `permission:true`. Files go to
+`assets/third-party/<source>/` (pulled), `assets/captures/` (screenshots), `assets/brand/` (from the person's site),
+`assets/imported/` (the person's own), each with a ledger entry (`assetKind`, licence, author, hash, source URL).
+SVG that contains scripts, event handlers, `foreignObject` or external references is refused. `lint` requires a
+ledger entry for any Image, Svg or Video under those folders and refuses one that is not cleared for commercial use;
+the render's credits file lists CC-BY assets and, separately, credits a source asks for but the licence does not
+require. `asset_capture` and `brand_extract` need `permission:true` (the person owns the page or may show it) and
+use headless Chrome and the network once; `asset_capture` dismisses `alert()` dialogs and can hide elements.
+
+Reading the person's files: only audio, image, video, caption and transcript types; never `.env`, `.ssh`, `.aws`,
+`.gnupg`, keychains, `id_rsa`, `.npmrc` and the like.

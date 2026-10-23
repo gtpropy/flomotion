@@ -56,6 +56,29 @@ describe("skills/flomotion-studio: the package's main director skill", () => {
     expect(md).toMatch(/Never invent the brief/);
     expect(md).toMatch(/voice_quote[\s\S]*confirm:true/);
   });
+  it("tells the agent to check the setup first and to use the person's own material", () => {
+    expect(md).toMatch(/setup_status/);
+    expect(md).toMatch(/flomotion setup/);
+    expect(md).toMatch(/never ask for a key in the chat/i);
+    const interview = read("references/interview.md");
+    expect(interview).toMatch(/Round 0/);
+    for (const t of [
+      "setup_status",
+      "voice_import",
+      "transcript_import",
+      "sound_import",
+      "asset_import",
+      "brand_extract",
+      "asset_capture",
+    ])
+      expect(
+        interview + read("references/workflow.md") + read("references/assets.md"),
+        t,
+      ).toContain(t);
+    expect(read("references/assets.md")).toMatch(/trademark/);
+    expect(read("references/assets.md")).toMatch(/permission/);
+    expect(read("references/workflow.md")).toMatch(/asset plan/i);
+  });
   it("tells the agent about the live view", () => {
     expect(md).toMatch(/flomotion ui/);
     expect(md).toMatch(/brief\.json/);
@@ -80,10 +103,10 @@ describe("skills/flomotion-studio: the package's main director skill", () => {
       expect(docs, gone).not.toContain(gone);
     const named = new Set([...docs.matchAll(/`([a-z]+_[a-z_]+)`/g)].map((m) => m[1]!));
     const toolLike = [...named]
-      .filter((n) => n !== "font_error")
+      .filter((n) => !["font_error", "asset_missing"].includes(n)) // error codes, not tools
       .filter(
         (n) =>
-          /^(project|element|effect|keyframe|scene|frame|contact|sound|font|voice|history|mix)_/.test(
+          /^(project|element|effect|keyframe|scene|frame|contact|sound|font|voice|history|mix|setup|asset|transcript|brand)_/.test(
             n,
           ) || n === "align_to_voice",
       );

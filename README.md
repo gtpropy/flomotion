@@ -73,7 +73,7 @@ the font id and path.
 packages/core        schema system, JSX runtime, resolver, compiler, keyframes, linter, edit ops
 packages/components  76 components and effects built with defineComponent/defineEffect
 packages/render      HyperFrames wrapper, fonts, Chrome measurement, audio mix, project build
-packages/mcp         MCP server (30 tools), codemods, Freesound, voice, review
+packages/mcp         MCP server (39 tools), codemods, sounds, voice, assets, review
 packages/cli         the codecut CLI
 skills/flomotion-studio the director skill: interview, gates, looks, block recipes, checks
 examples/            saas-promo (30 s, 9:16) and typography (fonts test project)

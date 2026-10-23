@@ -31,8 +31,12 @@ import { contactSheet, frameRender, mixPreview, renderTool, reviewTool } from ".
 import { soundAuto, soundGet, soundSearch } from "./tools/sound.js";
 import { fontCheck, fontGet, fontList, fontPreview, fontSearch } from "./tools/fonts.js";
 import { alignToVoice, transcribe, voiceGenerate, voiceQuote } from "./tools/voice.js";
+import { soundImport, transcriptImport, voiceImport } from "./tools/import.js";
+import { assetCapture, assetGet, assetImport, assetSearch, brandExtract } from "./tools/assets.js";
+import { setupStatusTool } from "./tools/setup.js";
 
 export const TOOLS: ToolDef<any>[] = [
+  setupStatusTool,
   projectCreate,
   projectRead,
   elementAdd,
@@ -55,6 +59,14 @@ export const TOOLS: ToolDef<any>[] = [
   fontPreview,
   fontCheck,
   transcribe,
+  transcriptImport,
+  voiceImport,
+  soundImport,
+  assetSearch,
+  assetGet,
+  assetImport,
+  assetCapture,
+  brandExtract,
   voiceQuote,
   voiceGenerate,
   alignToVoice,
@@ -93,7 +105,7 @@ export interface CodeCutServer {
 export function createServer(root: string, deps: Deps = {}): CodeCutServer {
   const ctx = new Context(root, deps);
   const server = new McpServer(
-    { name: "flomotion", version: "0.3.0" },
+    { name: "flomotion", version: "0.4.0" },
     {
       instructions: `${CODECUT_NAME} (flomotion) edits a video that is one TSX file. Every tool works on the project in ${ctx.root}. Writes return a patch, a description and an undo token. Errors are typed with a fix hint. You cannot hear audio or judge taste: describe what you measured and ask the user to listen and approve.`,
     },

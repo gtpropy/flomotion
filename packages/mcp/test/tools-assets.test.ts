@@ -213,13 +213,14 @@ describe("sounds (Freesound client against a test double)", () => {
   it("falls back to sounds/catalog.json when there is no key, and errors clearly with neither", async () => {
     const dir = tmpProject("nokey");
     const bare = await connect(dir, {
-      env: {} as NodeJS.ProcessEnv,
+      env: { FLOMOTION_CONFIG: join(dir, ".no-config.json") } as NodeJS.ProcessEnv,
       fontSources: d.deps.fontSources,
       hfCheck: async () => undefined,
     });
     await bare.call("project_create", { name: "Local", size: "540x960" });
     const e = await fails(bare.call("sound_search", { query: "thud" }), "missing_dependency");
-    expect(e.fix).toContain("sounds/catalog.json");
+    expect(e.fix).toContain("flomotion setup");
+    expect(e.fix).toContain("sound_import");
     makeSound(join(dir, "sounds", "thud.wav"), { peak: 0.2, seconds: 0.6 });
     writeFileSync(
       join(dir, "sounds", "catalog.json"),
@@ -265,6 +266,16 @@ describe("voice: quote then confirm (ElevenLabs test double)", () => {
     expect(q.assumptions.join(" ")).toMatch(/verify on your plan/);
     expect(q.next).toMatch(/Do NOT call voice_generate/);
     expect(d.eleven).toHaveLength(0);
+    // the real allowance is read (free) so the quote can say whether the account can afford it
+    expect(d.elevenAccount.length).toBeGreaterThan(0);
+    expect(q.account).toMatchObject({
+      tier: "creator",
+      used: 1000,
+      limit: 100000,
+      remaining: 99000,
+      enough: true,
+    });
+    expect(q.account.note).toContain("99000 characters left");
   });
   it("refuses to run without confirm:true (typed quote_required) and spends nothing", async () => {
     const e = await fails(h.call("voice_generate", { quoteId }), "quote_required");

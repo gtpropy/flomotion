@@ -22,6 +22,14 @@ Product name; one-sentence what it does; who uses it (primary audience); job-to-
 
 ## Rounds (adapt order; skip when known)
 
+### Round 0: What is set up, and what they will supply (before anything else, one short message)
+Call `setup_status`. Tell the person, in plain words, what this machine can do and what is missing (FFmpeg, Chrome, no Freesound key, no ElevenLabs key, no Whisper). Then ask how they want to supply four things; none needs a service key:
+1. **Voiceover:** their own recording, a generated voice (ElevenLabs, paid, always quoted first), or none.
+2. **Word timings:** a transcript or captions file they already have (SRT, VTT or JSON), or Whisper on this computer, or ElevenLabs returns them with the voice.
+3. **Sound effects:** their own sound files (a folder or a few files), Freesound, or both.
+4. **Graphics:** their logo and brand files, screenshots of their product (or a public URL we can capture, with their permission), their website for brand colours and fonts; icons and stock photos can be pulled from open sources.
+If they want a service, tell them to run `flomotion setup` in a terminal (keys are saved on their computer and never pass through the chat). Never ask them to paste a key here. Record the answers in `interview.json`.
+
 ### Round 1: The product, in their words
 Ask:
 - What is it, in one sentence, as you'd explain it to a friend who has never heard of it?
@@ -56,6 +64,9 @@ Probe: "If a skeptic asked 'prove it', what would you show?"
 
 ### Round 5: Assets
 - Logo (vector?), brand guide, colors, fonts, existing videos, screenshots, screen recordings, footage, product photos, voice recordings, music you own.
+- Their website or app URL: may we read its brand (`brand_extract`) and take screenshots of it (`asset_capture`)? Only with their yes. Pages behind a login: they take the screenshots and we import them (`asset_import`).
+- Their own files can be anywhere on their computer: ask for the path and import (`asset_import`, `voice_import`, `sound_import`); the tools state what rights they assert, so ask "are these yours, or licensed to you?".
+- Customer or partner logos ("works with Slack"): brand logos are trademarks. Ask whether they have permission or the brand's guidelines allow it; otherwise use a plain wordmark in text.
 - Anything the viewer should never see (private data, real customers)?
 - Can we show real UI or must it be mocked? Is the UI recent?
 - Language(s) and any non-Latin text? Accessibility needs (captions required)?
@@ -72,7 +83,7 @@ Ask for the files; list what arrived and what is missing.
 Probe on vague words: "modern" -> which brand, which feature of it?
 
 ### Round 7: Voice, sound and music
-- Voiceover or text-only? Whose voice (own, generated)? Accent and gender preference, pace.
+- Voiceover or text-only? Whose voice (own, generated)? Accent and gender preference, pace. If it is their own recording: where is the file, and do they have a transcript or captions for it (any format)? A line-level caption file is enough for captions; word-level (Whisper, ElevenLabs, a caption tool) is needed to start things exactly on a word.
 - Music mood (examples of artists/tracks for *mood only*), instrumental only?
 - Sound design appetite: subtle clicks, punchy impacts, none?
 - Pronunciation of the brand name and key terms.
@@ -101,7 +112,7 @@ Write a one-page summary in their words and show it:
 4. Proof available (with sources) and proof missing
 5. Format, length, platform
 6. Taste: adjectives, do/don't, chosen style family and look direction, references liked/disliked
-7. Voice, sound, language
+7. Voice, sound, language, and how each is supplied (their recording and transcript, their sound files, generated, Freesound)
 8. Constraints and risks
 9. **Assumptions I am making** (each with a default you can accept or change)
 10. **Open items** (what I still do not know and how I will handle it)

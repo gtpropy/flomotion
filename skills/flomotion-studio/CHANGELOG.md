@@ -2,6 +2,12 @@
 
 Format: date, what changed, why (evidence), effect on the 10-brief eval.
 
+## 2026-10-25: v0.4.0 (flomotion 0.4.0)
+- Setup and the person's own material: `setup_status` first; Round 0 of the interview asks how voice, word timings, sound effects and graphics will be supplied (own files first, services optional). New tools in `mcp-tools.md`: `voice_import`, `transcript_import` (with precision: word, cue, estimated), `sound_import`, `asset_import`.
+- `references/assets.md`: where each SaaS graphic comes from (icons, logos with permission, screenshots, brand from the person's site, photos), the asset plan in the storyboard, permission rules. New tools: `asset_search`, `asset_get`, `asset_capture`, `brand_extract`.
+- `workflow.md`: materials check at G0, asset plan at G4, asset pulling before the draft build. `sound.md`: own sound files and own transcripts.
+- Evidence: package tests (every tool, live Iconify and Openverse, the setup wizard, skill structure). Eval on the 10 briefs: not run.
+
 ## 2026-10-24: v0.3.0 (shipped in the flomotion package)
 - Reconciled with the real MCP: `references/mcp-tools.md` rewritten with the 30 real tools, call order, error codes; `references/checks.md` says which checks `review` computes (17) and which the agent computes or cannot run; `sound.md` uses the real sound tags and `sound_auto`.
 - Added `references/block-recipes.md` (13 core blocks as TSX, linted by the package tests) and `references/components.md` (generated).

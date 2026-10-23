@@ -66,9 +66,22 @@ export const voiceQuote = tool({
       voice: a.voice,
       model: a.model,
     });
+    const account = q.spends ? await ctx.voice.account(a.provider) : undefined;
     return {
       data: {
         ...q,
+        ...(account
+          ? {
+              account: {
+                ...account,
+                enough: account.remaining >= q.credits,
+                note:
+                  account.remaining >= q.credits
+                    ? `The account has ${account.remaining} characters left this period, enough for this.`
+                    : `The account has only ${account.remaining} characters left this period; this needs about ${q.credits}.`,
+              },
+            }
+          : {}),
         next: q.spends
           ? "Show this quote to the user. Do NOT call voice_generate until they agree; then pass confirm:true."
           : "Free. Call voice_generate with this quoteId.",

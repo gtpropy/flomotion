@@ -15,6 +15,11 @@ export * from "./providers/voice.js";
 export * from "./providers/transcribe.js";
 export { PRESETS } from "./tools/media.js";
 export * from "./activity.js";
+export * from "./config.js";
+export * from "./assets.js";
+export * from "./providers/assets.js";
+export * from "./providers/library.js";
+export * from "./providers/transcript.js";
 export { startUi, type UiOptions, type UiServer } from "./ui/server.js";
 
 /** Serve the MCP server for `root` over stdio (what `codecut mcp` and `npx codecut mcp` run). */

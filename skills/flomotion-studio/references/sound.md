@@ -27,6 +27,9 @@ You cannot hear audio. You can search, transcribe, measure levels, and place sou
 5. Silence is a tool: a 0.3-0.6 s drop before a turn increases impact.
 6. Music: start under the hook, rise slightly at the turn, resolve under the CTA; fade out within the last 0.5 s after the final frame's key text.
 
+## Their own sound effects
+If the person has sound files: `sound_import` (a file, or a folder up to 40 files; they state `rights`). For a big library they run `flomotion setup` and point it at the folder; then `sound_search` finds them by file and folder names. Your own sounds are searched first, then Freesound if a key is set. They are used as `local:ID`, with the same measured peak and ledger entry. Their rights are what they told you: nothing checks them, so ask "are these yours or licensed to you?".
+
 ## Freesound flow (via the flomotion MCP)
 1. `sound_auto` (dry run) lists impact effects (Shake, Slam, Thud, PunchZoom...) that have no sound on their frame. Apply it, or search by hand: `sound_search` with a job `tag` (`ui/pop ui/tap ui/tick move/whip move/whoosh-deep hit/land hit/punch hit/boom tech/click tech/data tech/glass tech/success tech/glitch`) and your own query words; the server already limits to `CC0` and `CC-BY` (set `soundLicenses` in `codecut.json` to restrict) and marks allowed results.
 2. Pick 2-3 candidates per slot; `sound_get` downloads the file (with only an API key this is the HQ MP3 preview), measures the **peak** and writes the ledger. Pass `tag` so the peak is named after the job (`hit/land` gives `peak="land"`).
@@ -46,7 +49,7 @@ Mix measured: LUFS -14.2, true peak -1.8 dBTP, voice margin 13 dB (pass)
 ```
 
 ## Voice
-- Own recording: `transcribe` to get word times; `align_to_voice` snaps key times to words.
+- Own recording: `voice_import` copies it in from wherever it is. Word times: if they have a transcript or captions, `transcript_import` (SRT, VTT, word-level JSON, lines with times, or plain text). Say how exact it is: **word** (Whisper, ElevenLabs) is exact; **cue** (captions) is line-level, fine for captions, off by up to a line for a word-tied move; **estimated** (plain text) is a rough guide, so ask for captions or run Whisper before you promise sync. Otherwise `transcribe` (Whisper). `align_to_voice` snaps key times to words.
 - Generated voice: `voice_quote` first (cost, duration), wait for the person's confirm, then `voice_generate`. Language and pronunciation of brand names to be confirmed by the person.
 - No voice: captions carry the narration; ensure caption reading speed passes.
 

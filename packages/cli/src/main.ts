@@ -16,11 +16,32 @@ import {
   syncFonts,
   hyperframesVersion,
   lintProjectDir,
+  collectAssetSrcs,
   licenseReport,
   readLedger,
 } from "@codecut/render";
 import { registry, docsMarkdown, docsIndexMarkdown } from "@codecut/components";
-import { serveStdio, startUi } from "@codecut/mcp";
+import {
+  KEY_NAMES,
+  checkKey,
+  configPath,
+  indexSoundLibrary,
+  libraryIndexPath,
+  readConfig,
+  serveStdio,
+  startUi,
+  writeConfig,
+  type KeyName,
+} from "@codecut/mcp";
+import {
+  addKeyInteractive,
+  checkAll,
+  importFromEnv,
+  registerWithClaude,
+  runWizard,
+  summary,
+  terminalIO,
+} from "./setup.js";
 
 const fail = (e: unknown): never => {
   if (isCodeCutError(e)) {
@@ -75,6 +96,7 @@ const render = defineCommand({
         b.audio,
         b.fontsUsed,
         b.fonts.map((f) => f.family),
+        collectAssetSrcs(b.loaded.node),
       );
       const stem = r.output.replace(/\.mp4$/, "");
       writeFileSync(
@@ -442,7 +464,160 @@ const skill = defineCommand({
   subCommands: { install: skillInstallLegacy },
 });
 
+const setupShow = defineCommand({
+  meta: { name: "show", description: "Show what is set up (keys are masked)" },
+  run() {
+    const io = terminalIO();
+    summary(io, readConfig(), process.env);
+    io.say();
+    io.say(`Config file: ${configPath()}`);
+    io.close();
+  },
+});
+const setupCheck = defineCommand({
+  meta: {
+    name: "check",
+    description: "Test every saved key against its service (free, read-only)",
+  },
+  async run() {
+    const io = terminalIO();
+    const ok = await checkAll(io, { env: process.env });
+    io.close();
+    if (!ok) process.exit(1);
+  },
+});
+const setupSet = defineCommand({
+  meta: {
+    name: "set",
+    description: "Save one key: setup set freesound|elevenlabs|googleFonts|pexels [key]",
+  },
+  args: {
+    name: {
+      type: "positional",
+      required: true,
+      description: "freesound, elevenlabs, googleFonts or pexels",
+    },
+    key: {
+      type: "positional",
+      required: false,
+      description: "The key (omit to be asked without it showing on screen)",
+    },
+  },
+  async run({ args }) {
+    const io = terminalIO();
+    try {
+      const name = String(args.name) as KeyName;
+      if (!KEY_NAMES.includes(name))
+        throw new CodeCutError("invalid_value", `Unknown key "${name}"`, {
+          fix: `One of: ${KEY_NAMES.join(", ")}`,
+        });
+      const cfg = readConfig();
+      if (args.key) {
+        const r = await checkKey(name, String(args.key));
+        io.say(`${r.ok ? "✔" : "✖"} ${r.detail}`);
+        if (r.rejected) process.exit(1);
+        cfg.keys[name] = String(args.key);
+        writeConfig(cfg);
+        io.say(`Saved to ${configPath()}`);
+      } else {
+        const ok = await addKeyInteractive(io, cfg, name);
+        if (ok) writeConfig(cfg);
+      }
+    } catch (e) {
+      fail(e);
+    } finally {
+      io.close();
+    }
+  },
+});
+const setupUnset = defineCommand({
+  meta: { name: "unset", description: "Forget one saved key" },
+  args: { name: { type: "positional", required: true } },
+  run({ args }) {
+    const name = String(args.name) as KeyName;
+    if (!KEY_NAMES.includes(name))
+      return fail(
+        new CodeCutError("invalid_value", `Unknown key "${name}"`, {
+          fix: `One of: ${KEY_NAMES.join(", ")}`,
+        }),
+      );
+    const cfg = readConfig();
+    delete cfg.keys[name];
+    writeConfig(cfg);
+    console.log(`Removed the ${name} key from ${configPath()}`);
+  },
+});
+const setupSounds = defineCommand({
+  meta: {
+    name: "sounds",
+    description: "Index a folder of your own sound effects so Claude can search it",
+  },
+  args: {
+    folder: { type: "positional", required: true },
+    rights: { type: "boolean", description: "I have the right to use these sounds in videos" },
+  },
+  run({ args }) {
+    try {
+      const idx = indexSoundLibrary(resolve(String(args.folder)), libraryIndexPath(), {
+        rights: !!args.rights,
+      });
+      const cfg = readConfig();
+      cfg.preferences.soundLibrary = idx.root;
+      cfg.preferences.soundLibraryRights = true;
+      cfg.preferences.sounds = cfg.keys.freesound ? "both" : "own";
+      writeConfig(cfg);
+      console.log(`✔ Indexed ${idx.entries.length} sound files from ${idx.root}`);
+    } catch (e) {
+      fail(e);
+    }
+  },
+});
+
+const setup = defineCommand({
+  meta: {
+    name: "setup",
+    description:
+      "Choose how you work (your own recording, transcript, sounds, or services) and save API keys",
+  },
+  args: {
+    yes: { type: "boolean", description: "No questions: save the keys already in the environment" },
+    skill: { type: "boolean", description: "With --yes: also install the skill" },
+    mcp: {
+      type: "boolean",
+      description: "With --yes: also register the MCP server with Claude Code",
+    },
+  },
+  subCommands: {
+    show: setupShow,
+    check: setupCheck,
+    set: setupSet,
+    unset: setupUnset,
+    sounds: setupSounds,
+  },
+  async run({ args, rawArgs }) {
+    // a subcommand name was given: citty already ran it
+    if (rawArgs.some((a) => ["show", "check", "set", "unset", "sounds"].includes(a))) return;
+    const io = terminalIO();
+    const ctx = {
+      env: process.env,
+      installSkill: () => installSkill({}),
+      registerMcp: registerWithClaude,
+    };
+    try {
+      if (args.yes) {
+        await importFromEnv(io, ctx);
+        if (args.skill) installSkill({});
+        if (args.mcp) io.say(registerWithClaude().message);
+      } else await runWizard(io, ctx);
+    } catch (e) {
+      fail(e);
+    } finally {
+      io.close();
+    }
+  },
+});
+
 export const main = defineCommand({
   meta: { name: "codecut", description: `${CODECUT_NAME}: a code-first video editor` },
-  subCommands: { render, frame, sheet, fonts, init, lint, docs, mcp, ui, install, skill },
+  subCommands: { setup, render, frame, sheet, fonts, init, lint, docs, mcp, ui, install, skill },
 });

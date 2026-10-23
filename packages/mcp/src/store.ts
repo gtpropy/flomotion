@@ -26,6 +26,8 @@ export interface ProjectConfig {
   entry?: string;
   /** Sound licences allowed (default CC0 and CC-BY). */
   soundLicenses?: Array<"CC0" | "CC-BY">;
+  /** Image and icon licence classes allowed (default CC0, permissive, CC-BY). */
+  assetLicenses?: Array<"CC0" | "permissive" | "CC-BY">;
   lint?: Partial<LintConfig>;
 }
 

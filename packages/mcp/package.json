@@ -11,6 +11,7 @@
     "@codecut/components": "workspace:*",
     "@codecut/render": "workspace:*",
     "@modelcontextprotocol/sdk": "latest",
+    "puppeteer-core": "^25.15.0",
     "ts-morph": "latest",
     "zod": "latest"
   },

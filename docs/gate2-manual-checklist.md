@@ -41,9 +41,9 @@ claude mcp add flomotion \
 node /ABSOLUTE/PATH/TO/codeCut/packages/cli/dist/bin.mjs install skill      # copies the skill to ~/.claude/skills/flomotion-studio (add --project for ./.claude/skills)
 ```
 
-Leave out the `-e` lines for keys you do not have. Then start `claude` in that folder and run `/mcp`: the `flomotion` server must be connected and list 30 tools. Run `/skills` (or ask "what skills do you have?"): `flomotion-studio` must be there. The server was started with `--ui`: its stderr line `live view: http://127.0.0.1:4317` (also in the `ui` field of `project_read`) is the live view address; open it before you start and keep it beside the terminal.
+Leave out the `-e` lines for keys you do not have. Then start `claude` in that folder and run `/mcp`: the `flomotion` server must be connected and list 39 tools. Run `/skills` (or ask "what skills do you have?"): `flomotion-studio` must be there. The server was started with `--ui`: its stderr line `live view: http://127.0.0.1:4317` (also in the `ui` field of `project_read`) is the live view address; open it before you start and keep it beside the terminal.
 
-Pass: server connected, 30 tools, skill listed. If the server is not connected, run the command after `mcp` by hand in a terminal and read its stderr.
+Pass: server connected, 39 tools, skill listed. If the server is not connected, run the command after `mcp` by hand in a terminal and read its stderr.
 
 ## 2. The session
 

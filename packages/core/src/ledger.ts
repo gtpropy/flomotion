@@ -18,6 +18,12 @@ export interface LedgerEntry {
   duration?: number;
   tags?: string[];
   title?: string;
+  /** What an image-like asset is: icon, logo, emoji, photo, illustration, screenshot, brand. */
+  assetKind?: "icon" | "logo" | "emoji" | "photo" | "illustration" | "screenshot" | "brand" | "own";
+  /** Credit is not required by the licence but the source asks for it (e.g. Pexels). Listed as recommended. */
+  creditRecommended?: boolean;
+  /** One line for the licence report (what the person asserted, what the licence expects). */
+  note?: string;
 }
 
 export interface Ledger {

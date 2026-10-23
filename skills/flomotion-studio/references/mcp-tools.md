@@ -1,6 +1,6 @@
 # flomotion MCP tools
 
-The server (`flomotion mcp --dir <project folder>`) exposes these 30 tools and 4 resources. They are the real list (checked by a test against the server). You call them by bare name; your client may prefix them with the server name you registered.
+The server (`flomotion mcp --dir <project folder>`) exposes these 39 tools and 4 resources. They are the real list (checked by a test against the server). You call them by bare name; your client may prefix them with the server name you registered.
 
 Every write returns `{ description, patches, undoToken }`. The undo token is a history snapshot id: `history_restore {id}` puts the file back. Every write snapshots first, so you can always go back. Errors come back as `{ error: { code, message, fix } }`: read the `fix` and act on it; do not retry the same call.
 
@@ -8,11 +8,14 @@ Every write returns `{ description, patches, undoToken }`. The undo token is a h
 
 | Phase | Tools (in order) | Notes |
 |---|---|---|
+| Setup | `setup_status` | First call of every video. Says which keys are set (never the keys), what is installed, what each job can use, and what is missing. The person adds keys with `flomotion setup` in a terminal; you never ask for a key in the chat. |
 | Project | `project_create {name, size:"1080x1920", fps, template:"blank"\|"saas-promo", look, duration}`, `project_read {path?, depth?}` | `look` is a look id: `clean-light`, `dark-product`, `bold-kinetic` (the skill's looks) or the engine's `kinetic`, `minimal`, `sketch`. `saas-promo` scaffolds six empty beat scenes (30 s); for other lengths use `blank` and write the scenes from the storyboard. `project_read` shows the outline and the `ui` address when the live view is on. |
 | Look and fonts | `font_list`, `font_get {id}` for each look font, `font_check {text, fontId}`, `font_preview {fontId, text, size}`, `font_search` | `font_get` downloads, locks the hash and writes the ledger; a new family name is added as a `<Font>`. Renders never use the network. `font_search` needs `GOOGLE_FONTS_API_KEY`. |
 | Script | (no tool) | Write `brief.json`, `script.json`, `storyboard.json`, `LOG.md` with your normal file tools in the project folder. The live view reads them. |
 | Style frames | `scene_write` (key scenes), `lint`, `frame_render {time, scale?}`, `contact_sheet {times?\|count?}` | G3. Read the PNGs: describe what you see. |
 | Build | `scene_write` per scene (or `element_add` / `element_set` / `element_remove` / `element_move` / `effect_add` / `keyframe_set` / `edit`) | `lint` after each scene. `references/block-recipes.md` has the 13 core blocks as TSX. |
+| Own material | `voice_import {source, transcript?}`, `transcript_import {audio, source\|text}`, `sound_import {source, rights, tag?}`, `asset_import {source, rights}` | The person's own recording, transcript or captions, sound files, logos, images and video, from anywhere on their computer. They state their rights; the tools record them in the ledger. |
+| Assets | `asset_search {query, kind}`, `asset_get {ref, color?, permission?}`, `asset_capture {url, permission}`, `brand_extract {url, permission}` | Icons, brand logos, emoji, photos, illustrations; screenshots of their product; their site's brand. See `assets.md`. |
 | Voice | `voice_quote {provider, text, voice}` then, after the person's yes, `voice_generate {quoteId, confirm:true}`; `transcribe {audio}` for a recording | Providers: `recording` (their file, free), `local-tts` (macOS `say`, a timing draft), `elevenlabs` (paid). ElevenLabs returns word timings itself; for a recording run `transcribe` and read the words against the script. |
 | Align | `align_to_voice {voiceId, mapping:[{id, word, edge?, prop?, offset?}]}` | Starts elements on spoken words. Do this after the voice exists. |
 | Sound | `sound_auto` (dry run, then `apply:true`), `sound_search {tag?, query?}`, `sound_get {id, tag?}`, then `element_add Sound` | Ledger entry per sound; CC0 and CC-BY only unless `codecut.json` restricts further. |

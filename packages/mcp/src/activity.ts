@@ -59,6 +59,24 @@ export function summarizeResult(tool: string, data: unknown): string {
       return `voice saved to ${d.file}${d.spent ? `, spent ${d.spent.credits} credits` : ""}`;
     case "transcribe":
       return `${d.words} words transcribed (${d.engine})`;
+    case "setup_status":
+      return `${(d.missing ?? []).length} thing(s) missing; ${Object.values(d.keys ?? {}).filter((k: any) => k.configured).length} key(s) set`;
+    case "transcript_import":
+      return `${d.words} words from the transcript (${d.precision} precision)`;
+    case "voice_import":
+      return `voice imported: ${d.file}${d.transcript ? `, ${d.transcript.words} words (${d.transcript.precision})` : ", no timings yet"}`;
+    case "sound_import":
+      return `${(d.imported ?? []).length} of the person's sound(s) imported`;
+    case "asset_search":
+      return `${n(d.results)} ${d.sources?.join("+") ?? ""} results`;
+    case "asset_get":
+      return `got ${d.ref} → ${d.path} (${d.entry?.license ?? "?"})`;
+    case "asset_import":
+      return `${n(d.imported)} file(s) imported`;
+    case "asset_capture":
+      return `screenshot ${d.path} (${d.width}x${d.height})`;
+    case "brand_extract":
+      return `brand read: ${n(d.accents)} accent colours, ${n(d.fonts)} fonts, ${n(d.logos)} logos`;
     case "project_read":
       return "read the outline";
     case "history_list":

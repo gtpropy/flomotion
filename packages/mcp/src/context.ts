@@ -14,15 +14,32 @@ import {
 import type { FontSource } from "@codecut/render";
 import type { HfCheck } from "./review.js";
 import { ProjectStore } from "./store.js";
-import { SoundService, defaultSoundProvider, type SoundProvider } from "./providers/sounds.js";
-import { VoiceService, type VoiceProvider } from "./providers/voice.js";
+import { SoundService, soundProviders, type SoundProvider } from "./providers/sounds.js";
+import { AssetService } from "./assets.js";
+import {
+  IconifyProvider,
+  OpenverseProvider,
+  PexelsProvider,
+  type AssetProvider,
+} from "./providers/assets.js";
+import { libraryIndexPath, resolveEnv } from "./config.js";
+import {
+  ElevenLabsProvider,
+  LocalTtsProvider,
+  RecordingProvider,
+  VoiceService,
+  type VoiceProvider,
+} from "./providers/voice.js";
 import { HyperframesTranscriber, type Transcriber } from "./providers/transcribe.js";
 
 /** Everything outside the process that the tools use. Tests replace these with doubles. */
 export interface Deps {
   env?: NodeJS.ProcessEnv;
   fetch?: typeof fetch;
+  /** Replaces the Freesound client (tests). Your own sounds are always searched first. */
   sound?: SoundProvider;
+  /** Replaces the asset sources (tests). */
+  assetProviders?: AssetProvider[];
   voice?: VoiceProvider[];
   transcriber?: Transcriber;
   fontSources?: FontSource[];
@@ -61,23 +78,49 @@ export class Context {
   uiUrl?: string;
   /** Where builds go (the live view uses its own so it never fights the agent's frame renders). */
   readonly buildDir?: string;
+  /** The environment as the process has it (no saved keys mixed in). */
+  readonly rawEnv: NodeJS.ProcessEnv;
+  /** Where the person's own assets and licensed sources come from. */
+  readonly assets: AssetService;
+  /** The environment the tools use: real variables first, then the keys saved by `flomotion setup`. */
+  readonly env: NodeJS.ProcessEnv;
 
   constructor(root: string, deps: Deps = {}, opts: { buildDir?: string } = {}) {
     this.buildDir = opts.buildDir;
     this.store = new ProjectStore(root);
     this.deps = deps;
-    const env = deps.env ?? process.env;
+    this.rawEnv = deps.env ?? process.env;
+    this.env = resolveEnv(this.rawEnv);
+    const libraryIndex = libraryIndexPath(this.rawEnv);
     this.sound = new SoundService(
       this.store,
-      deps.sound ?? defaultSoundProvider(this.store.root, env, deps.fetch),
+      soundProviders(this.store.root, this.env, {
+        fetch: deps.fetch,
+        freesound: deps.sound,
+        libraryIndex: existsSync(libraryIndex) ? libraryIndex : undefined,
+      }),
     );
-    this.voice = new VoiceService(this.store, deps.voice);
+    this.voice = new VoiceService(
+      this.store,
+      deps.voice ?? [
+        new RecordingProvider(),
+        new LocalTtsProvider(),
+        new ElevenLabsProvider({ env: this.env, fetch: deps.fetch }),
+      ],
+    );
+    this.assets = new AssetService(
+      this.store,
+      deps.assetProviders ?? [
+        new IconifyProvider({ fetch: deps.fetch }),
+        new OpenverseProvider({ fetch: deps.fetch }),
+        ...(this.env.PEXELS_API_KEY
+          ? [new PexelsProvider({ key: this.env.PEXELS_API_KEY, fetch: deps.fetch })]
+          : []),
+      ],
+    );
     this.transcriber = deps.transcriber ?? new HyperframesTranscriber();
   }
 
-  get env() {
-    return this.deps.env ?? process.env;
-  }
   get root() {
     return this.store.root;
   }

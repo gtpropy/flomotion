@@ -4,6 +4,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { z } from "zod";
 import { CODECUT_DIR, CodeCutError } from "@codecut/core";
 import {
+  collectAssetSrcs,
   licenseReport,
   lintProjectDir,
   loadVoiceWords,
@@ -228,7 +229,13 @@ export const renderTool = tool({
       file = trimmed;
     }
     const families = b.fonts.map((f) => f.family);
-    const lic = licenseReport(readLedger(ctx.root), b.audio, b.fontsUsed, families);
+    const lic = licenseReport(
+      readLedger(ctx.root),
+      b.audio,
+      b.fontsUsed,
+      families,
+      collectAssetSrcs(b.loaded.node),
+    );
     const stem = file.replace(/\.mp4$/, "");
     let creditsFile: string | undefined;
     if (lic.credits) {
@@ -307,6 +314,7 @@ export const reviewTool = tool({
           b.audio,
           b.fontsUsed,
           b.fonts.map((f) => f.family),
+          collectAssetSrcs(b.loaded.node),
         ),
         mix,
         hf,

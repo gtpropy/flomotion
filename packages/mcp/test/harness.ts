@@ -30,6 +30,7 @@ import {
   type Word,
 } from "../src/providers/voice.js";
 import { FreesoundClient } from "../src/providers/sounds.js";
+import { IconifyProvider, OpenverseProvider, PexelsProvider } from "../src/providers/assets.js";
 import type { Transcriber } from "../src/providers/transcribe.js";
 
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
@@ -206,6 +207,212 @@ export function fakeFreesoundFetch(
   }) as typeof fetch;
 }
 
+// ---------- asset sources test double (Iconify, Openverse, Pexels) ----------
+
+export interface AssetCall {
+  url: string;
+  auth?: string | null;
+}
+
+const SVG = (color = "currentColor") =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="none" stroke="${color}" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></g></svg>`;
+
+const ICON_COLLECTIONS: Record<string, Record<string, unknown>> = {
+  lucide: {
+    name: "Lucide",
+    author: { name: "Lucide Contributors", url: "https://github.com/lucide-icons/lucide" },
+    license: { title: "ISC", spdx: "ISC", url: "https://example.test/lucide/LICENSE" },
+  },
+  tabler: {
+    name: "Tabler Icons",
+    author: { name: "Paweł Kuna", url: "https://github.com/tabler/tabler-icons" },
+    license: { title: "MIT", spdx: "MIT", url: "https://example.test/tabler/LICENSE" },
+  },
+  solar: {
+    name: "Solar",
+    author: { name: "480 Design", url: "https://example.test/solar" },
+    license: {
+      title: "CC BY 4.0",
+      spdx: "CC-BY-4.0",
+      url: "https://creativecommons.org/licenses/by/4.0/",
+    },
+  },
+  bi: {
+    name: "Bootstrap-like (test: share-alike)",
+    author: { name: "Someone" },
+    license: {
+      title: "CC BY-SA 4.0",
+      spdx: "CC-BY-SA-4.0",
+      url: "https://creativecommons.org/licenses/by-sa/4.0/",
+    },
+  },
+  logos: {
+    name: "SVG Logos",
+    author: { name: "Gil Barbara", url: "https://github.com/gilbarbara/logos" },
+    license: { title: "CC0", spdx: "CC0-1.0", url: "https://example.test/logos/LICENSE" },
+    palette: true,
+  },
+};
+
+/** A fetch that behaves like the parts of Iconify, Openverse and Pexels that flomotion uses. Records every request. */
+export function fakeAssetFetch(root: string, log: AssetCall[] = []): typeof fetch {
+  const dir = join(root, ".asset-fake");
+  const photo = (name: string, w: number, h: number) => {
+    const f = join(dir, name);
+    if (!existsSync(f)) {
+      mkdirSync(dir, { recursive: true });
+      execFileSync("ffmpeg", [
+        "-y",
+        "-v",
+        "error",
+        "-f",
+        "lavfi",
+        "-i",
+        `testsrc2=s=${w}x${h}:d=1`,
+        "-frames:v",
+        "1",
+        f,
+      ]);
+    }
+    return readFileSync(f);
+  };
+  const OV = [
+    {
+      id: "11111111-1111-4111-8111-111111111111",
+      title: "Laptop on a desk",
+      creator: "Dana",
+      creator_url: "https://example.test/dana",
+      license: "cc0",
+      license_version: "1.0",
+      license_url: "https://creativecommons.org/publicdomain/zero/1.0/",
+      url: "https://img.test/ov1.jpg",
+      foreign_landing_url: "https://example.test/p/1",
+      attribution: "",
+      width: 3000,
+      height: 2000,
+      filetype: "jpg",
+      category: "photograph",
+      thumbnail: "https://img.test/t1.jpg",
+    },
+    {
+      id: "22222222-2222-4222-8222-222222222222",
+      title: "Team at a whiteboard",
+      creator: "Lee",
+      creator_url: "https://example.test/lee",
+      license: "by",
+      license_version: "2.0",
+      license_url: "https://creativecommons.org/licenses/by/2.0/",
+      url: "https://img.test/ov2.jpg",
+      foreign_landing_url: "https://example.test/p/2",
+      attribution: '"Team at a whiteboard" by Lee is licensed under CC BY 2.0.',
+      width: 1600,
+      height: 1000,
+      filetype: "jpg",
+      category: "photograph",
+    },
+    {
+      id: "33333333-3333-4333-8333-333333333333",
+      title: "Share alike photo",
+      creator: "Sam",
+      license: "by-sa",
+      license_version: "2.0",
+      license_url: "https://creativecommons.org/licenses/by-sa/2.0/",
+      url: "https://img.test/ov3.jpg",
+      foreign_landing_url: "https://example.test/p/3",
+      attribution: "",
+      width: 800,
+      height: 600,
+      filetype: "jpg",
+      category: "photograph",
+    },
+  ];
+  const PX = {
+    id: 555,
+    url: "https://www.pexels.com/photo/desk-555/",
+    photographer: "Pat Pexel",
+    photographer_url: "https://www.pexels.com/@pat",
+    alt: "A tidy desk with a laptop",
+    width: 4000,
+    height: 6000,
+    src: { original: "https://img.test/px555.jpg", large: "https://img.test/px555-l.jpg" },
+  };
+  return (async (input: string | URL | Request, init?: RequestInit) => {
+    const url = String(input);
+    const headers = new Headers(init?.headers);
+    log.push({ url, auth: headers.get("authorization") });
+    const u = new URL(url);
+    const json = (b: unknown, status = 200) => Response.json(b, { status });
+    if (u.host === "iconify.test") {
+      if (u.pathname === "/search") {
+        const q = (u.searchParams.get("query") ?? "").toLowerCase();
+        const prefixes = (u.searchParams.get("prefixes") ?? "").split(",");
+        const all = [
+          ["lucide", "calendar"],
+          ["lucide", "calendar-clock"],
+          ["tabler", "calendar"],
+          ["solar", "calendar-bold"],
+          ["bi", "calendar3"],
+          ["logos", "slack"],
+          ["logos", "slack-icon"],
+        ];
+        const icons = all
+          .filter(
+            ([p, n]) => prefixes.includes(p!) && (n!.includes(q) || q.includes(n!.split("-")[0]!)),
+          )
+          .map(([p, n]) => `${p}:${n}`);
+        const collections = Object.fromEntries(
+          [...new Set(icons.map((i) => i.split(":")[0]!))].map((p) => [p, ICON_COLLECTIONS[p]]),
+        );
+        return json({ icons, total: icons.length, collections });
+      }
+      if (u.pathname === "/collections") {
+        const wanted = (u.searchParams.get("prefixes") ?? "").split(",");
+        return json(
+          Object.fromEntries(
+            wanted.filter((p) => ICON_COLLECTIONS[p]).map((p) => [p, ICON_COLLECTIONS[p]]),
+          ),
+        );
+      }
+      const svg = /^\/([a-z0-9-]+)\/([a-z0-9-]+)\.svg$/.exec(u.pathname);
+      if (svg)
+        return new Response(SVG(u.searchParams.get("color") ?? "currentColor"), {
+          headers: { "content-type": "image/svg+xml" },
+        });
+    }
+    if (u.host === "openverse.test") {
+      if (u.pathname === "/v1/images/") {
+        const lic = (u.searchParams.get("license") ?? "").split(",");
+        return json({
+          result_count: OV.length,
+          results: OV.filter((r) => lic.includes(r.license) || !lic[0]),
+        });
+      }
+      const one = /^\/v1\/images\/([0-9a-f-]{36})\/$/.exec(u.pathname);
+      if (one)
+        return json(
+          OV.find((r) => r.id === one[1]) ?? {},
+          OV.some((r) => r.id === one[1]) ? 200 : 404,
+        );
+    }
+    if (u.host === "pexels.test") {
+      if (headers.get("authorization") !== "px-key") return new Response("no", { status: 401 });
+      if (u.pathname === "/v1/search") return json({ photos: [PX] });
+      if (u.pathname === "/v1/photos/555") return json(PX);
+    }
+    if (u.host === "img.test") {
+      const w = u.pathname.includes("px555")
+        ? [4000, 6000]
+        : u.pathname.includes("ov1")
+          ? [3000, 2000]
+          : [1600, 1000];
+      return new Response(photo(u.pathname.slice(1).replace(/\W/g, "") + ".jpg", w[0]!, w[1]!), {
+        headers: { "content-type": "image/jpeg" },
+      });
+    }
+    return new Response("unhandled " + url, { status: 500 });
+  }) as typeof fetch;
+}
+
 // ---------- ElevenLabs test double ----------
 
 export interface ElevenCall {
@@ -214,9 +421,18 @@ export interface ElevenCall {
   body: { text: string; model_id?: string };
 }
 
-export function fakeElevenFetch(root: string, calls: ElevenCall[] = []): typeof fetch {
+export function fakeElevenFetch(
+  root: string,
+  calls: ElevenCall[] = [],
+  accountCalls: Array<{ key: string | null }> = [],
+): typeof fetch {
   return (async (input: string | URL | Request, init?: RequestInit) => {
     const headers = new Headers(init?.headers);
+    if (String(input).endsWith("/v1/user/subscription")) {
+      // reading the allowance is free and is not a generation
+      accountCalls.push({ key: headers.get("xi-api-key") });
+      return Response.json({ tier: "creator", character_count: 1000, character_limit: 100000 });
+    }
     const body = JSON.parse(String(init?.body ?? "{}"));
     calls.push({ url: String(input), key: headers.get("xi-api-key"), body });
     const f = join(root, ".eleven-fake", `${calls.length}.mp3`);
@@ -378,11 +594,16 @@ export async function connect(root: string, deps: Deps = {}): Promise<Harness> {
 export function doubles(root: string, extra: Partial<Deps> = {}) {
   const fsLog: Array<{ url: string; auth?: string | null }> = [];
   const eleven: ElevenCall[] = [];
+  const elevenAccount: Array<{ key: string | null }> = [];
   const fonts = new FixtureGoogleSource();
   const fsFetch = fakeFreesoundFetch(root, fsLog);
-  const elFetch = fakeElevenFetch(root, eleven);
+  const elFetch = fakeElevenFetch(root, eleven, elevenAccount);
+  const assetLog: AssetCall[] = [];
+  const af = fakeAssetFetch(root, assetLog);
   const deps: Deps = {
     env: {
+      // never read the real config of the machine running the tests
+      FLOMOTION_CONFIG: join(root, ".no-config.json"),
       FREESOUND_API_KEY: "test-key",
       ELEVENLABS_API_KEY: "el-key",
       ELEVENLABS_USD_PER_1K_CREDITS: "0.30",
@@ -398,11 +619,16 @@ export function doubles(root: string, extra: Partial<Deps> = {}) {
         env: { ELEVENLABS_USD_PER_1K_CREDITS: "0.30" } as NodeJS.ProcessEnv,
       }),
     ],
+    assetProviders: [
+      new IconifyProvider({ fetch: af, base: "https://iconify.test" }),
+      new OpenverseProvider({ fetch: af, base: "https://openverse.test" }),
+      new PexelsProvider({ key: "px-key", fetch: af, base: "https://pexels.test" }),
+    ],
     fontSources: [fonts],
     hfCheck: async () => undefined,
     ...extra,
   };
-  return { deps, fsLog, eleven, fonts };
+  return { deps, fsLog, eleven, elevenAccount, fonts, assetLog };
 }
 
 export { existsSync, readFileSync, writeFileSync, join, mkdirSync };

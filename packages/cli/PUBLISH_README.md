@@ -44,7 +44,7 @@ nothing from the network.
 ## CLI
 
 ```bash
-codecut mcp --dir . [--ui]      # MCP server over stdio (30 tools, 4 resources); --ui also serves the live view
+codecut mcp --dir . [--ui]      # MCP server over stdio (39 tools, 4 resources); --ui also serves the live view
 codecut ui [--open]             # the live view for this folder
 codecut install skill [--project]
 codecut init my-video           # scaffold a project

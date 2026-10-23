@@ -17,6 +17,10 @@ Never skip a gate. At each gate, present the artifact, list what you verified, l
 
 Output: `brief.json` saved to the project. If a field is missing and the person cannot answer, write `"TBD"` and show a visible placeholder in drafts.
 
+## Materials check (part of G0, before G1)
+
+Call `setup_status` and tell the person what is missing and how they can proceed without a service: their own recording (`voice_import`) with a transcript or captions (`transcript_import`), their own sound files (`sound_import`), their logo and screenshots (`asset_import`), or a URL we may capture (`asset_capture`, `brand_extract`). Services (Freesound, ElevenLabs, Pexels) are set up by the person with `flomotion setup`, never by pasting keys into the chat.
+
 ## G1 Direction
 
 Use `decision-tables.md`. Present:
@@ -47,11 +51,13 @@ Decision needed: approve look or give notes (max 2 revision rounds before propos
 
 Per beat: block id, parameters, duration, in/out motion, transition, sound tags, which element is the **hero** that carries across beats. Check total length, scene durations, and novelty rate on the plan itself.
 
+Add the **asset plan** (see `assets.md`): for each beat, every graphic it needs and where it comes from (icon from Iconify, their logo, a screenshot of their app, a stock photo, or drawn with components), what is still missing from the person, and any logo that needs permission. Missing items are listed, never faked.
+
 Decision needed: approve storyboard.
 
 ## G5 Draft
 
-1. Build all scenes with blocks. `lint` after each scene.
+1. Pull the assets in the plan (`assets.md`), look at each one in a frame, then build all scenes with blocks. `lint` after each scene.
 2. Align animation key times to voice words if voice exists (`align_to_voice`).
 3. Place sounds (`sound_search` -> `sound_get` -> place on peak frames). Preview mix (`mix_preview`).
 4. Render draft at reduced size.

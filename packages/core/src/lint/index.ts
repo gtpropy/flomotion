@@ -317,8 +317,12 @@ export function lintProject(project: ResolvedProject, ctx: LintContext = {}): Li
             ? "CC0"
             : /^CC-BY(-\d|$)/i.test(e?.license ?? "")
               ? "CC-BY"
-              : e?.license;
-          if (e && !cfg.soundLicenses.includes(family as "CC0" | "CC-BY"))
+              : e?.source === "local" ||
+                  e?.source === "own" ||
+                  /^(user-supplied|owned|licensed|used with permission)/i.test(e?.license ?? "")
+                ? "own" // the person's own files: the rights are what they stated
+                : e?.license;
+          if (e && family !== "own" && !cfg.soundLicenses.includes(family as "CC0" | "CC-BY"))
             out.push({
               severity: "error",
               rule: "license-blocked",
@@ -339,17 +343,44 @@ export function lintProject(project: ResolvedProject, ctx: LintContext = {}): Li
       });
     }
   }
-  for (const n of nodes.filter((x) => ["Image", "Video", "Clip"].includes(x.name))) {
+  // images, icons and video: the file must exist; assets that were pulled from a source or supplied by the person
+  // (assets/third-party, captures, brand, imported) must be in the ledger, with a licence that allows commercial use
+  const MANAGED = /^(\.\/)?assets\/(third-party|captures|brand|imported)\//;
+  for (const n of nodes.filter((x) => ["Image", "Svg", "Video", "Clip"].includes(x.name))) {
     const src = String(n.raw.src ?? "");
-    if (src && ctx.fileExists && !ctx.fileExists(src))
+    if (!src || /^data:|^</.test(src.trim())) continue;
+    if (ctx.fileExists && !ctx.fileExists(src)) {
       out.push({
         severity: "error",
         rule: "asset-missing",
         message: `#${n.id}: file ${src} does not exist`,
         id: n.id,
         prop: "src",
-        fix: "Add the file to the project.",
+        fix: "Add the file to the project, or fetch it with asset_get / asset_capture / asset_import.",
       });
+      continue;
+    }
+    if (ctx.ledger && MANAGED.test(src)) {
+      const rel = src.replace(/^\.\//, "");
+      const e = ctx.ledger.entries.find((x) => x.file === rel);
+      if (!e)
+        out.push({
+          severity: "error",
+          rule: "asset-no-ledger",
+          message: `#${n.id}: ${src} has no ledger entry`,
+          id: n.id,
+          prop: "src",
+          fix: "Fetch it with asset_get, asset_capture or asset_import so its licence is recorded.",
+        });
+      else if (!e.commercialOk)
+        out.push({
+          severity: "error",
+          rule: "license-blocked",
+          message: `#${n.id}: ${src} (${e.license}) is not cleared for commercial use`,
+          id: n.id,
+          fix: "Pick an asset with a licence that allows it, or get permission and re-import it.",
+        });
+    }
   }
   return unique(out);
 }
