@@ -7,3 +7,4 @@ export * from "./audio.js";
 export * from "./media-probe.js";
 export * from "./project.js";
 export * from "./lint.js";
+export * from "./license.js";

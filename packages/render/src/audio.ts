@@ -256,3 +256,43 @@ export async function measureLoudness(file: string): Promise<{ lufs?: number; tr
     return { lufs: i ? Number(i) : undefined };
   }
 }
+
+/**
+ * Where a sound is loudest: the centre of the 5 ms window with the highest RMS (mono, 16 kHz decode).
+ * Deterministic. Used to store a `peak` in the ledger so `Sound` can land the hit on its frame.
+ */
+export async function measurePeakTime(
+  file: string,
+): Promise<{ peak: number; level: number; duration: number }> {
+  requireFfmpeg();
+  const rate = 16000;
+  const buf = await new Promise<Buffer>((resolve, reject) => {
+    execFile(
+      "ffmpeg",
+      ["-v", "error", "-i", file, "-ac", "1", "-ar", String(rate), "-f", "f32le", "pipe:1"],
+      { encoding: "buffer", maxBuffer: 512 * 1024 * 1024 },
+      (err, stdout) => (err ? reject(err) : resolve(stdout as unknown as Buffer)),
+    );
+  });
+  const n = Math.floor(buf.length / 4);
+  const win = Math.round(rate * 0.005);
+  let best = 0;
+  let bestAt = 0;
+  for (let s = 0; s + win <= n; s += win) {
+    let sum = 0;
+    for (let i = 0; i < win; i++) {
+      const v = buf.readFloatLE((s + i) * 4);
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / win);
+    if (rms > best) {
+      best = rms;
+      bestAt = s + win / 2;
+    }
+  }
+  return {
+    peak: Math.round((bestAt / rate) * 1000) / 1000,
+    level: best > 0 ? Math.round(20 * Math.log10(best) * 10) / 10 : -120,
+    duration: Math.round((n / rate) * 1000) / 1000,
+  };
+}

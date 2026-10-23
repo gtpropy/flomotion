@@ -196,6 +196,10 @@ export interface BuildOptions {
   skipGate?: boolean;
   /** Mix audio (default true when the project has audio events). */
   mix?: boolean;
+  /** Master loudness target of the mix in LUFS (export preset). Default -14. */
+  targetLufs?: number;
+  /** How far music ducks under voice, in dB. Default 12. */
+  duckAmount?: number;
   log?: (m: string) => void;
 }
 
@@ -308,6 +312,8 @@ export async function buildLoaded(
       ledger,
       duration: compiled.ir.end,
       outFile: join(outDir, "assets", "mix.wav"),
+      targetLufs: opts.targetLufs,
+      duckAmount: opts.duckAmount,
     });
     // re-embed with the mix as one <audio>
     html = html.replace(
