@@ -2018,13 +2018,13 @@ exports[`every definition has a schema, a renderer, a unit test and a compile sn
             "children": [
               {
                 "animated": [
-                  "#host-xf x @0.5 x25",
-                  "#host-xf skewX @0.5 x25",
-                  "#host-xf filter @0.5 x25",
-                  "#host-xf x=24.4138",
-                  "#host-xf skewX=8.4328",
+                  "#host-xf x @0.4833 x26",
+                  "#host-xf skewX @0.4833 x26",
+                  "#host-xf filter @0.4833 x26",
+                  "#host-xf x=0",
+                  "#host-xf skewX=0",
                   "#host-xf opacity=1",
-                  "#host-xf filter=hue-rotate(-93deg)",
+                  "#host-xf filter=",
                 ],
                 "children": [],
                 "end": 3,
@@ -2075,7 +2075,7 @@ exports[`every definition has a schema, a renderer, a unit test and a compile sn
       "tag": "tech/glitch",
     },
   ],
-  "statics": "[["#s1-xf","transformOrigin","50% 50% 0px",""],["#host-xf","xPercent",-50,""],["#host-xf","yPercent",-50,""],["#host-xf","transformOrigin","50% 50% 0px",""],["#host-xf","x",24.4138,""],["#host-xf","skewX",8.4328,""],["#host-xf","opacity",1,""],["#host-xf","filter","hue-rotate(-93deg)",""]]",
+  "statics": "[["#s1-xf","transformOrigin","50% 50% 0px",""],["#host-xf","xPercent",-50,""],["#host-xf","yPercent",-50,""],["#host-xf","transformOrigin","50% 50% 0px",""],["#host-xf","x",0,""],["#host-xf","skewX",0,""],["#host-xf","opacity",1,""],["#host-xf","filter","",""]]",
 }
 `;
 
@@ -3847,13 +3847,13 @@ exports[`every definition has a schema, a renderer, a unit test and a compile sn
             "children": [
               {
                 "animated": [
-                  "#host-xf filter @1.2833 x2",
-                  "#fx-rgb-r attr:dx @0.5 x49",
-                  "#fx-rgb-b attr:dx @0.5 x49",
-                  "#host-xf filter=url(#fx-rgb)",
-                  "#fx-rgb-r attr:dx=14",
+                  "#host-xf filter @0.4833 x50",
+                  "#fx-rgb-r attr:dx @0.4833 x50",
+                  "#fx-rgb-b attr:dx @0.4833 x50",
+                  "#host-xf filter=",
+                  "#fx-rgb-r attr:dx=0",
                   "#fx-rgb-r attr:dy=0",
-                  "#fx-rgb-b attr:dx=-14",
+                  "#fx-rgb-b attr:dx=0",
                   "#fx-rgb-b attr:dy=0",
                 ],
                 "children": [],
@@ -3905,7 +3905,7 @@ exports[`every definition has a schema, a renderer, a unit test and a compile sn
       "tag": "tech/glitch",
     },
   ],
-  "statics": "[["#s1-xf","transformOrigin","50% 50% 0px",""],["#host-xf","xPercent",-50,""],["#host-xf","yPercent",-50,""],["#host-xf","transformOrigin","50% 50% 0px",""],["#host-xf","filter","url(#fx-rgb)",""],["#fx-rgb-r","attr:dx",14,""],["#fx-rgb-r","attr:dy",0,""],["#fx-rgb-b","attr:dx",-14,""],["#fx-rgb-b","attr:dy",0,""]]",
+  "statics": "[["#s1-xf","transformOrigin","50% 50% 0px",""],["#host-xf","xPercent",-50,""],["#host-xf","yPercent",-50,""],["#host-xf","transformOrigin","50% 50% 0px",""],["#host-xf","filter","",""],["#fx-rgb-r","attr:dx",0,""],["#fx-rgb-r","attr:dy",0,""],["#fx-rgb-b","attr:dx",0,""],["#fx-rgb-b","attr:dy",0,""]]",
 }
 `;
 

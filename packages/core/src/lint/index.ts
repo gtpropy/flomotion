@@ -296,10 +296,10 @@ export function lintProject(project: ResolvedProject, ctx: LintContext = {}): Li
   const audioLike = nodes.filter((n) => ["Sound", "Audio", "Voiceover"].includes(n.name));
   for (const n of audioLike) {
     const src = String(n.raw.src ?? "");
-    if (/^freesound:/.test(src) || /^https?:/.test(src)) {
+    if (/^(freesound|local):/.test(src) || /^https?:/.test(src)) {
       const has = ctx.assetHasLedger
         ? ctx.assetHasLedger(src)
-        : ctx.ledger?.entries.some((e) => e.source === "freesound" && `freesound:${e.id}` === src);
+        : ctx.ledger?.entries.some((e) => `${e.source}:${e.id}` === src);
       if (ctx.ledger || ctx.assetHasLedger) {
         if (!has)
           out.push({
@@ -312,7 +312,9 @@ export function lintProject(project: ResolvedProject, ctx: LintContext = {}): Li
           });
         else if (ctx.ledger) {
           const e = ctx.ledger.entries.find((x) => `${x.source}:${x.id}` === src);
-          if (e && !cfg.soundLicenses.includes(e.license as "CC0" | "CC-BY"))
+          // ledger licences are SPDX-like ("CC0-1.0", "CC-BY-4.0"); the config lists the families
+          const family = /^CC0/i.test(e?.license ?? "") ? "CC0" : /^CC-BY(-\d|$)/i.test(e?.license ?? "") ? "CC-BY" : e?.license;
+          if (e && !cfg.soundLicenses.includes(family as "CC0" | "CC-BY"))
             out.push({
               severity: "error",
               rule: "license-blocked",

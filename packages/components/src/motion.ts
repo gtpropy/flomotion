@@ -414,12 +414,14 @@ export const Glitch = defineEffect("Glitch", {
   apply: (p, rc) => {
     const span = win(rc, undefined);
     const dur = rc.node.end - rc.node.start || 0.4;
-    const span2: [number, number] = [rc.node.start, rc.node.start + dur];
+    // The window starts with a jump (the value is neutral before it). The baker holds the first sample before
+    // a span, so the span must begin earlier, on a neutral sample.
+    const span2: [number, number] = [Math.max(0, rc.node.start - LEAD), rc.node.start + dur];
     void span;
     const step = (t: number) => Math.floor(((t - rc.node.start) * rc.fps) / p.hold);
     const env = (t: number) => Math.max(0, 1 - (t - rc.node.start) / dur);
     const s = (fn: (t: number) => number) =>
-      exprSignal((t) => (t >= span2[0] && t < span2[1] ? fn(t) : 0), "number", span2);
+      exprSignal((t) => (t >= rc.node.start && t < span2[1] ? fn(t) : 0), "number", span2);
     return {
       offsets: [
         off(
@@ -437,7 +439,7 @@ export const Glitch = defineEffect("Glitch", {
           "mul",
           exprSignal(
             (t) =>
-              t >= span2[0] && t < span2[1] && noise1D(step(t) * 5.3, p.seed + 2) > 0.7 ? 0.35 : 1,
+              t >= rc.node.start && t < span2[1] && noise1D(step(t) * 5.3, p.seed + 2) > 0.7 ? 0.35 : 1,
             "number",
             span2,
           ),
@@ -446,7 +448,7 @@ export const Glitch = defineEffect("Glitch", {
       filters: [
         exprSignal(
           (t) =>
-            t >= span2[0] && t < span2[1]
+            t >= rc.node.start && t < span2[1]
               ? `hue-rotate(${Math.round(noise1D(step(t) * 1.9, p.seed + 3) * 120 * p.amount * env(t))}deg)`
               : "",
           "discrete",
@@ -457,6 +459,9 @@ export const Glitch = defineEffect("Glitch", {
     };
   },
 });
+
+/** Seconds a jump-at-start effect begins its baked span before its window (one neutral sample). */
+const LEAD = 0.05;
 
 export const RGBSplit = defineEffect("RGBSplit", {
   category: "impact",
@@ -479,19 +484,20 @@ export const RGBSplit = defineEffect("RGBSplit", {
       t >= a && t < b
         ? (evalAmt(amt, t) as number) * (p.decay > 0 ? Math.exp(-p.decay * (t - a)) : 1)
         : 0;
+    const span: [number, number] = [Math.max(0, a - LEAD), b]; // see Glitch: neutral before the window
     const dx = (sgn: number) => (t: number) => round(sgn * k(t) * Math.cos(rad), 3);
     const dy = (sgn: number) => (t: number) => round(sgn * k(t) * Math.sin(rad), 3);
     const ch = (m: string) => `<feColorMatrix in="SourceGraphic" type="matrix" values="${m}"/>`;
     const defs = `<filter id="${id}" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">${ch("1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0").replace("/>", ' result="r"/>')}<feOffset id="${id}-r" in="r" dx="0" dy="0" result="ro"/>${ch("0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0").replace("/>", ' result="g"/>')}${ch("0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0").replace("/>", ' result="b"/>')}<feOffset id="${id}-b" in="b" dx="0" dy="0" result="bo"/><feBlend in="ro" in2="g" mode="screen" result="rg"/><feBlend in="rg" in2="bo" mode="screen"/></filter>`;
-    const num_ = (fn: (t: number) => number) => exprSignal(fn, "number", [a, b]);
+    const num_ = (fn: (t: number) => number) => exprSignal(fn, "number", span);
     return {
       defs,
-      filters: [exprSignal((t) => (t >= a && t < b ? `url(#${id})` : ""), "discrete", [a, b])],
+      filters: [exprSignal((t) => (t >= a && t < b ? `url(#${id})` : ""), "discrete", span)],
       channels: [
-        { target: `#${id}-r`, prop: "attr:dx", signal: num_(dx(1)), span: [a, b] },
-        { target: `#${id}-r`, prop: "attr:dy", signal: num_(dy(1)), span: [a, b] },
-        { target: `#${id}-b`, prop: "attr:dx", signal: num_(dx(-1)), span: [a, b] },
-        { target: `#${id}-b`, prop: "attr:dy", signal: num_(dy(-1)), span: [a, b] },
+        { target: `#${id}-r`, prop: "attr:dx", signal: num_(dx(1)), span },
+        { target: `#${id}-r`, prop: "attr:dy", signal: num_(dy(1)), span },
+        { target: `#${id}-b`, prop: "attr:dx", signal: num_(dx(-1)), span },
+        { target: `#${id}-b`, prop: "attr:dy", signal: num_(dy(-1)), span },
       ],
       sounds: cue(rc, p.sound),
     };

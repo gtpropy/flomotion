@@ -325,11 +325,14 @@ export function runChecklist(input: ReviewInput, only?: number[]): CheckResult[]
     if (!m || !voice.length) add(11, "skipped", m ? "No voice in the mix." : "No mix was built.");
     else {
       const music = m.events.filter((e) => e.bus === "music");
-      const loud = m.events.filter((e) => e.bus !== "voice" && e.gainDb > Math.min(...voice.map((v) => v.gainDb)) + 0.1);
+      const voiceGain = Math.min(...voice.map((v) => v.gainDb));
       const problems: string[] = [];
       if (music.length && m.duckAmount < 6) problems.push(`music ducks only ${m.duckAmount} dB (need 6 or more)`);
-      if (loud.length) problems.push(`${loud.length} non-voice event(s) are set louder than the voice`);
-      add(11, problems.length ? "fail" : "pass", problems.length ? problems.join("; ") + "." : `Music ducks ${m.duckAmount} dB under the voice and no other bus is set louder.`, "Lower music/sfx gain or raise duckAmount.");
+      const hot = music.filter((e) => e.gainDb - m.duckAmount > voiceGain);
+      if (hot.length) problems.push(`${hot.length} music event(s) stay louder than the voice even when ducked`);
+      const loudSfx = m.events.filter((e) => e.bus === "sfx" && e.gainDb > voiceGain + 6);
+      if (loudSfx.length) problems.push(`${loudSfx.length} sound effect(s) are set more than 6 dB above the voice`);
+      add(11, problems.length ? "fail" : "pass", problems.length ? problems.join("; ") + "." : `Music ducks ${m.duckAmount} dB under the voice and no bus is set far above it. (Gains are compared, not heard.)`, "Lower music/sfx gain or raise duckAmount.");
     }
   }
   // 12

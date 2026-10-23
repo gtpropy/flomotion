@@ -1,7 +1,10 @@
-import { mkdirSync, writeFileSync, existsSync, copyFileSync } from "node:fs";
+import { cpSync, mkdirSync, writeFileSync, existsSync, copyFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { defineCommand } from "citty";
-import { CODECUT_NAME, CodeCutError, isCodeCutError } from "@codecut/core";
+import { CODECUT_NAME, CodeCutError, isCodeCutError, listLooks } from "@codecut/core";
 import {
   buildProject,
   collectFontDecls,
@@ -12,8 +15,11 @@ import {
   syncFonts,
   hyperframesVersion,
   lintProjectDir,
+  licenseReport,
+  readLedger,
 } from "@codecut/render";
 import { registry, docsMarkdown, docsIndexMarkdown } from "@codecut/components";
+import { serveStdio } from "@codecut/mcp";
 
 const fail = (e: unknown): never => {
   if (isCodeCutError(e)) {
@@ -63,7 +69,13 @@ const render = defineCommand({
         quality: args.draft ? "draft" : "looks",
         software: !!args.software,
       });
+      const lic = licenseReport(readLedger(dir), b.audio, b.fontsUsed, b.fonts.map((f) => f.family));
+      const stem = r.output.replace(/\.mp4$/, "");
+      writeFileSync(`${stem}.licenses.json`, JSON.stringify({ used: lic.used, problems: lic.problems }, null, 2) + "\n");
+      if (lic.credits) writeFileSync(`${stem}.credits.txt`, lic.credits);
+      for (const p of lic.problems) console.log(`  ! licence: ${p}`);
       console.log(`✔ ${r.output} (${(r.bytes / 1024 / 1024).toFixed(2)} MB)`);
+      if (lic.credits) console.log(`  credits: ${stem}.credits.txt`);
     } catch (e) {
       fail(e);
     }
@@ -179,6 +191,10 @@ const docs = defineCommand({
       type: "string",
       description: "Also write one combined components.md for the skill",
     },
+    "looks-dir": {
+      type: "string",
+      description: "Also write one <look>.json per Look (data, for the skill)",
+    },
   },
   async run({ args }) {
     const out = resolve(String(args.out));
@@ -193,6 +209,11 @@ const docs = defineCommand({
         f,
         `# Components (generated from schemas: do not edit)\n\n${defs.map((d) => docsMarkdown(d)).join("\n---\n\n")}`,
       );
+    }
+    if (args["looks-dir"]) {
+      const dir = resolve(String(args["looks-dir"]));
+      mkdirSync(dir, { recursive: true });
+      for (const l of listLooks()) writeFileSync(join(dir, `${l.id}.json`), JSON.stringify(l, null, 2) + "\n");
     }
     console.log(`wrote ${defs.length} pages to ${out}`);
   },
@@ -256,7 +277,57 @@ export default (
   },
 });
 
+const mcp = defineCommand({
+  meta: {
+    name: "mcp",
+    description: "Run the MCP server over stdio for a project folder (add it to Claude Code)",
+  },
+  args: { dir: { type: "string", default: ".", description: "Project folder (default: cwd)" } },
+  async run({ args }) {
+    try {
+      // stdout belongs to the protocol: nothing else may print there
+      await serveStdio(resolve(String(args.dir)));
+    } catch (e) {
+      fail(e);
+    }
+  },
+});
+
+/** Where the shipped motion-studio skill lives: next to the package (published) or in the repo (dev). */
+function skillSource(): string {
+  const here = dirname(fileURLToPath(import.meta.url));
+  for (const rel of ["../skills/motion-studio", "../../../skills/motion-studio", "../../skills/motion-studio"]) {
+    const p = resolve(here, rel);
+    if (existsSync(join(p, "SKILL.md"))) return p;
+  }
+  throw new CodeCutError("asset_missing", "The motion-studio skill files were not found next to this install");
+}
+
+const skillInstall = defineCommand({
+  meta: { name: "install", description: "Copy the motion-studio skill into .claude/skills" },
+  args: {
+    global: { type: "boolean", description: "Install for all projects (~/.claude/skills)" },
+    dir: { type: "string", default: ".", description: "Project folder for a project install" },
+  },
+  run({ args }) {
+    try {
+      const base = args.global ? join(homedir(), ".claude", "skills") : join(resolve(String(args.dir)), ".claude", "skills");
+      const dest = join(base, "motion-studio");
+      mkdirSync(base, { recursive: true });
+      cpSync(skillSource(), dest, { recursive: true });
+      console.log(`Installed the motion-studio skill to ${dest}`);
+    } catch (e) {
+      fail(e);
+    }
+  },
+});
+
+const skill = defineCommand({
+  meta: { name: "skill", description: "The motion-studio director skill for Claude Code" },
+  subCommands: { install: skillInstall },
+});
+
 export const main = defineCommand({
   meta: { name: "codecut", description: `${CODECUT_NAME}: a code-first video editor` },
-  subCommands: { render, frame, sheet, fonts, init, lint, docs },
+  subCommands: { render, frame, sheet, fonts, init, lint, docs, mcp, skill },
 });

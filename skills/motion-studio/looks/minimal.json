@@ -1,0 +1,111 @@
+{
+  "id": "minimal",
+  "name": "Minimal",
+  "description": "Calm and precise. DM Sans, soft neutrals, slow eases, dissolves.",
+  "palette": {
+    "bg": "#f6f5f2",
+    "fg": "#14141a",
+    "primary": "#2f5bff",
+    "accent": "#14141a",
+    "surface": "#ffffff",
+    "muted": "#7a7a86"
+  },
+  "background": "#f6f5f2",
+  "fonts": [
+    {
+      "id": "display",
+      "family": "DM Sans",
+      "source": "google",
+      "weights": [
+        500,
+        700
+      ],
+      "variable": true,
+      "axes": {
+        "wght": [
+          300,
+          700
+        ]
+      },
+      "subsets": [
+        "latin"
+      ]
+    },
+    {
+      "id": "body",
+      "family": "DM Sans",
+      "source": "google",
+      "weights": [
+        400,
+        500
+      ],
+      "variable": true,
+      "axes": {
+        "wght": [
+          300,
+          700
+        ]
+      },
+      "subsets": [
+        "latin"
+      ]
+    },
+    {
+      "id": "mono",
+      "family": "IBM Plex Mono",
+      "source": "google",
+      "weights": [
+        400
+      ],
+      "subsets": [
+        "latin"
+      ]
+    }
+  ],
+  "type": {
+    "display": {
+      "font": "display",
+      "size": 88,
+      "weight": 600,
+      "tracking": -20,
+      "leading": 1.06
+    },
+    "body": {
+      "font": "body",
+      "size": 40,
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.4
+    },
+    "mono": {
+      "font": "mono",
+      "size": 32,
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.5
+    },
+    "numerals": {
+      "font": "display",
+      "size": 150,
+      "weight": 600,
+      "tracking": -25,
+      "leading": 1
+    }
+  },
+  "easing": {
+    "in": "power3.out",
+    "out": "power3.in",
+    "pop": "back.out(1.2)",
+    "settle": "sine.inOut",
+    "spring": "spring(120,22)"
+  },
+  "transition": {
+    "type": "dissolve",
+    "duration": 0.6
+  },
+  "grain": 0,
+  "sound": {
+    "ui/pop": "freesound:soft-pop",
+    "ui/tick": "freesound:tick"
+  }
+}

@@ -6,7 +6,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import type { FontDecl } from "@codecut/core";
-import { formatOf, inspectFont, sha256, type FontContext, type FontSource, type FontSyncResult } from "@codecut/render";
+import { formatOf, sha256, type FontContext, type FontSource, type FontSyncResult } from "@codecut/render";
 import { createServer } from "../src/server.js";
 import type { Deps } from "../src/context.js";
 import { ElevenLabsProvider, RecordingProvider, LocalTtsProvider, type Word } from "../src/providers/voice.js";
@@ -158,15 +158,14 @@ export class FixtureGoogleSource implements FontSource {
   }
   async sync(decl: FontDecl, ctx: FontContext): Promise<FontSyncResult> {
     this.requests.push(decl.family);
-    const entries = FONT_FILES[decl.family];
-    if (!entries) throw new Error(`fixture has no font "${decl.family}"`);
-    const files = entries
-      .filter((e) => typeof e.weight !== "number" || !decl.weights || decl.weights.includes(e.weight))
+    // Families without their own fixture are served as Inter, so Look fonts resolve offline. Test double only.
+    const entries = FONT_FILES[decl.family] ?? [{ file: "inter-400.woff2", weight: 400 }];
+    const wanted = entries.filter((e) => typeof e.weight !== "number" || !decl.weights || decl.weights.includes(e.weight));
+    const files = (wanted.length ? wanted : entries.slice(0, 1))
       .map((e) => {
         const dest = join(ctx.cacheDir, decl.id, e.file);
         mkdirSync(dirname(dest), { recursive: true });
         copyFileSync(join(FIXTURES, "fonts", e.file), dest);
-        const info = inspectFont(dest);
         return {
           abs: dest,
           rel: relative(ctx.projectRoot, dest),
@@ -176,7 +175,6 @@ export class FixtureGoogleSource implements FontSource {
           format: formatOf(dest),
           subset: "latin",
         };
-        void info;
       });
     return {
       files,

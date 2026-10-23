@@ -9,6 +9,8 @@ export interface LicenseReport {
   problems: string[];
   /** Entries that need attribution. */
   attribution: LedgerEntry[];
+  /** Project files you supplied yourself (not downloaded): no ledger entry is required, the rights are yours to confirm. */
+  own: string[];
 }
 
 const sameFile = (e: LedgerEntry, src: string) =>
@@ -23,12 +25,15 @@ export function licenseReport(
 ): LicenseReport {
   const used = new Map<string, LedgerEntry>();
   const problems: string[] = [];
+  const own = new Set<string>();
   const key = (e: LedgerEntry) => `${e.kind}:${e.source}:${e.id}`;
   for (const ev of audio) {
-    const m = ev.src.match(/^freesound:(\d+)$/);
-    const e = ledger.entries.find((x) => (m ? x.source === "freesound" && x.id === m[1] : sameFile(x, ev.src)));
+    const m = ev.src.match(/^(freesound|local):([\w.-]+)$/);
+    const e = ledger.entries.find((x) => (m ? x.source === m[1] && x.id === m[2] : sameFile(x, ev.src)));
     if (e) used.set(key(e), e);
-    else problems.push(`${ev.src} has no ledger entry`);
+    else if (m || /^https?:/.test(ev.src) || /(^|\/)\.codecut\/assets\//.test(ev.src))
+      problems.push(`${ev.src} has no ledger entry`);
+    else own.add(ev.src);
   }
   const fams = new Set(fontFamilies);
   for (const e of ledger.entries) {
@@ -50,5 +55,5 @@ export function licenseReport(
         "",
       ].join("\n")
     : "";
-  return { used: [...used.values()], credits, problems, attribution };
+  return { used: [...used.values()], credits, problems, attribution, own: [...own] };
 }

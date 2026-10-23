@@ -157,9 +157,9 @@ export function makeAssetResolver(root: string, ledger: Ledger) {
     const hit = refs.get(src);
     if (hit) return hit;
     let abs: string | undefined;
-    const m = src.match(/^freesound:(\d+)$/);
+    const m = src.match(/^(freesound|local):([\w.-]+)$/);
     if (m) {
-      const e = ledger.entries.find((x) => x.source === "freesound" && x.id === m[1]);
+      const e = ledger.entries.find((x) => x.source === m[1] && x.id === m[2]);
       abs = e ? join(root, e.file) : undefined;
     } else if (/^[a-z]+:/i.test(src)) {
       missing.push(`${src} (remote or unsupported asset; download it first)`);

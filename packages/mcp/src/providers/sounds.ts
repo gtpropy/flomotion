@@ -182,7 +182,10 @@ export class LocalCatalogProvider implements SoundProvider {
   constructor(private readonly root: string) {}
   private catalog(): SoundHit[] {
     const f = join(this.root, "sounds", "catalog.json");
-    if (!existsSync(f)) return [];
+    if (!existsSync(f))
+      throw new CodeCutError("missing_dependency", "No sound source: FREESOUND_API_KEY is not set and sounds/catalog.json does not exist", {
+        fix: "Export FREESOUND_API_KEY (free key at freesound.org/apiv2/apply), or list your own licensed files in sounds/catalog.json: [{ id, name, tags, license, author, url, file }].",
+      });
     const rows = JSON.parse(readFileSync(f, "utf8")) as Array<Record<string, any>>;
     return rows.map((r) => ({
       id: String(r.id),

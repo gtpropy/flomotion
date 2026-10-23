@@ -492,3 +492,33 @@ describe("every definition has a schema, a renderer, a unit test and a compile s
     });
   }
 });
+
+describe("effects that jump at their start are neutral before it", () => {
+  /** Value the page shows at time t for `target`/`prop`: baked samples once active, else the static value. */
+  const pageValue = (html: string, target: string, prop: string, t: number): unknown => {
+    const st = JSON.parse(html.match(/window\.__ccStatic=([\s\S]*?);\nwindow\.__ccBaked/)![1]!) as unknown[][];
+    const bk = JSON.parse(html.match(/window\.__ccBaked=([\s\S]*?);\n/)![1]!) as unknown[][];
+    const baked = bk.find((b) => b[0] === target && b[1] === prop);
+    const stat = st.find((s) => s[0] === target && s[1] === prop);
+    if (!baked) return stat?.[2];
+    const [, , t0, hz, samples] = baked as [string, string, number, number, unknown[]];
+    if (t < t0) return stat?.[2];
+    return samples[Math.min(samples.length - 1, Math.round((t - t0) * hz))];
+  };
+  it("RGBSplit shows no split and no filter before it starts, and does during its window", () => {
+    const { out } = compile(FIXTURES.RGBSplit!());
+    const id = "fx-rgb";
+    expect(pageValue(out.html, `#${id}-r`, "attr:dx", 0.2)).toBe(0);
+    expect(pageValue(out.html, `#${id}-r`, "attr:dx", 0.6)).not.toBe(0);
+    const filterOf = (t: number) => pageValue(out.html, "#host-xf", "filter", t);
+    expect(filterOf(0.2) ?? "").toBe("");
+    expect(String(filterOf(0.6))).toContain(`url(#${id})`);
+    expect(filterOf(2.5) ?? "").toBe("");
+  });
+  it("Glitch is neutral before its window", () => {
+    const { out } = compile(FIXTURES.Glitch!());
+    const f = pageValue(out.html, "#host-xf", "filter", 0.2);
+    expect(f ?? "").toBe("");
+    expect(pageValue(out.html, "#host-xf", "x", 0.2) ?? 0).toBe(0);
+  });
+});

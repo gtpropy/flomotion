@@ -1,0 +1,106 @@
+{
+  "id": "kinetic",
+  "name": "Kinetic",
+  "description": "Loud, fast and punchy. Space Grotesk display, hard colour, expo eases, flash cuts.",
+  "palette": {
+    "bg": "#0b0b12",
+    "fg": "#ffffff",
+    "primary": "#ff3366",
+    "accent": "#ffe14d",
+    "cyan": "#27e0ff",
+    "surface": "#17171f",
+    "muted": "#9aa0b4"
+  },
+  "background": "#0b0b12",
+  "fonts": [
+    {
+      "id": "display",
+      "family": "Space Grotesk",
+      "source": "google",
+      "weights": [
+        500,
+        700
+      ],
+      "variable": true,
+      "axes": {
+        "wght": [
+          300,
+          700
+        ]
+      },
+      "subsets": [
+        "latin"
+      ]
+    },
+    {
+      "id": "body",
+      "family": "Inter",
+      "source": "google",
+      "weights": [
+        400,
+        600
+      ],
+      "subsets": [
+        "latin"
+      ]
+    },
+    {
+      "id": "mono",
+      "family": "JetBrains Mono",
+      "source": "google",
+      "weights": [
+        500
+      ],
+      "subsets": [
+        "latin"
+      ]
+    }
+  ],
+  "type": {
+    "display": {
+      "font": "display",
+      "size": 104,
+      "weight": 700,
+      "tracking": -25,
+      "leading": 1.02
+    },
+    "body": {
+      "font": "body",
+      "size": 44,
+      "weight": 500,
+      "tracking": 0,
+      "leading": 1.3
+    },
+    "mono": {
+      "font": "mono",
+      "size": 34,
+      "weight": 500,
+      "tracking": 0,
+      "leading": 1.5
+    },
+    "numerals": {
+      "font": "display",
+      "size": 160,
+      "weight": 700,
+      "tracking": -30,
+      "leading": 1
+    }
+  },
+  "easing": {
+    "in": "expo.out",
+    "out": "expo.in",
+    "pop": "back.out(1.8)",
+    "settle": "power3.out",
+    "spring": "spring(180,18)"
+  },
+  "transition": {
+    "type": "flash",
+    "duration": 0.3
+  },
+  "grain": 0.1,
+  "sound": {
+    "hit/land": "freesound:land",
+    "move/whip": "freesound:whip",
+    "ui/pop": "freesound:pop"
+  }
+}

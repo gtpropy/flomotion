@@ -1,0 +1,95 @@
+{
+  "id": "sketch",
+  "name": "Sketch",
+  "description": "Hand-drawn and playful. Permanent Marker display, paper colours, bouncy eases, wipes.",
+  "palette": {
+    "bg": "#fbf4e4",
+    "fg": "#2a2420",
+    "primary": "#e8452c",
+    "accent": "#2d7dd2",
+    "surface": "#fffaf0",
+    "muted": "#8c7f70"
+  },
+  "background": "#fbf4e4",
+  "fonts": [
+    {
+      "id": "display",
+      "family": "Permanent Marker",
+      "source": "google",
+      "weights": [
+        400
+      ],
+      "subsets": [
+        "latin"
+      ]
+    },
+    {
+      "id": "body",
+      "family": "Patrick Hand",
+      "source": "google",
+      "weights": [
+        400
+      ],
+      "subsets": [
+        "latin"
+      ]
+    },
+    {
+      "id": "mono",
+      "family": "Space Mono",
+      "source": "google",
+      "weights": [
+        400
+      ],
+      "subsets": [
+        "latin"
+      ]
+    }
+  ],
+  "type": {
+    "display": {
+      "font": "display",
+      "size": 96,
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.05
+    },
+    "body": {
+      "font": "body",
+      "size": 48,
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.25
+    },
+    "mono": {
+      "font": "mono",
+      "size": 32,
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1.5
+    },
+    "numerals": {
+      "font": "display",
+      "size": 150,
+      "weight": 400,
+      "tracking": 0,
+      "leading": 1
+    }
+  },
+  "easing": {
+    "in": "back.out(2)",
+    "out": "back.in(1.4)",
+    "pop": "elastic.out(1,0.5)",
+    "settle": "power2.out",
+    "spring": "spring(150,12)"
+  },
+  "transition": {
+    "type": "wipe",
+    "duration": 0.45
+  },
+  "grain": 0.18,
+  "sound": {
+    "ui/pop": "freesound:pop",
+    "move/whip": "freesound:whoosh"
+  }
+}
