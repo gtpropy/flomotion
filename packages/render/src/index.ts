@@ -3,3 +3,6 @@ export * from "./hf.js";
 export * from "./project-dir.js";
 export * from "./render.js";
 export * from "./fonts/index.js";
+export * from "./audio.js";
+export * from "./media-probe.js";
+export * from "./project.js";

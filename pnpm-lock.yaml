@@ -166,6 +166,15 @@ importers:
 
   .:
     devDependencies:
+      '@codecut/components':
+        specifier: workspace:*
+        version: link:packages/components
+      '@codecut/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@codecut/render':
+        specifier: workspace:*
+        version: link:packages/render
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.13.0)

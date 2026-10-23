@@ -39,9 +39,10 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
     const f = fontById.get(id);
     if (f) {
       fontsUsed.add(f.id);
-      return [JSON.stringify(f.family), ...f.fallback.map((x) => (/\s/.test(x) ? JSON.stringify(x) : x)), "sans-serif"].join(", ");
+      // single quotes: this string lands inside style="…" attributes
+      return [`'${f.family}'`, ...f.fallback.map((x) => (/\s/.test(x) ? `'${x}'` : x)), "sans-serif"].join(", ");
     }
-    return /\s/.test(id) ? `${JSON.stringify(id)}, sans-serif` : `${id}, sans-serif`;
+    return /\s/.test(id) ? `'${id}', sans-serif` : `${id}, sans-serif`;
   };
 
   const makeCtx = (node: RNode): RenderCtx => {

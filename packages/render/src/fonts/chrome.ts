@@ -48,6 +48,8 @@ export async function openFontPage(root: string, fonts: ResolvedFont[]): Promise
     } else void req.continue();
   });
   await page.goto(pathToFileURL(file).href);
+  // tsx/esbuild inject a `__name` helper into serialised functions; give the page a no-op one
+  await page.evaluate("window.__name = (f) => f");
   (page as unknown as { __remote: string[] }).__remote = remote;
   return { browser, page, close: () => browser.close() };
 }

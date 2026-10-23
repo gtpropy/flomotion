@@ -14,6 +14,7 @@ import {
   text,
   time,
   toCss,
+  lerpColor,
   type Channel,
   type RNode,
   type RenderCtx,
@@ -121,8 +122,8 @@ const readState = (rc: RenderCtx, t: number): State => {
 function axesString(a: State["axes"] | undefined): string | undefined {
   if (!a) return undefined;
   const parts: string[] = [];
-  for (const k of ["wght", "wdth", "slnt", "ital", "opsz"] as const) if (typeof a[k] === "number") parts.push(`"${k}" ${round(a[k]!, 2)}`);
-  for (const [k, v] of Object.entries(a.custom ?? {})) parts.push(`"${k}" ${round(v, 3)}`);
+  for (const k of ["wght", "wdth", "slnt", "ital", "opsz"] as const) if (typeof a[k] === "number") parts.push(`'${k}' ${round(a[k]!, 2)}`);
+  for (const [k, v] of Object.entries(a.custom ?? {})) parts.push(`'${k}' ${round(v, 3)}`);
   return parts.length ? parts.join(", ") : undefined;
 }
 
@@ -130,7 +131,7 @@ const FEATURE_NUMERIC: Record<string, string[]> = { tabular: ["tnum"], proportio
 
 function featureString(features: string[] | undefined, numeric: string | undefined): string | undefined {
   const all = [...(features ?? []), ...(FEATURE_NUMERIC[numeric ?? ""] ?? [])];
-  return all.length ? all.map((f) => `"${f}" 1`).join(", ") : undefined;
+  return all.length ? all.map((f) => `'${f}' 1`).join(", ") : undefined;
 }
 
 const CASE: Record<string, Record<string, string>> = {
@@ -191,6 +192,21 @@ function withAlphaColor(c: string, a: number): string {
     return toCss({ ...p, a: p.a * a });
   } catch {
     return c;
+  }
+}
+
+/** Colour of a linear gradient at fractional position t along its axis. */
+function gradientAt(stops: Array<[number, string]>, t: number): string {
+  const k = Math.min(1, Math.max(0, t));
+  let i = 0;
+  while (i < stops.length - 2 && k > stops[i + 1]![0]) i++;
+  const [p0, c0] = stops[i]!;
+  const [p1, c1] = stops[Math.min(stops.length - 1, i + 1)]!;
+  const f = p1 === p0 ? 0 : Math.min(1, Math.max(0, (k - p0) / (p1 - p0)));
+  try {
+    return toCss(lerpColor(parseColor(c0), parseColor(c1), f));
+  } catch {
+    return c0;
   }
 }
 
@@ -274,6 +290,29 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     }
   }
 
+  // gradient fills cannot clip through animated inline-block units, so colour each character from the
+  // gradient at its measured position instead
+  const fillv = s.fill;
+  const srcIndex = new Map(r.chars.map((c, i) => [c, i] as const));
+  let charColor: ((i: number) => string) | undefined;
+  if (needed.size && fillv && typeof fillv === "object" && (fillv as { type?: string }).type === "linear") {
+    const g = fillv as { angle?: number | string; stops: Array<[number, string]> };
+    const m = measure(rc, plain, toTextStyle(s, rc, size), maxW);
+    const glyphs = new Map<number, { x: number; y: number; width: number; height: number }>();
+    for (const l of m.lines) for (const gl of l.glyphs) glyphs.set(gl.index, gl);
+    const th = ((typeof g.angle === "number" ? g.angle : parseFloat(String(g.angle ?? 180))) * Math.PI) / 180;
+    const dx = Math.sin(th);
+    const dy = -Math.cos(th);
+    const W = Math.max(1, m.width);
+    const H = Math.max(1, m.height);
+    const L = Math.abs(W * dx) + Math.abs(H * dy) || 1;
+    charColor = (i) => {
+      const gl = glyphs.get(i);
+      if (!gl) return gradientAt(g.stops, 0.5);
+      const t = ((gl.x + gl.width / 2 - W / 2) * dx + (gl.y + gl.height / 2 - H / 2) * dy) / L + 0.5;
+      return gradientAt(g.stops, t);
+    };
+  } else if (needed.size && isGradient(fillv)) issues.push("image/radial gradient fills are approximated with the first stop when text is split into units");
   // inner markup (split or plain)
   const table: UnitTable = {
     char: [],
@@ -328,7 +367,8 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
             table.char.push(cid);
             table.target.char.push(cid);
             table.charText.push(c.g);
-            return `${c.open}<span id="${cid}" class="cc-c" style="display:inline-block;white-space:pre">${esc(c.g)}</span>${c.close}`;
+            const col = charColor ? `;color:${charColor(srcIndex.get(c)!)}` : "";
+            return `${c.open}<span id="${cid}" class="cc-c" style="display:inline-block;white-space:pre${col}">${esc(c.g)}</span>${c.close}`;
           })
           .join("");
         const sep = k < words.length - 1 || false ? " " : "";
@@ -348,8 +388,7 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
   setUnitTable(rc.node, table);
 
   // style
-  const fillv = s.fill;
-  const gradient = isGradient(fillv);
+  const gradient = isGradient(fillv) && !charColor;
   if (fillv && typeof fillv === "object" && (fillv as { type?: string }).type === "video") issues.push("video fill clipped to letter shapes is not supported yet; using white");
   if (s.extrude && s.extrude.depth > 0) issues.push("`extrude` (3D text) is a later tier: ignored");
   if (s.stroke?.dash?.length) issues.push("dashed text strokes need SVG text and are not supported yet: ignored");
