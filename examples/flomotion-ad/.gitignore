@@ -1,0 +1,6 @@
+.flomotion/*
+!.flomotion/ledger.json
+!.flomotion/fonts.lock.json
+!.flomotion/fonts/
+renders/
+audio-src/

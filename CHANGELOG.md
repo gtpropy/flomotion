@@ -1,10 +1,20 @@
 # Changelog
 
+## Fixes and examples (unreleased)
+
+- **Audio mix is deterministic again.** With voice and music together, two renders of the same project could differ
+  in the last samples (`sidechaincompress` paired frames in thread order). The ducking chain now uses fixed frame
+  sizes; a regression test mixes the same project 8 times and fails without the fix.
+- **`examples/flomotion-ad`:** a 30 s vertical ad for flomotion, built with the studio skill (real live-view captures,
+  its own licence ledger on screen). See its `LOG.md` for what was and was not verified.
+
 ## Rename: CodeCut is now flomotion everywhere
 
 - The product, packages (`@flomotion/*`), command (`flomotion`), project folder (`.flomotion/`), config file
   (`flomotion.json`) and element ids (`fm_`) all use the name flomotion. The old `codecut` command and `@codecut/*`
-  imports are gone. Projects made before the rename: move `.codecut/` to `.flomotion/` and change the imports.
+  imports are gone. Projects made before the rename: move `.codecut/` to `.flomotion/`, change the imports, and replace `.codecut/` with
+  `.flomotion/` inside `.flomotion/fonts.lock.json` and `.flomotion/ledger.json`
+  (`sed -i '' 's#\.codecut/#.flomotion/#g' .flomotion/*.json`).
 
 ## 0.4.0: setup, your own material, and assets (unreleased)
 

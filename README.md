@@ -1,5 +1,20 @@
 # flomotion
 
+<p align="center">
+  <a href="docs/media/flomotion-ad.mp4">
+    <img src="docs/media/flomotion-ad.png" alt="The flomotion ad: a 30 second vertical video that is one TSX file" width="270">
+  </a>
+</p>
+
+<p align="center">
+  <video src="docs/media/flomotion-ad.mp4" poster="docs/media/flomotion-ad.png" controls muted playsinline width="270"></video>
+  <br>
+  <b>The 30 s ad for flomotion, made with flomotion.</b> The whole video is one TSX file:
+  <a href="examples/flomotion-ad/project.tsx"><code>examples/flomotion-ad/project.tsx</code></a>
+  (<a href="examples/flomotion-ad/script.md">script</a>, <a href="examples/flomotion-ad/storyboard.md">storyboard</a>,
+  <a href="examples/flomotion-ad/LOG.md">what was and was not verified</a>).
+</p>
+
 A code-first video editor. A video is one TSX file; every control a normal editor has is a typed prop or
 function. An editor UI and Claude (through MCP) edit the same project file. Rendering is done by
 [HyperFrames](https://github.com/heygen-com/hyperframes) (HTML + GSAP → headless Chrome + FFmpeg → MP4); flomotion is
@@ -58,7 +73,7 @@ claude                                    # then describe the video you want
 
 The skill (`skills/flomotion-studio`) runs a gated workflow: interview, direction, script, style frames, storyboard,
 draft, final. `--ui` starts the **live view**: open the address the server prints (or run `flomotion ui` in the
-folder) to watch the project take shape: Claude's tool calls as they happen, the outline and timeline, the
+folder) to watch the project take shape: a **Storyboard** board (your ideas in `ideas.md` and Claude's plan in `storyboard.md`, turning green as scenes are built), Claude's tool calls as they happen, the outline and timeline, the
 preview at any time, review results, sounds and fonts with their licences, renders, and a history you can restore
 from. `docs/gate2-manual-checklist.md` lists what to set up and verify by hand (nothing here has been run in a real
 Claude Code session). From a checkout use `node packages/cli/dist/bin.mjs …` after `pnpm build`.

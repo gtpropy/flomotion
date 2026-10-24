@@ -1,0 +1,62 @@
+[
+  {
+    "id": "hit",
+    "name": "hit",
+    "tags": ["hit", "boom"],
+    "license": "owned by the person",
+    "rights": "own",
+    "author": "flomotion-ad make-audio.py",
+    "url": "",
+    "file": "hit.wav"
+  },
+  {
+    "id": "tick",
+    "name": "tick",
+    "tags": ["tick", "ui"],
+    "license": "owned by the person",
+    "rights": "own",
+    "author": "flomotion-ad make-audio.py",
+    "url": "",
+    "file": "tick.wav"
+  },
+  {
+    "id": "pop",
+    "name": "pop",
+    "tags": ["pop", "ui"],
+    "license": "owned by the person",
+    "rights": "own",
+    "author": "flomotion-ad make-audio.py",
+    "url": "",
+    "file": "pop.wav"
+  },
+  {
+    "id": "type",
+    "name": "type",
+    "tags": ["type", "ui"],
+    "license": "owned by the person",
+    "rights": "own",
+    "author": "flomotion-ad make-audio.py",
+    "url": "",
+    "file": "type.wav"
+  },
+  {
+    "id": "chime",
+    "name": "chime",
+    "tags": ["chime", "tech", "success"],
+    "license": "owned by the person",
+    "rights": "own",
+    "author": "flomotion-ad make-audio.py",
+    "url": "",
+    "file": "chime.wav"
+  },
+  {
+    "id": "music",
+    "name": "music",
+    "tags": ["music", "bed"],
+    "license": "CC0-1.0, arranged from Freesound 434103, 429447 and 560760 (all CC0)",
+    "rights": "licensed",
+    "author": "Freesound users (CC0), arranged by scripts/build-music.py",
+    "url": "https://freesound.org/s/434103/",
+    "file": "music.wav"
+  }
+]

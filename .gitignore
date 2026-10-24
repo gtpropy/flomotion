@@ -10,3 +10,6 @@ coverage/
 .vitest/
 tests/.tmp/
 .publish/
+
+# the flomotion-ad example keeps its licence ledger, font lock and fonts (the rest of .flomotion/ is generated)
+!examples/flomotion-ad/.flomotion/
