@@ -15,6 +15,12 @@
   <a href="examples/flomotion-ad/LOG.md">what was and was not verified</a>).
 </p>
 
+<p align="center"><sub>
+  Credits: voice by <a href="https://elevenlabs.io">ElevenLabs</a> (voice "Jessica"); sound effect "VS_Short Whoosh 4" by
+  <a href="https://freesound.org/people/Vilkas_Sound/sounds/460469/">Vilkas_Sound</a> (CC BY 4.0); music arranged from CC0 loops by
+  Freesound users; the rest is original. Full list: <a href="docs/media/flomotion-ad.credits.txt">credits</a>.
+</sub></p>
+
 A code-first video editor. A video is one TSX file; every control a normal editor has is a typed prop or
 function. An editor UI and Claude (through MCP) edit the same project file. Rendering is done by
 [HyperFrames](https://github.com/heygen-com/hyperframes) (HTML + GSAP → headless Chrome + FFmpeg → MP4); flomotion is

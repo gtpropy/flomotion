@@ -105,7 +105,7 @@ export interface FlomotionServer {
 export function createServer(root: string, deps: Deps = {}): FlomotionServer {
   const ctx = new Context(root, deps);
   const server = new McpServer(
-    { name: "flomotion", version: "0.4.0" },
+    { name: "flomotion", version: "0.4.1" },
     {
       instructions: `${FLOMOTION_NAME} edits a video that is one TSX file. Every tool works on the project in ${ctx.root}. Writes return a patch, a description and an undo token. Errors are typed with a fix hint. You cannot hear audio or judge taste: describe what you measured and ask the user to listen and approve.`,
     },

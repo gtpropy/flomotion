@@ -7,7 +7,7 @@ import { bundle } from "./bundle.mjs";
 const OUT = ".publish";
 const root = JSON.parse(readFileSync("package.json", "utf8"));
 const cli = JSON.parse(readFileSync("packages/cli/package.json", "utf8"));
-const version = "0.4.0";
+const version = "0.4.1";
 
 await bundle();
 rmSync(OUT, { recursive: true, force: true });
@@ -36,6 +36,9 @@ const pkg = {
     "A code-first video editor: a video is one TSX file, edited by Claude through MCP and rendered with HyperFrames.",
   type: "module",
   license: "MIT",
+  repository: { type: "git", url: "git+https://github.com/gtpropy/flomotion.git" },
+  homepage: "https://github.com/gtpropy/flomotion#readme",
+  bugs: { url: "https://github.com/gtpropy/flomotion/issues" },
   keywords: [
     "video",
     "motion-graphics",

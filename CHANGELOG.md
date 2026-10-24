@@ -1,6 +1,12 @@
 # Changelog
 
-## Fixes and examples (unreleased)
+## 0.4.1
+
+- **The npm page links to the repo** (https://github.com/gtpropy/flomotion): `repository`, `homepage` and `bugs` are set.
+- Everything in "Fixes and examples" below, the Storyboard tab, and the Markdown-only skill ship in this release (0.4.0 was published first, with the same code).
+- The ad's README credits its sources: the voice (ElevenLabs), the CC-BY sound effect (Vilkas_Sound) and the CC0 loops.
+
+## Fixes and examples
 
 - **Audio mix is deterministic again.** With voice and music together, two renders of the same project could differ
   in the last samples (`sidechaincompress` paired frames in thread order). The ducking chain now uses fixed frame

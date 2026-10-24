@@ -1,0 +1,4 @@
+Credits
+
+"VS_Short Whoosh 4.mp3" by Vilkas_Sound (CC-BY-4.0) - https://freesound.org/people/Vilkas_Sound/sounds/460469/
+"voice.wav" by ElevenLabs (voice: Jessica) (ElevenLabs generated (voice Jessica, free plan: terms of your plan), assembled from p01-p14 by scripts/build-voice.py) - https://elevenlabs.io
