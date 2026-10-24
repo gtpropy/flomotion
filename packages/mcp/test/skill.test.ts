@@ -27,8 +27,7 @@ const walk = (dir: string): string[] =>
   readdirSync(dir).flatMap((f) =>
     statSync(join(dir, f)).isDirectory() ? walk(join(dir, f)) : [join(dir, f)],
   );
-const textFiles = () =>
-  walk(SKILL).filter((f) => /\.(md|json)$/.test(f) && !f.includes("components.md"));
+const textFiles = () => walk(SKILL).filter((f) => /\.md$/.test(f) && !f.includes("components.md"));
 
 describe("skills/flomotion-studio: the package's main director skill", () => {
   const md = read("SKILL.md");
@@ -81,11 +80,11 @@ describe("skills/flomotion-studio: the package's main director skill", () => {
   });
   it("tells the agent about the live view", () => {
     expect(md).toMatch(/flomotion ui/);
-    expect(md).toMatch(/brief\.json/);
+    expect(md).toMatch(/brief\.md/);
+    expect(md).toMatch(/Storyboard\*\* tab/);
   });
-  it("every file in the skill parses and the references named in SKILL.md exist", () => {
-    for (const f of walk(SKILL).filter((x) => x.endsWith(".json")))
-      expect(() => JSON.parse(readFileSync(f, "utf8")), f).not.toThrow();
+  it("holds no JSON data files (Markdown a model can read) and the references named in SKILL.md exist", () => {
+    expect(walk(SKILL).filter((x) => x.endsWith(".json"))).toEqual([]);
     for (const m of md.matchAll(/`((?:references|config|dataset|evals|looks)\/[\w./*-]+)`/g)) {
       const rel = m[1]!;
       if (rel.includes("*")) continue;
@@ -174,42 +173,63 @@ describe("skills/flomotion-studio: the package's main director skill", () => {
   });
 });
 
-describe("the three skill looks exist in the engine and match their JSON", () => {
+/** The tables of a look file (`looks/<name>.md`) by section: `palette`, `type.display`, `motion.easing`, ... */
+function lookTables(text: string): Record<string, Record<string, string>> {
+  const out: Record<string, Record<string, string>> = {};
+  const path: string[] = [];
+  for (const line of text.split("\n")) {
+    const h = /^(#{2,4}) (.+)$/.exec(line);
+    if (h) {
+      path.length = h[1]!.length - 2;
+      path[h[1]!.length - 2] = h[2]!.trim();
+      continue;
+    }
+    const row = /^\| ([^|]+?) \| (.*?) \|$/.exec(line);
+    if (row && row[1] !== "Field" && !/^-+$/.test(row[1]!))
+      (out[path.join(".")] ??= {})[row[1]!.trim()] = row[2]!.trim();
+  }
+  return out;
+}
+
+describe("the three skill looks exist in the engine and match their look files", () => {
   for (const name of ["clean-light", "dark-product", "bold-kinetic"]) {
     it(name, () => {
-      const j = JSON.parse(read(`looks/${name}.json`));
+      const t = lookTables(read(`looks/${name}.md`));
       const look = getLook(name)!;
       expect(look, `engine look ${name}`).toBeTruthy();
-      const p = j.palette;
+      const p = t.palette!;
       expect(look.palette.bg).toBe(p.bg);
       expect(look.palette.surface).toBe(p.surface);
       expect(look.palette.text).toBe(p.text);
       expect(look.palette.textMuted).toBe(p.textMuted);
       for (const k of ["accent", "signal", "positive", "negative"])
         expect(look.palette[k], k).toBe(p[k]);
-      p.blocks.forEach((c: string, i: number) =>
+      p.blocks!.split(", ").forEach((c: string, i: number) =>
         expect(look.palette[`block${i + 1}`], `block${i + 1}`).toBe(c),
       );
       expect(look.palette.fg).toBe(p.text);
       expect(look.palette.primary).toBe(p.accent);
+      const weights = (w: string) => w.split(", ").map(Number);
       expect(look.fonts.find((f) => f.id === "display")).toMatchObject({
-        family: j.type.display.family,
-        weights: j.type.display.weights,
+        family: t["type.display"]!.family,
+        weights: weights(t["type.display"]!.weights!),
       });
       expect(look.fonts.find((f) => f.id === "body")).toMatchObject({
-        family: j.type.body.family,
-        weights: j.type.body.weights,
+        family: t["type.body"]!.family,
+        weights: weights(t["type.body"]!.weights!),
       });
-      expect(look.fonts.find((f) => f.id === "mono")!.family).toBe(j.type.mono.family);
-      expect(look.type.display!.tracking).toBe(Math.round(j.type.display.tracking * 1000));
-      expect(look.type.display!.leading).toBe(j.type.display.lineHeight);
-      expect(look.easing.in).toBe(j.motion.easing.enter);
-      expect(look.easing.out).toBe(j.motion.easing.exit);
-      expect(look.easing.move).toBe(j.motion.easing.move);
-      expect(look.easing.spring).toBe(
-        `spring(${j.motion.easing.spring.stiffness},${j.motion.easing.spring.damping})`,
+      expect(look.fonts.find((f) => f.id === "mono")!.family).toBe(t["type.mono"]!.family);
+      expect(look.type.display!.tracking).toBe(
+        Math.round(Number(t["type.display"]!.tracking) * 1000),
       );
-      expect(look.grain).toBe(j.texture.grain);
+      expect(look.type.display!.leading).toBe(Number(t["type.display"]!.lineHeight));
+      const e = t["motion.easing"]!;
+      expect(look.easing.in).toBe(e.enter);
+      expect(look.easing.out).toBe(e.exit);
+      expect(look.easing.move).toBe(e.move);
+      const sp = t["motion.easing.spring"]!;
+      expect(look.easing.spring).toBe(`spring(${sp.stiffness},${sp.damping})`);
+      expect(look.grain).toBe(Number(t.texture!.grain));
       // the skill's minimum sizes for 9:16 hold for the tokens
       expect(look.type.body!.size).toBeGreaterThanOrEqual(44);
       expect(look.type.caption!.size).toBeGreaterThanOrEqual(40);
@@ -419,11 +439,15 @@ describe("flomotion install skill (the bundled CLI)", () => {
         "references/mcp-tools.md",
         "references/block-recipes.md",
         "references/components.md",
-        "looks/clean-light.json",
-        "looks/dark-product.json",
-        "looks/bold-kinetic.json",
-        "config/thresholds.json",
-        "dataset/schema.json",
+        "looks/clean-light.md",
+        "looks/dark-product.md",
+        "looks/bold-kinetic.md",
+        "config/thresholds.md",
+        "references/storyboard.md",
+        "references/clean-styles.md",
+        "references/script-craft.md",
+        "references/transitions.md",
+        "dataset/schema.md",
         "evals/README.md",
         "examples/saas-promo/project.tsx",
       ])

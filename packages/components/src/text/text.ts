@@ -860,7 +860,7 @@ const inline = <C extends Record<string, any>>(
     description,
     traits: ["inline"],
     children: "any",
-    controls,
+    controls: { id: text({ label: "Id", description: "Stable unique id." }), ...controls },
     render: (p: any, rc: RenderCtx) => ({
       html: `${open(p, rc)}{{children}}</span>`,
       visual: false,

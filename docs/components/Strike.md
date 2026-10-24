@@ -8,14 +8,16 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `color` | `Color` | `"#ffffff"` |  |
 | `thickness` | `number` | `4` | range 0..∞; unit px |
 | `offset` | `number` | `4` | unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface StrikeProps {
+  /** Stable unique id. */
+  id?: string;
   /** default "#ffffff" */
   color?: Color;
   /** range 0..∞; unit px; default 4 */
@@ -24,8 +26,6 @@ export interface StrikeProps {
   offset?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```

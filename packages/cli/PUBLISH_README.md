@@ -33,10 +33,10 @@ render. The agent cannot hear audio or judge taste, so it lists what you need to
 ## Live view
 
 `--ui` on the MCP server (or `flomotion ui` in the project folder) serves a small page on `127.0.0.1:4317`. It shows,
-in real time: each tool call Claude makes with its result, progress through the gates, the scene outline and
+in real time: a **Storyboard** board where you and Claude brainstorm (`ideas.md`) and the plan (`storyboard.md`) shows as a timeline that turns green as scenes are built, each tool call Claude makes with its result, progress through the gates, the scene outline and
 timeline, a preview you can scrub (rendered on demand from the file on disk), the code with the latest change
 highlighted, review results, the sounds and fonts used with their licences, renders you can play, and the
-history with a Restore button. It is a viewer with undo, not an editor yet. It listens on localhost only and loads
+history with a Restore button. It is a viewer with undo and a notes board, not an editor yet. It listens on localhost only and loads
 nothing from the network.
 
 ## CLI

@@ -12,6 +12,7 @@ import {
 } from "@flomotion/core";
 import { collectFontDecls, readLedger } from "@flomotion/render";
 import { activityFile, logActivity, readActivity } from "../activity.js";
+import { addIdea, readBoard, toggleIdea } from "../board.js";
 import { Context, type Deps } from "../context.js";
 import { outlineOf } from "../tools/util.js";
 import { PAGE_HTML } from "./page.js";
@@ -34,13 +35,14 @@ export interface UiServer {
   close(): Promise<void>;
 }
 
-const GATE_FILES = [
-  "interview.md",
-  "brief.json",
-  "script.json",
-  "storyboard.json",
-  "LOG.md",
-] as const;
+/** The gate files, as Markdown. A project made earlier may still have brief.json, script.json or storyboard.json. */
+const GATE_FILES = ["interview.md", "brief.md", "script.md", "storyboard.md", "LOG.md"] as const;
+const LEGACY_GATE: Record<string, string> = {
+  "brief.md": "brief.json",
+  "script.md": "script.json",
+  "storyboard.md": "storyboard.json",
+};
+const BOARD_FILES = ["ideas.md"];
 const MEDIA: Record<string, string> = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
@@ -230,7 +232,9 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
 
   function gates() {
     return GATE_FILES.map((name) => {
-      const p = join(projectRoot, name);
+      let p = join(projectRoot, name);
+      if (!existsSync(p) && LEGACY_GATE[name] && existsSync(join(projectRoot, LEGACY_GATE[name]!)))
+        p = join(projectRoot, LEGACY_GATE[name]!);
       if (!existsSync(p)) return { name, exists: false };
       const text = readFileSync(p, "utf8");
       const tail =
@@ -265,6 +269,7 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
       })),
       review: readJson(join(projectRoot, FLOMOTION_DIR, "review", "last.json")) ?? null,
       gates: gates(),
+      board: readBoard(projectRoot),
       ...files(),
     };
   }
@@ -283,7 +288,8 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
       mtimeOf(activityFile(projectRoot)) +
       (existsSync(activityFile(projectRoot)) ? statSync(activityFile(projectRoot)).size : 0);
     fp.review = mtimeOf(join(projectRoot, FLOMOTION_DIR, "review", "last.json"));
-    for (const g of GATE_FILES) fp[g] = mtimeOf(join(projectRoot, g));
+    for (const g of [...GATE_FILES, ...Object.values(LEGACY_GATE), ...BOARD_FILES])
+      fp[g] = mtimeOf(join(projectRoot, g));
     for (const d of [
       "renders",
       `${FLOMOTION_DIR}/frames`,
@@ -439,6 +445,35 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
       }
       if (req.method === "GET" && url.pathname.startsWith("/files/"))
         return serveFile(req, res, decodeURIComponent(url.pathname.slice("/files/".length)));
+      if (req.method === "POST" && url.pathname.startsWith("/api/board/")) {
+        if (req.headers["x-flomotion-ui"] !== "1")
+          return json(res, 403, { error: { code: "invalid_edit", message: "Missing header" } });
+        const chunks: Buffer[] = [];
+        for await (const c of req) {
+          chunks.push(c as Buffer);
+          if (chunks.reduce((n, b) => n + b.length, 0) > 4_000)
+            return json(res, 413, { error: { code: "invalid_edit", message: "Too large" } });
+        }
+        let body: { text?: string; index?: number } = {};
+        try {
+          body = JSON.parse(Buffer.concat(chunks).toString("utf8") || "{}");
+        } catch {
+          return json(res, 400, { error: { code: "invalid_edit", message: "Not JSON" } });
+        }
+        if (url.pathname === "/api/board/idea") {
+          if (typeof body.text !== "string" || !body.text.trim())
+            return json(res, 400, { error: { code: "invalid_edit", message: "text is required" } });
+          return json(res, 200, { ideas: addIdea(projectRoot, body.text, "you") });
+        }
+        if (url.pathname === "/api/board/idea/toggle") {
+          if (!Number.isInteger(body.index) || (body.index as number) < 0)
+            return json(res, 400, {
+              error: { code: "invalid_edit", message: "index is required" },
+            });
+          return json(res, 200, { ideas: toggleIdea(projectRoot, body.index as number) });
+        }
+        return json(res, 404, { error: { code: "invalid_edit", message: "No such board route" } });
+      }
       if (req.method === "POST" && url.pathname === "/api/restore") {
         // the custom header cannot be sent cross-origin without a preflight, which this server never allows
         if (req.headers["x-flomotion-ui"] !== "1")

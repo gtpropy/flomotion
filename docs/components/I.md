@@ -8,15 +8,15 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `skew` | `number` | `0` |  |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface IProps {
+  /** Stable unique id. */
+  id?: string;
   /** default 0 */
   skew?: number;
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```

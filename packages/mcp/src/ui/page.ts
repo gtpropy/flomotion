@@ -127,6 +127,26 @@ video{width:100%;border-radius:8px;background:#000;max-height:360px}
 .lightbox.on{display:grid}.lightbox img{max-width:94vw;max-height:94vh;border-radius:8px}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:8px 14px;border-radius:10px;z-index:30;display:none}
 .toast.on{display:block}
+/* storyboard board */
+.strip{position:relative;height:34px;background:var(--panel2);border-radius:8px;margin:2px 0 12px;overflow:hidden}
+.seg{position:absolute;top:3px;bottom:3px;border-radius:5px;border:1px solid color-mix(in srgb,var(--read) 60%,transparent);background:color-mix(in srgb,var(--read) 18%,var(--panel2));font:600 10px/26px var(--mono);text-align:center;color:var(--muted);cursor:pointer;overflow:hidden;white-space:nowrap}
+.seg.built{background:color-mix(in srgb,var(--ok) 28%,var(--panel2));border-color:var(--ok);color:var(--text)}
+.seg.active{background:color-mix(in srgb,var(--accent) 45%,var(--panel2));border-color:var(--accent);color:#fff}
+.seg.now{outline:2px solid var(--warn)}
+.bcard{border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin-bottom:8px;background:var(--panel2)}
+.bcard.now{border-color:var(--warn)}
+.bcard .bh{display:flex;gap:8px;align-items:center;cursor:pointer}
+.bcard .bh b{flex:1;min-width:0}
+.bcard .bt{font:11px var(--mono);color:var(--muted)}
+.bcard dl{margin:6px 0 0;display:grid;grid-template-columns:78px 1fr;gap:3px 8px;font-size:12px}
+.bcard dt{color:var(--muted)}.bcard dd{margin:0;word-break:break-word}
+.idea{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;margin-bottom:6px;border-radius:9px;background:color-mix(in srgb,var(--warn) 14%,var(--panel2));border:1px solid color-mix(in srgb,var(--warn) 35%,var(--line))}
+.idea.claude{background:color-mix(in srgb,var(--accent) 14%,var(--panel2));border-color:color-mix(in srgb,var(--accent) 40%,var(--line))}
+.idea.done{opacity:.5;text-decoration:line-through}
+.idea .from{margin-left:auto;font:600 10px var(--mono);color:var(--muted);text-transform:uppercase}
+.addidea{display:flex;gap:8px;margin:6px 0 10px}
+.addidea input{flex:1;min-width:0;background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:6px 9px;font:inherit}
+.sec{margin:14px 0 6px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
 </style>
 </head>
 <body>
@@ -169,7 +189,7 @@ video{width:100%;border-radius:8px;background:#000;max-height:360px}
 <script>
 (function(){
 "use strict";
-var S=null, started=false, sel=null, time=0, tab="outline", src=null, frameN=0, frameBusy=false, frameWant=null, lastProjectMtime=0, lastActT=0, seenAct={};
+var S=null, started=false, sel=null, time=0, tab="board", src=null, frameN=0, frameBusy=false, frameWant=null, lastProjectMtime=0, lastActT=0, seenAct={};
 var $=function(id){return document.getElementById(id)};
 function h(tag,attrs,kids){var e=document.createElement(tag);if(attrs)for(var k in attrs){if(k==="class")e.className=attrs[k];else if(k==="text")e.textContent=attrs[k];else if(k.slice(0,2)==="on")e.addEventListener(k.slice(2),attrs[k]);else e.setAttribute(k,attrs[k])}
   (kids||[]).forEach(function(c){if(c==null)return;e.appendChild(typeof c==="string"?document.createTextNode(c):c)});return e}
@@ -191,10 +211,10 @@ function steps(){
   (function walk(n,d){if(!n)return;if(n.type==="Scene")scenes++;if(d>0)els++;(n.children||[]).forEach(function(c){walk(c,d+1)})})(p&&p.outline,0);
   var rv=S.review, drafts=S.renders.filter(function(r){return /-draft\.mp4$/.test(r.file)}), fin=S.renders.filter(function(r){return /-final\.mp4$/.test(r.file)});
   var list=[
-    {t:"Interview",d:g["brief.json"].exists?"brief.json written":"Waiting for the brief",ok:g["brief.json"].exists},
-    {t:"Script",d:g["script.json"].exists?"script.json written":"Not written yet",ok:g["script.json"].exists},
+    {t:"Interview",d:g["brief.md"].exists?"brief.md written":"Waiting for the brief",ok:g["brief.md"].exists},
+    {t:"Script",d:g["script.md"].exists?"script.md written":"Not written yet",ok:g["script.md"].exists},
     {t:"Style frames",d:S.frames.length||S.sheet?"Frames rendered":"No frames yet",ok:S.frames.length>0||!!S.sheet},
-    {t:"Storyboard",d:g["storyboard.json"].exists?"storyboard.json written":"Not written yet",ok:g["storyboard.json"].exists},
+    {t:"Storyboard",d:g["storyboard.md"].exists?"storyboard.md written":"Not written yet",ok:g["storyboard.md"].exists},
     {t:"Build",d:scenes?scenes+" scene"+(scenes>1?"s":"")+", "+els+" elements":"No scenes yet",ok:els>3},
     {t:"Review",d:rv?(rv.pass?"Passed":"Failing: checks "+(rv.failing||[]).join(", "))+" · "+ago(rv.at):"Not run yet",ok:!!rv&&rv.pass,bad:!!rv&&!rv.pass},
     {t:"Draft render",d:drafts.length?drafts[0].file:"Not rendered",ok:drafts.length>0},
@@ -238,6 +258,7 @@ function setTime(t,reload){
   t=Math.max(0,Math.min(tl.duration-1/tl.fps,t));time=Math.round(t*tl.fps)/tl.fps;
   $("scrub").value=time;$("tm").textContent=fmt(time)+" / "+fmt(tl.duration);
   var ph=document.querySelector(".playhead");if(ph)ph.style.left=(time/tl.duration*100)+"%";
+  var bp=document.querySelector(".bplay");if(bp)bp.style.left=(time/tl.duration*100)+"%";
   if(reload)loadFrame();
 }
 function loadFrame(){
@@ -290,7 +311,7 @@ function timeline(){
 }
 
 /* ---------- right panel ---------- */
-var TABS=[["outline","Outline"],["code","Code"],["review","Review"],["assets","Assets"],["renders","Renders"],["history","History"]];
+var TABS=[["board","Storyboard"],["outline","Outline"],["code","Code"],["review","Review"],["assets","Assets"],["renders","Renders"],["history","History"]];
 function tabs(){var t=$("tabs");t.textContent="";TABS.forEach(function(x){t.appendChild(h("button",{class:"tab"+(tab===x[0]?" on":""),text:x[1],onclick:function(){tab=x[0];tabs();panel()}}))})}
 function select(id){sel=id;timeline();if(tab==="outline")panel();if(tab==="code")flashCode(id)}
 function tree(n,root){
@@ -307,6 +328,7 @@ function panel(){
     if(!S.project.outline){p.appendChild(h("div",{class:"empty",text:"No project yet. Claude creates it with project_create."}));return}
     p.appendChild(tree(S.project.outline,true));
   }else if(tab==="code"){loadSource()}
+  else if(tab==="board"){boardPanel(p)}
   else if(tab==="review"){reviewPanel(p)}
   else if(tab==="assets"){assetsPanel(p)}
   else if(tab==="renders"){rendersPanel(p)}
@@ -326,6 +348,51 @@ function loadSource(){
 }
 function flashCode(id){if(!src)return;var lines=src.source.split("\n"),i=lines.findIndex(function(l){return l.indexOf('id="'+id+'"')>=0});if(i<0)return;
   var el=document.querySelector('.cl[data-l="'+i+'"]');if(!el)return;el.classList.add("flash");el.scrollIntoView({block:"center"});setTimeout(function(){el.classList.remove("flash")},1800)}
+function typing(){var a=document.activeElement;return !!(a&&a.tagName==="INPUT"&&a.type==="text"&&$("panel").contains(a))}
+function sceneIds(){var ids={};(function walk(n){if(!n)return;if(n.type==="Scene"&&n.id)ids[n.id]=1;(n.children||[]).forEach(walk)})(S.project&&S.project.outline);return ids}
+function beatStatus(b,ids){
+  var built=b.scenes&&b.scenes.length&&b.scenes.every(function(x){return ids[x]});
+  var recent=(S.activity||[]).filter(function(a){return Date.now()-a.t<90000});
+  var active=b.scenes&&b.scenes.some(function(x){return recent.some(function(a){return (a.args||"").indexOf('"'+x+'"')>=0||(a.summary||"").indexOf("#"+x)>=0})});
+  return active?"active":built?"built":"planned"}
+function boardPanel(p){
+  var B=S.board||{beats:[],ideas:[],intro:""},tl=tlInfo(),ids=sceneIds();
+  var dur=tl?tl.duration:B.beats.reduce(function(m,b){return Math.max(m,b.end||0)},0)||30;
+  if(B.title)p.appendChild(h("div",{style:"font-weight:700;margin-bottom:2px",text:B.title}));
+  if(B.intro)p.appendChild(h("div",{class:"note",style:"margin:0 0 8px;white-space:pre-wrap",text:B.intro}));
+  if(!B.beats.length){
+    p.appendChild(h("div",{class:"empty",text:"No storyboard yet. Claude writes storyboard.md: one ## heading per beat (## 1. Hook · 0–3.3 s) with - Voice, - On screen, - Motion, - Sound and - Scene lines. Add your ideas below and Claude will read them."}));
+  }else{
+    var cur=time,strip=h("div",{class:"strip"});
+    B.beats.forEach(function(b){if(b.start===undefined||b.end===undefined)return;
+      var st=beatStatus(b,ids),now=cur>=b.start&&cur<b.end;
+      strip.appendChild(h("div",{class:"seg "+st+(now?" now":""),title:b.n+". "+b.title+" ("+st+")",style:"left:"+(b.start/dur*100)+"%;width:"+Math.max(1.5,(b.end-b.start)/dur*100-0.4)+"%",text:String(b.n),onclick:function(){setTime(b.start,true)}}))});
+    strip.appendChild(h("div",{class:"playhead bplay",style:"left:"+(Math.min(cur,dur)/dur*100)+"%"}));
+    p.appendChild(strip);
+    var built=0,active=0;
+    B.beats.forEach(function(b){var st=beatStatus(b,ids);if(st==="built")built++;if(st==="active")active++});
+    p.appendChild(h("div",{class:"note",style:"margin:-6px 0 10px",text:built+" of "+B.beats.length+" beats built"+(active?" · Claude is working on "+active:"")+" · click a beat to jump the preview"}));
+    B.beats.forEach(function(b){
+      var st=beatStatus(b,ids),now=cur>=(b.start||0)&&cur<(b.end===undefined?0:b.end);
+      var dl=h("dl");
+      [["block","Block"],["voice","Voice"],["on screen","On screen"],["motion","Motion"],["sound","Sound"],["why","Why it works"],["scene","Scene"]].forEach(function(k){
+        if(b.fields[k[0]]){dl.appendChild(h("dt",{text:k[1]}));dl.appendChild(h("dd",{text:b.fields[k[0]]}))}});
+      p.appendChild(h("div",{class:"bcard"+(now?" now":"")},[
+        h("div",{class:"bh",onclick:function(){if(b.start!==undefined)setTime(b.start,true)}},[h("span",{class:"pill "+(st==="built"?"pass":st==="active"?"warn":"manual"),text:st}),h("b",{text:b.n+". "+b.title}),h("span",{class:"bt",text:b.start!==undefined?fmt(b.start)+" – "+fmt(b.end):""})]),dl]))});
+  }
+  p.appendChild(h("div",{class:"sec",text:"Ideas (you and Claude)"}));
+  var inp=h("input",{type:"text",placeholder:"Add an idea for Claude…",maxlength:"300"});
+  function add(){var t=inp.value.trim();if(!t)return;fetch("/api/board/idea",{method:"POST",headers:{"content-type":"application/json","x-flomotion-ui":"1"},body:JSON.stringify({text:t})}).then(function(r){return r.json()}).then(function(j){if(j.error)throw new Error(j.error.message);inp.value="";toast("Idea saved to ideas.md");refresh()}).catch(function(x){toast(x.message)})}
+  inp.addEventListener("keydown",function(e){if(e.key==="Enter")add()});
+  p.appendChild(h("div",{class:"addidea"},[inp,h("button",{class:"primary",text:"Add",onclick:add})]));
+  if(!B.ideas.length)p.appendChild(h("div",{class:"empty",text:"No ideas yet. Notes land in ideas.md, so Claude reads them like any other file."}));
+  B.ideas.forEach(function(i){
+    p.appendChild(h("div",{class:"idea "+i.from+(i.done?" done":"")},[
+      h("input",{type:"checkbox",title:"Tick when used or dropped",onchange:function(){fetch("/api/board/idea/toggle",{method:"POST",headers:{"content-type":"application/json","x-flomotion-ui":"1"},body:JSON.stringify({index:i.index})}).then(function(){refresh()})}}),
+      h("span",{text:i.text}),h("span",{class:"from",text:i.from})]));
+  });
+  var boxes=p.querySelectorAll(".idea input[type=checkbox]");B.ideas.forEach(function(i,k){if(boxes[k])boxes[k].checked=i.done});
+}
 function reviewPanel(p){
   var r=S.review;
   if(!r){p.appendChild(h("div",{class:"empty",text:"No review yet. Claude runs review before it shows a draft: 17 checks, a contact sheet, and a second look at the frames."}));return}
@@ -371,7 +438,7 @@ function refresh(){if(pending)return;pending=setTimeout(function(){pending=null;
     S=s;lastProjectMtime=s.project.mtime||0;
     header();steps();activity();timeline();thumbs();sizeFrame();
     var tl=tlInfo();if(tl){var sc=$("scrub");sc.max=tl.duration;sc.step=1/tl.fps;if(!started){started=true;var ht=/[#&]t=([\d.]+)/.exec(location.hash);time=Math.round((ht?Math.min(Number(ht[1]),tl.duration):Math.min(1.2,tl.duration/3))*tl.fps)/tl.fps;sc.value=time}$("tm").textContent=fmt(time)+" / "+fmt(tl.duration)}
-    if(tab!=="code"||projChanged)panel();
+    if((tab!=="code"||projChanged)&&!typing())panel();
     if(projChanged&&tl&&!s.project.error){clearTimeout(refresh.t);refresh.t=setTimeout(function(){loadFrame()},700)}
     $("conn").className="dot"}).catch(function(){$("conn").className="dot off"})},120)}
 $("scrub").addEventListener("input",function(e){setTime(Number(e.target.value),false);clearTimeout(refresh.s);refresh.s=setTimeout(loadFrame,250)});

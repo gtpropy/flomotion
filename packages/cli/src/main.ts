@@ -5,7 +5,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { defineCommand } from "citty";
-import { FLOMOTION_NAME, FlomotionError, isFlomotionError, listLooks } from "@flomotion/core";
+import { FLOMOTION_NAME, FlomotionError, isFlomotionError } from "@flomotion/core";
 import {
   buildProject,
   collectFontDecls,
@@ -223,10 +223,6 @@ const docs = defineCommand({
       type: "string",
       description: "Also write one combined components.md for the skill",
     },
-    "looks-dir": {
-      type: "string",
-      description: "Also write one <look>.json per Look (data, for the skill)",
-    },
   },
   async run({ args }) {
     const out = resolve(String(args.out));
@@ -241,12 +237,6 @@ const docs = defineCommand({
         f,
         `# Components (generated from schemas: do not edit)\n\n${defs.map((d) => docsMarkdown(d)).join("\n---\n\n")}`,
       );
-    }
-    if (args["looks-dir"]) {
-      const dir = resolve(String(args["looks-dir"]));
-      mkdirSync(dir, { recursive: true });
-      for (const l of listLooks())
-        writeFileSync(join(dir, `${l.id}.json`), JSON.stringify(l, null, 2) + "\n");
     }
     console.log(`wrote ${defs.length} pages to ${out}`);
   },

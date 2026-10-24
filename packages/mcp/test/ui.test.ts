@@ -199,8 +199,41 @@ describe("live view server", () => {
     }
   });
 
+  it("the storyboard board: shows beats and ideas, takes ideas only with the page's header", async () => {
+    writeFileSync(
+      join(root, "storyboard.md"),
+      "# Storyboard: test\n\n## 1. Hook · 0-2 s\n- Scene: s0\n- Voice: hi\n\n## 2. Next · 2-4 s\n- Scene: nope\n",
+    );
+    const noHeader = await get("/api/board/idea", {
+      method: "POST",
+      body: JSON.stringify({ text: "x" }),
+    });
+    expect(noHeader.status).toBe(403);
+    const post = (path: string, body: unknown) =>
+      get(path, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-flomotion-ui": "1" },
+        body: JSON.stringify(body),
+      });
+    expect((await post("/api/board/idea", { text: "" })).status).toBe(400);
+    const added = (await (await post("/api/board/idea", { text: "a vault door" })).json()) as any;
+    expect(added.ideas).toEqual([{ index: 0, text: "a vault door", from: "you", done: false }]);
+    expect(readFileSync(join(root, "ideas.md"), "utf8")).toContain("- [ ] a vault door (you)");
+    const ticked = (await (await post("/api/board/idea/toggle", { index: 0 })).json()) as any;
+    expect(ticked.ideas[0].done).toBe(true);
+    expect((await post("/api/board/idea/toggle", { index: -1 })).status).toBe(400);
+    const s = await j("/api/state");
+    expect(s.board.title).toBe("Storyboard: test");
+    expect(s.board.beats.map((b: any) => [b.title, b.start, b.end, b.scenes])).toEqual([
+      ["Hook", 0, 2, ["s0"]],
+      ["Next", 2, 4, ["nope"]],
+    ]);
+    expect(s.board.ideas).toHaveLength(1);
+    expect(s.gates.find((g: any) => g.name === "storyboard.md").exists).toBe(true);
+  });
+
   it("shows gate files, the last review, assets and renders", async () => {
-    writeFileSync(join(root, "brief.json"), JSON.stringify({ product: "Pulse" }));
+    writeFileSync(join(root, "brief.md"), "# Brief\n- product: Pulse\n");
     writeFileSync(join(root, "LOG.md"), "# Log\n- G0 approved at h0003\n");
     mkdirSync(join(root, ".flomotion", "review"), { recursive: true });
     writeFileSync(
@@ -230,9 +263,9 @@ describe("live view server", () => {
       const x = await j("/api/state");
       return x.gates.find((g: any) => g.name === "LOG.md")?.exists && x.review ? x : false;
     });
-    expect(s.gates.find((g: any) => g.name === "brief.json").exists).toBe(true);
+    expect(s.gates.find((g: any) => g.name === "brief.md").exists).toBe(true);
     expect(s.gates.find((g: any) => g.name === "LOG.md").tail).toContain("G0 approved");
-    expect(s.gates.find((g: any) => g.name === "script.json").exists).toBe(false);
+    expect(s.gates.find((g: any) => g.name === "script.md").exists).toBe(false);
     expect(s.review).toMatchObject({ pass: false, failing: [3] });
     expect(s.renders[0]).toMatchObject({
       file: "renders/live-test-draft.mp4",
