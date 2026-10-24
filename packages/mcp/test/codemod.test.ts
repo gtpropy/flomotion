@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CodeCutError, type CCNode } from "@codecut/core";
+import { FlomotionError, type CCNode } from "@flomotion/core";
 import { TsxDoc, isStructuredExpr } from "../src/codemod/tsx.js";
 import { printExpr, printNode } from "../src/codemod/print.js";
 
-const SRC = `import { Composition, Track, Scene, Title, Sound } from "@codecut/components";
+const SRC = `import { Composition, Track, Scene, Title, Sound } from "@flomotion/components";
 
 const SFX = (n: string) => \`./assets/\${n}.wav\`;
 
@@ -47,7 +47,7 @@ describe("codemod: values", () => {
       ]),
     ).toBe('[[0, 1], [3, 1.08, "expo.out"]]');
     expect(printExpr({ from: "sw", "dash-x": 1 })).toBe('{ from: "sw", "dash-x": 1 }');
-    expect(() => printExpr(() => 1)).toThrow(CodeCutError);
+    expect(() => printExpr(() => 1)).toThrow(FlomotionError);
   });
   it("prints an element tree", () => {
     const s = printNode(node("Title", { id: "t2", text: "Hi", size: 90 }));
@@ -83,7 +83,7 @@ describe("codemod: structured edits", () => {
     try {
       doc.setProp("s1", "src", "x.wav");
     } catch (e) {
-      expect((e as CodeCutError).code).toBe("opaque_expression");
+      expect((e as FlomotionError).code).toBe("opaque_expression");
     }
     expect(doc.text).toBe(SRC);
     // the other literal props on the same element are still editable and the call stays intact
@@ -144,7 +144,7 @@ describe("codemod: structured edits", () => {
     ]);
     const { doc, written } = new TsxDoc(src).writeIds(tree);
     expect(written).toHaveLength(1);
-    expect(doc.text).toMatch(/<Title id="cc_\w+"/);
+    expect(doc.text).toMatch(/<Title id="fm_\w+"/);
   });
   it("reports a syntax error with a typed code", () => {
     expect(() => new TsxDoc("export default (<A>").assertParses()).toThrowError(/does not parse/);

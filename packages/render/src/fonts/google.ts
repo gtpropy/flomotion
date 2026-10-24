@@ -1,6 +1,6 @@
 import { mkdirSync, existsSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
-import { CodeCutError, type FontDecl } from "@codecut/core";
+import { FlomotionError, type FontDecl } from "@flomotion/core";
 import { inspectFont, sha256 } from "./inspect.js";
 import type { FontContext, FontFile, FontSource, FontSyncResult } from "./types.js";
 
@@ -93,7 +93,7 @@ async function download(ctx: FontContext, url: string, attempts = 3): Promise<Bu
       await sleep(400 * (i + 1));
     }
   }
-  throw new CodeCutError("font_error", `Could not download ${url}: ${(last as Error).message}`, {
+  throw new FlomotionError("font_error", `Could not download ${url}: ${(last as Error).message}`, {
     fix: "Check your network, or use the Fontsource fallback by installing @fontsource/<id>.",
   });
 }
@@ -144,7 +144,7 @@ export class GoogleCssSource implements FontSource {
     ctx.log(`google css: ${url}`);
     const res = await ctx.fetch(url, { headers: { "User-Agent": UA } });
     if (!res.ok)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "font_error",
         `Google Fonts CSS API returned ${res.status} for ${decl.family}`,
         {
@@ -155,7 +155,7 @@ export class GoogleCssSource implements FontSource {
     const wanted = new Set(decl.subsets?.length ? decl.subsets : ["latin"]);
     const faces = parseGoogleCss(css).filter((f) => wanted.has(f.subset));
     if (!faces.length)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "font_error",
         `No faces for ${decl.family} subsets ${[...wanted].join(", ")}`,
         { fix: "Pick a subset the family supports (see `font_get`)." },
@@ -301,7 +301,7 @@ export async function googleFontsApi(opts: {
   if (opts.category) q.set("category", opts.category);
   const res = await (opts.fetch ?? fetch)(`https://www.googleapis.com/webfonts/v1/webfonts?${q}`);
   if (!res.ok)
-    throw new CodeCutError("font_error", `Google Fonts Developer API returned ${res.status}`, {
+    throw new FlomotionError("font_error", `Google Fonts Developer API returned ${res.status}`, {
       fix: "Check GOOGLE_FONTS_API_KEY.",
     });
   const json = (await res.json()) as { items?: GoogleFontMeta[] };

@@ -37,7 +37,7 @@ Never ship a placeholder as if it were final: a missing logo is a visible "LOGO"
 1. **Look at what you pulled.** Place it in a frame (`frame_render`) and describe what you see; reject the wrong picture.
 2. **One icon set per video**, one stroke weight, colours from the look.
 3. **Permission is the person's to give.** For screenshots, brand extraction and other companies' logos, ask first and pass `permission:true` only after a yes. Record the yes in `LOG.md`.
-4. **Licences:** CC0, permissive (MIT, Apache, ISC) and CC-BY are allowed by default; share-alike, non-commercial and unknown licences are refused (`license_blocked`). `codecut.json` can narrow this with `assetLicenses`.
+4. **Licences:** CC0, permissive (MIT, Apache, ISC) and CC-BY are allowed by default; share-alike, non-commercial and unknown licences are refused (`license_blocked`). `flomotion.json` can narrow this with `assetLicenses`.
 5. **Credits:** CC-BY assets are credited automatically; sources that ask for a credit (Pexels) are listed as recommended. Tell the person where the credits file is.
 6. **Size:** photos are scaled to 2400 px on the long side. Screenshots at 2x of a 1440 px page are fine; do not capture at 3x for a 1080 px frame.
 7. **No remote files at render time.** Everything is on disk; a `src` that starts with `http` fails the build.

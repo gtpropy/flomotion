@@ -19,7 +19,7 @@ $F -f lavfi -i "anoisesrc=d=0.35:c=white:a=0.5" -af "acrusher=bits=4:mix=1,afade
 # music bed: soft pad, 31s
 $F -f lavfi -i "sine=f=110:d=31" -f lavfi -i "sine=f=164.81:d=31" -f lavfi -i "sine=f=220:d=31" -filter_complex "amix=inputs=3:normalize=0,volume=0.35,tremolo=f=0.3:d=0.2,afade=t=in:d=2,afade=t=out:st=28:d=3" music.wav
 # voiceover (local TTS test double) and estimated word timings
-SCRIPT="Ship videos as code. Editing takes forever. Hours of clicking, exporting, and waiting for every single change. Meet CodeCut. Every control is a prop. Describe a scene, and it renders the same way every time. Write it, preview it, render it. Claude can edit the same file you do, with real sound and captions built in. Over twelve thousand videos shipped, and ninety eight percent rendered on the first try. Start free today."
+SCRIPT="Ship videos as code. Editing takes forever. Hours of clicking, exporting, and waiting for every single change. Meet flomotion. Every control is a prop. Describe a scene, and it renders the same way every time. Write it, preview it, render it. Claude can edit the same file you do, with real sound and captions built in. Over twelve thousand videos shipped, and ninety eight percent rendered on the first try. Start free today."
 say -v Samantha -r 175 -o voice.aiff "$SCRIPT"
 $F -i voice.aiff -ar 48000 -ac 1 voice.wav
 rm voice.aiff

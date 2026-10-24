@@ -177,7 +177,7 @@ export function lintProject(project: ResolvedProject, ctx: LintContext = {}): Li
           rule: "font-no-ledger",
           message: `Font "${f.id}" (${f.family}) has no ledger entry`,
           id: f.id,
-          fix: "Run `codecut fonts sync`.",
+          fix: "Run `flomotion fonts sync`.",
         });
       else {
         const lic = ctx.ledger.entries.find(
@@ -201,7 +201,7 @@ export function lintProject(project: ResolvedProject, ctx: LintContext = {}): Li
         rule: "font-network-url",
         message: `Font "${f.id}" is loaded from a URL at render time`,
         id: f.id,
-        fix: "Run `codecut fonts sync` so the file is local.",
+        fix: "Run `flomotion fonts sync` so the file is local.",
       });
   }
   for (const m of ctx.fontLockProblems?.(declIds) ?? [])
@@ -209,7 +209,7 @@ export function lintProject(project: ResolvedProject, ctx: LintContext = {}): Li
       severity: "error",
       rule: "font-lock",
       message: m,
-      fix: "Run `codecut fonts sync`.",
+      fix: "Run `flomotion fonts sync`.",
     });
 
   // text rules

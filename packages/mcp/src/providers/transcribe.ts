@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CodeCutError } from "@codecut/core";
-import { runHyperframes, stripAnsi } from "@codecut/render";
+import { FlomotionError } from "@flomotion/core";
+import { runHyperframes, stripAnsi } from "@flomotion/render";
 import type { Word } from "./voice.js";
 
 export interface Transcriber {
@@ -37,7 +37,7 @@ export function normalizeWords(raw: unknown): Word[] {
 export class HyperframesTranscriber implements Transcriber {
   readonly name = "whisper-cpp (via hyperframes transcribe)";
   async transcribe(audioFile: string, opts: { language?: string } = {}): Promise<Word[]> {
-    const dir = mkdtempSync(join(tmpdir(), "codecut-tr-"));
+    const dir = mkdtempSync(join(tmpdir(), "flomotion-tr-"));
     try {
       mkdirSync(dir, { recursive: true });
       const args = ["transcribe", audioFile, "-d", dir, "--json", "--no-runtime-install"];
@@ -52,7 +52,7 @@ export class HyperframesTranscriber implements Transcriber {
         ? (JSON.parse(last) as { ok?: boolean; error?: string; transcriptPath?: string })
         : undefined;
       if (r.code !== 0 || !j?.ok) {
-        throw new CodeCutError(
+        throw new FlomotionError(
           "missing_dependency",
           `Transcription failed: ${j?.error ?? stripAnsi(r.stderr).split("\n").filter(Boolean).slice(-1)[0] ?? "unknown error"}`,
           {
@@ -62,10 +62,10 @@ export class HyperframesTranscriber implements Transcriber {
       }
       const file = j.transcriptPath ? j.transcriptPath : join(dir, "transcript.json");
       if (!existsSync(file))
-        throw new CodeCutError("missing_dependency", "Transcript file was not written");
+        throw new FlomotionError("missing_dependency", "Transcript file was not written");
       const words = normalizeWords(JSON.parse(readFileSync(file, "utf8")));
       if (!words.length)
-        throw new CodeCutError("missing_dependency", "The transcript has no words");
+        throw new FlomotionError("missing_dependency", "The transcript has no words");
       return words;
     } finally {
       rmSync(dir, { recursive: true, force: true });

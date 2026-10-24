@@ -8,7 +8,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `kind` | `video` \| `audio` \| `overlay` \| `graphics` \| `captions` | `"video"` |  |
 | `locked` | `boolean` | `false` |  |
@@ -19,7 +19,7 @@ Children: any layers and effects.
 
 ```ts
 export interface TrackProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** default "video" */

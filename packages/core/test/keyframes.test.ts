@@ -9,7 +9,7 @@ import {
   isKeyframes,
   normalizeTrack,
   pathAngle,
-  CodeCutError,
+  FlomotionError,
   makeCtx,
   noise1D,
 } from "../src/index.js";
@@ -55,7 +55,7 @@ describe("keyframe detection and normalisation", () => {
         [1, 5],
       ]);
     } catch (e) {
-      expect((e as CodeCutError).code).toBe("duplicate_keyframe");
+      expect((e as FlomotionError).code).toBe("duplicate_keyframe");
     }
   });
   it("resolves non-literal times through the callback", () => {

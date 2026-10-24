@@ -8,7 +8,7 @@ import {
   Title,
   TextAnimator,
   Marker,
-} from "@codecut/components";
+} from "@flomotion/components";
 
 /** Text-heavy test project: Google font, local custom font, variable font with an animated axis, Devanagari. */
 export default (

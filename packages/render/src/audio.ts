@@ -2,7 +2,7 @@ import { execFile } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { promisify } from "node:util";
-import { CodeCutError, type AudioEvent, type Ledger } from "@codecut/core";
+import { FlomotionError, type AudioEvent, type Ledger } from "@flomotion/core";
 import { requireFfmpeg } from "./env.js";
 import { probeMedia } from "./media-probe.js";
 
@@ -61,7 +61,7 @@ export function peakOffsetOf(ev: AudioEvent, ledger: Ledger, file: string): numb
     const j = JSON.parse(readFileSync(side, "utf8")) as Record<string, number>;
     if (ev.peak in j) return j[ev.peak]!;
   }
-  throw new CodeCutError(
+  throw new FlomotionError(
     "asset_missing",
     `Sound ${ev.id}: no peak named "${ev.peak}" for ${ev.src}`,
     {
@@ -217,7 +217,7 @@ export async function mixAudio(o: MixOptions): Promise<MixResult> {
   try {
     await run("ffmpeg", args, { maxBuffer: 64 * 1024 * 1024 });
   } catch (e) {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "render_failed",
       `FFmpeg audio mix failed: ${(e as { stderr?: string }).stderr?.split("\n").slice(-4).join(" ") ?? (e as Error).message}`,
       { details: { graph } },

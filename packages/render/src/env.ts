@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import { CodeCutError } from "@codecut/core";
+import { FlomotionError } from "@flomotion/core";
 
 const require = createRequire(import.meta.url);
 
@@ -22,7 +22,7 @@ export function requireFfmpeg(bin: "ffmpeg" | "ffprobe" = "ffmpeg"): ToolInfo {
     const path = execFileSync("which", [bin], { encoding: "utf8" }).trim();
     return { path, version };
   } catch {
-    throw new CodeCutError("missing_dependency", `${bin} was not found on PATH`, {
+    throw new FlomotionError("missing_dependency", `${bin} was not found on PATH`, {
       fix: "Install FFmpeg: `brew install ffmpeg` (macOS), `sudo apt install ffmpeg` (Ubuntu), or https://ffmpeg.org/download.html",
     });
   }
@@ -40,7 +40,7 @@ export function findChrome(): string {
     "/usr/bin/chromium-browser",
   ];
   for (const c of candidates) if (existsSync(c)) return c;
-  throw new CodeCutError(
+  throw new FlomotionError(
     "missing_dependency",
     "No Chrome/Chromium found for text measurement and font checks",
     {

@@ -1,7 +1,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { CodeCutError, CODECUT_DIR } from "@codecut/core";
-import type { CompileResult } from "@codecut/core";
+import { FlomotionError, FLOMOTION_DIR } from "@flomotion/core";
+import type { CompileResult } from "@flomotion/core";
 import { gsapFile } from "./env.js";
 
 export interface Materialized {
@@ -14,7 +14,7 @@ export function insideRoot(root: string, p: string): string {
   const abs = resolve(root, p);
   const rel = relative(resolve(root), abs);
   if (rel === ".." || rel.startsWith(".." + sep) || resolve(rel) === rel) {
-    throw new CodeCutError("path_outside_project", `Path ${p} is outside the project folder`, {
+    throw new FlomotionError("path_outside_project", `Path ${p} is outside the project folder`, {
       fix: "Use paths inside the project directory.",
     });
   }
@@ -27,7 +27,7 @@ export function ensureDir(p: string): string {
 }
 
 export function buildDir(projectRoot: string, name = "build"): string {
-  return ensureDir(join(projectRoot, CODECUT_DIR, name));
+  return ensureDir(join(projectRoot, FLOMOTION_DIR, name));
 }
 
 /**
@@ -37,7 +37,7 @@ export function buildDir(projectRoot: string, name = "build"): string {
 export function materialize(
   outDir: string,
   compiled: Pick<CompileResult, "html">,
-  opts: { id: string; extraFiles?: Array<{ from: string; to: string }> } = { id: "codecut" },
+  opts: { id: string; extraFiles?: Array<{ from: string; to: string }> } = { id: "flomotion" },
 ): Materialized {
   ensureDir(outDir);
   ensureDir(join(outDir, "vendor"));

@@ -1,13 +1,13 @@
 import { existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
-  isCodeCutError,
+  isFlomotionError,
   lintTree,
   type LintConfig,
   type LintIssue,
   type ResolvedFont,
-} from "@codecut/core";
-import { safeRect } from "@codecut/components";
+} from "@flomotion/core";
+import { safeRect } from "@flomotion/components";
 import { collectFontDecls, loadProject, loadVoiceWords, type LoadedProject } from "./project.js";
 import { readLedger, readLock, resolveFromLock } from "./fonts/lock.js";
 import { missingGlyphs } from "./fonts/glyphs.js";
@@ -36,7 +36,7 @@ export async function lintProjectDir(
     try {
       fonts.set(d.id, resolveFromLock(root, d, lock));
     } catch (e) {
-      if (isCodeCutError(e))
+      if (isFlomotionError(e))
         issues.push({
           severity: "error",
           rule: "font-lock",

@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-import { CodeCutError } from "@codecut/core";
+import { FlomotionError } from "@flomotion/core";
 import { childEnv, hyperframesBin } from "./env.js";
 
 export interface RunResult {
@@ -39,7 +39,7 @@ export function runHyperframes(
       ? setTimeout(() => {
           child.kill("SIGKILL");
           reject(
-            new CodeCutError(
+            new FlomotionError(
               "render_failed",
               `hyperframes ${args[0]} timed out after ${opts.timeoutMs} ms`,
             ),

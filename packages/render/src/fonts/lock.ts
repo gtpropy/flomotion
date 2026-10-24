@@ -1,14 +1,14 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
-  CODECUT_DIR,
-  CodeCutError,
+  FLOMOTION_DIR,
+  FlomotionError,
   emptyLedger,
   upsertEntry,
   type FontDecl,
   type Ledger,
   type ResolvedFont,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { sha256 } from "./inspect.js";
 import type { FontFile, FontSyncResult } from "./types.js";
 
@@ -36,9 +36,9 @@ export interface FontLock {
   fonts: Record<string, LockedFont>;
 }
 
-export const lockPath = (root: string) => join(root, CODECUT_DIR, "fonts.lock.json");
-export const ledgerPath = (root: string) => join(root, CODECUT_DIR, "ledger.json");
-export const layoutCachePath = (root: string) => join(root, CODECUT_DIR, "layout-cache.json");
+export const lockPath = (root: string) => join(root, FLOMOTION_DIR, "fonts.lock.json");
+export const ledgerPath = (root: string) => join(root, FLOMOTION_DIR, "ledger.json");
+export const layoutCachePath = (root: string) => join(root, FLOMOTION_DIR, "layout-cache.json");
 
 export function readJson<T>(path: string, fallback: T): T {
   try {
@@ -129,33 +129,33 @@ export function resolveFromLock(root: string, decl: FontDecl, lock = readLock(ro
     };
   }
   if (!e) {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "font_error",
-      `Font "${decl.id}" (${decl.family}) is not in .codecut/fonts.lock.json`,
-      { fix: "Run `codecut fonts sync` to download and lock it." },
+      `Font "${decl.id}" (${decl.family}) is not in .flomotion/fonts.lock.json`,
+      { fix: "Run `flomotion fonts sync` to download and lock it." },
     );
   }
   if (e.declHash !== declHash(decl)) {
-    throw new CodeCutError("font_error", `Font "${decl.id}" changed since it was locked`, {
-      fix: "Run `codecut fonts sync` to refresh the lock for the new declaration.",
+    throw new FlomotionError("font_error", `Font "${decl.id}" changed since it was locked`, {
+      fix: "Run `flomotion fonts sync` to refresh the lock for the new declaration.",
     });
   }
   const files: ResolvedFont["files"] = [];
   for (const f of e.files) {
     const abs = join(root, f.path);
     if (!existsSync(abs)) {
-      throw new CodeCutError("font_error", `Font "${decl.id}": file ${f.path} is missing`, {
-        fix: "Restore the file or run `codecut fonts sync`.",
+      throw new FlomotionError("font_error", `Font "${decl.id}": file ${f.path} is missing`, {
+        fix: "Restore the file or run `flomotion fonts sync`.",
         details: { id: decl.id, path: f.path },
       });
     }
     const hash = sha256(readFileSync(abs));
     if (hash !== f.hash) {
-      throw new CodeCutError(
+      throw new FlomotionError(
         "font_error",
         `Font "${decl.id}": ${f.path} changed on disk (hash mismatch)`,
         {
-          fix: "If the change is intended, run `codecut fonts sync --update-lock`.",
+          fix: "If the change is intended, run `flomotion fonts sync --update-lock`.",
           details: { id: decl.id, path: f.path, expected: f.hash, actual: hash },
         },
       );

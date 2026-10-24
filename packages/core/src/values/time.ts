@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 
 /** Seconds as a number, or a string: "1.5", "1.5s", "1500ms", "36f", "00:00:01:12". */
 export type Time = number | string;
@@ -39,7 +39,7 @@ export function parseTimeLiteral(input: Time, fps: number): number {
 }
 
 function bad(input: unknown) {
-  return new CodeCutError("invalid_time", `Invalid time: ${JSON.stringify(input)}`, {
+  return new FlomotionError("invalid_time", `Invalid time: ${JSON.stringify(input)}`, {
     fix: 'Use seconds (1.5), "1.5s", "36f" or "00:00:01:12".',
   });
 }

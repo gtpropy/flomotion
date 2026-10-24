@@ -1,4 +1,4 @@
-export * from "@codecut/core";
+export * from "@flomotion/core";
 export * from "./util.js";
 export * from "./shapes.js";
 export * from "./layout.js";

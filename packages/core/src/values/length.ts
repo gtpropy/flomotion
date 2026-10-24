@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 
 /** 120 (px), "50%", "10vw", "10vh", "120px". */
 export type Length = number | string;
@@ -16,7 +16,7 @@ export function parseLength(input: Length): ParsedLength {
   if (typeof input === "number") return { unit: "px", value: input };
   const m = input.trim().match(/^(-?\d+(?:\.\d+)?|-?\.\d+)\s*(px|%|vw|vh)?$/);
   if (!m) {
-    throw new CodeCutError("invalid_value", `Invalid length: ${JSON.stringify(input)}`, {
+    throw new FlomotionError("invalid_value", `Invalid length: ${JSON.stringify(input)}`, {
       fix: 'Use pixels (120), "50%", "10vw" or "10vh".',
     });
   }

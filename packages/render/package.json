@@ -1,5 +1,5 @@
 {
-  "name": "@codecut/render",
+  "name": "@flomotion/render",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,8 +7,8 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@codecut/core": "workspace:*",
-    "@codecut/components": "workspace:*",
+    "@flomotion/core": "workspace:*",
+    "@flomotion/components": "workspace:*",
     "puppeteer-core": "latest",
     "gsap": "3.14.2",
     "hyperframes": "0.8.186",

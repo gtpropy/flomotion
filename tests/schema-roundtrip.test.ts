@@ -6,7 +6,7 @@ import {
   propsJsonSchema,
   registry,
   validateProps,
-} from "@codecut/components";
+} from "@flomotion/components";
 import { join } from "node:path";
 import { sample } from "./helpers/sample.js";
 

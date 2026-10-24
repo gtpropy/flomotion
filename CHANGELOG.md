@@ -1,5 +1,11 @@
 # Changelog
 
+## Rename: CodeCut is now flomotion everywhere
+
+- The product, packages (`@flomotion/*`), command (`flomotion`), project folder (`.flomotion/`), config file
+  (`flomotion.json`) and element ids (`fm_`) all use the name flomotion. The old `codecut` command and `@codecut/*`
+  imports are gone. Projects made before the rename: move `.codecut/` to `.flomotion/` and change the imports.
+
 ## 0.4.0: setup, your own material, and assets (unreleased)
 
 - **`flomotion setup`:** a guided setup (also `setup show | check | set | unset | sounds`, and `--yes`). You choose
@@ -32,17 +38,17 @@ flomotion/config.json`, mode 0600). It can also install the skill and add flomot
   matching the skill's JSON (a test keeps them in sync). The engine's `kinetic`, `minimal`, `sketch` stay for the
   examples.
 - **Install:** `flomotion install skill` copies the skill to `~/.claude/skills` (or `--project`), replacing a previous
-  copy and noting an old `motion-studio` skill. `codecut skill install` from 0.2.0 still works.
+  copy and noting an old `motion-studio` skill. `flomotion skill install` from 0.2.0 still works.
 - **Live view:** `flomotion ui` and `flomotion mcp --ui`: activity feed of every tool call, gate progress,
   outline and timeline, a scrubbable preview rendered on demand, code with the latest change highlighted, review
   results, assets with licences, renders, and history with Restore. Localhost only, no network.
-- The MCP server logs every call to `.codecut/activity.jsonl`; `review` writes `.codecut/review/last.json`;
+- The MCP server logs every call to `.flomotion/activity.jsonl`; `review` writes `.flomotion/review/last.json`;
   the server identifies itself as `flomotion`.
 - Fixed: bin paths written `./dist/bin.mjs` were stripped by npm 11 at publish.
 
 ## Phase 2: MCP server, sound, voice, review, skill (unreleased)
 
-- `@codecut/mcp`: 30 tools and 4 resources over stdio (`codecut mcp`), same patches as the edit ops, applied to the
+- `@flomotion/mcp`: 30 tools and 4 resources over stdio (`flomotion mcp`), same patches as the edit ops, applied to the
   TSX with ts-morph (formatting and comments kept, expressions refused, every write re-read and verified, history
   snapshots with undo tokens). Typed errors with fix hints.
 - Freesound client (token auth, tag search, CC0/CC-BY filter, measured peak, ledger, credits file) with a local
@@ -53,7 +59,7 @@ flomotion/config.json`, mode 0600). It can also install the skill and add flomot
 - `skills/motion-studio`: gated workflow, references (motion, sound, typography, saas-promo, review, generated
   components), three Looks as data with a finished reference scene each, a finished example.
 - CLI: `mcp`, `skill install`; `render` writes credits and a licence report. Bundle: multi-entry esbuild build with
-  hooks so a published install (npm package `flomotion`) resolves `@codecut/*` imports and compiles project TSX with no node_modules.
+  hooks so a published install (npm package `flomotion`) resolves `@flomotion/*` imports and compiles project TSX with no node_modules.
 - Fixed: `RGBSplit` and `Glitch` showed their effect before their start time (baked span began at the jump).
   `lint` compared `CC0-1.0` with `CC0`. A sound reused for two tags lost its first peak name.
 - Tests: codemods, every tool, review checks, resources, stdio, schema round trip through an MCP call, skill files,

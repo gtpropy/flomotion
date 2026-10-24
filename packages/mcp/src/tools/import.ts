@@ -9,8 +9,8 @@ import {
 } from "node:fs";
 import { basename, dirname, extname, join, relative } from "node:path";
 import { z } from "zod";
-import { CodeCutError, upsertEntry, type LedgerEntry } from "@codecut/core";
-import { ledgerPath, probeMedia, readLedger } from "@codecut/render";
+import { FlomotionError, upsertEntry, type LedgerEntry } from "@flomotion/core";
+import { ledgerPath, probeMedia, readLedger } from "@flomotion/render";
 import { AUDIO_EXT, TEXT_EXT, assertReadable, listFiles } from "../assets.js";
 import { tagsFromPath } from "../providers/library.js";
 import { checkWords, parseTranscript, type Precision } from "../providers/transcript.js";
@@ -46,11 +46,11 @@ function importTranscript(
 ) {
   const audio = ctx.store.path(audioRel);
   if (!existsSync(audio))
-    throw new CodeCutError("asset_missing", `No audio at ${audioRel}`, {
+    throw new FlomotionError("asset_missing", `No audio at ${audioRel}`, {
       fix: "Import the voice first with voice_import.",
     });
   if (!t.source && !t.text)
-    throw new CodeCutError("invalid_edit", "Give the transcript as `source` (a file) or `text`");
+    throw new FlomotionError("invalid_edit", "Give the transcript as `source` (a file) or `text`");
   const raw = t.source
     ? readFileSync(assertReadable(t.source, TEXT_EXT, 20 * 1024 * 1024), "utf8")
     : t.text!;
@@ -136,7 +136,8 @@ export const voiceImport = tool({
     mkdirSync(dirname(dest), { recursive: true });
     copyFileSync(real, dest);
     const info = probeMedia(dest);
-    if (!info?.hasAudio) throw new CodeCutError("asset_missing", `${basename(real)} has no audio`);
+    if (!info?.hasAudio)
+      throw new FlomotionError("asset_missing", `${basename(real)} has no audio`);
     const entry: LedgerEntry = {
       source: "own",
       kind: "voice",
@@ -198,9 +199,9 @@ export const soundImport = tool({
     const files = statSync(real).isDirectory()
       ? listFiles(real, AUDIO_EXT, !!a.recurse, 41)
       : [real];
-    if (!files.length) throw new CodeCutError("asset_missing", `No audio files in ${a.source}`);
+    if (!files.length) throw new FlomotionError("asset_missing", `No audio files in ${a.source}`);
     if (files.length > 40)
-      throw new CodeCutError("invalid_edit", "More than 40 sound files in one import", {
+      throw new FlomotionError("invalid_edit", "More than 40 sound files in one import", {
         fix: "Import the few you need, or run `flomotion setup` and point it at the folder to build a searchable library.",
       });
     const catalogFile = ctx.store.path(join("sounds", "catalog.json"));

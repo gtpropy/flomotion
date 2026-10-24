@@ -10,7 +10,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { FontDecl } from "@codecut/core";
+import type { FontDecl } from "@flomotion/core";
 import {
   css2FamilySpec,
   fontGate,
@@ -82,7 +82,7 @@ describe("css2 query builder (per developers.google.com/fonts/docs/css2)", () =>
 });
 
 describe.skipIf(!online)("font sync, lock, gate, glyphs, layout (live Google Fonts)", () => {
-  const root = mkdtempSync(join(tmpdir(), "cc-fonts-"));
+  const root = mkdtempSync(join(tmpdir(), "fm-fonts-"));
   const decls: FontDecl[] = [
     {
       id: "display",
@@ -157,7 +157,7 @@ describe.skipIf(!online)("font sync, lock, gate, glyphs, layout (live Google Fon
       /changed since it was locked/,
     );
     expect(() => resolveFromLock(root, { id: "nope", family: "Nope", source: "google" })).toThrow(
-      /not in .codecut\/fonts.lock.json/,
+      /not in .flomotion\/fonts.lock.json/,
     );
   });
 

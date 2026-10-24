@@ -1,6 +1,6 @@
 import { evalProp, evalSignal, exprSignal, isSignal, type Signal } from "../anim/signal.js";
 import { isNode } from "../ast/node.js";
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import type { Registry } from "../schema/define.js";
 import { registry as defaultRegistry } from "../schema/define.js";
 import type { Offset } from "../schema/render-types.js";
@@ -296,7 +296,7 @@ export function buildIR(project: ResolvedProject, opts: CompileOptions = {}): IR
     else html += kids;
     layer.html = html;
     if (n === rootNode) {
-      return `<div id="${n.id}-xf" class="cc-xf" style="position:absolute;inset:0">${layer.html}${layer.overlays.join("")}</div>`;
+      return `<div id="${n.id}-xf" class="fm-xf" style="position:absolute;inset:0">${layer.html}${layer.overlays.join("")}</div>`;
     }
     return hostHtml(layer, n);
   };
@@ -573,7 +573,7 @@ function hostHtml(layer: IRLayer, node: RNode): string {
       ? { position: "relative", "z-index": String(z), ...layer.hostStyle }
       : { position: "absolute", inset: "0", "z-index": String(z), ...layer.hostStyle },
   );
-  const attrs = `id="${node.id}" class="clip cc-l cc-${node.name.toLowerCase()}" data-start="${layer.start}" data-duration="${Math.round(dur * 1e6) / 1e6}"${
+  const attrs = `id="${node.id}" class="clip fm-l fm-${node.name.toLowerCase()}" data-start="${layer.start}" data-duration="${Math.round(dur * 1e6) / 1e6}"${
     layer.trackIndex !== undefined ? ` data-track-index="${layer.trackIndex}"` : ""
   } data-cc="${node.name}"`;
   if (!layer.visual) {
@@ -585,7 +585,7 @@ function hostHtml(layer: IRLayer, node: RNode): string {
       ? { position: "absolute" }
       : { position: "absolute", inset: "0" };
   const xf = styleAttr({ ...xfBase, ...layer.xfStyle });
-  return `<div ${attrs} style="${host}"><div id="${node.id}-xf" class="cc-xf" style="${xf}">${layer.html}${layer.overlays.join("")}</div></div>`;
+  return `<div ${attrs} style="${host}"><div id="${node.id}-xf" class="fm-xf" style="${xf}">${layer.html}${layer.overlays.join("")}</div></div>`;
 }
 
-export { parseColor, toCss, CodeCutError, isNode };
+export { parseColor, toCss, FlomotionError, isNode };

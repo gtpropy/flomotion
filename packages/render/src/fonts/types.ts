@@ -1,4 +1,4 @@
-import type { FontDecl } from "@codecut/core";
+import type { FontDecl } from "@flomotion/core";
 
 export interface FontFile {
   /** Absolute path on disk. */

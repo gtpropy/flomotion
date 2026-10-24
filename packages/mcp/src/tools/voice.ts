@@ -1,7 +1,7 @@
 import { extname } from "node:path";
 import { z } from "zod";
 import {
-  CodeCutError,
+  FlomotionError,
   edit as coreEdit,
   findById,
   isNode,
@@ -9,9 +9,9 @@ import {
   snapToFrame,
   type CCNode,
   type Patch,
-} from "@codecut/core";
-import { loadVoiceWords, requireFfmpeg } from "@codecut/render";
-import { registry } from "@codecut/components";
+} from "@flomotion/core";
+import { loadVoiceWords, requireFfmpeg } from "@flomotion/render";
+import { registry } from "@flomotion/components";
 import { writeWords } from "../providers/transcribe.js";
 import { tool, writeResult } from "./util.js";
 
@@ -160,12 +160,12 @@ export const alignToVoice = tool({
     const root = loaded.node;
     const voice = findById(root, a.voiceId);
     if (!voice || voice.node.name !== "Voiceover")
-      throw new CodeCutError("unknown_element", `#${a.voiceId} is not a Voiceover`, {
+      throw new FlomotionError("unknown_element", `#${a.voiceId} is not a Voiceover`, {
         fix: "Add a <Voiceover id=… src=… /> first.",
       });
     const words = loadVoiceWords(ctx.root, root).get(a.voiceId);
     if (!words?.length)
-      throw new CodeCutError("asset_missing", `No word timings for #${a.voiceId}`, {
+      throw new FlomotionError("asset_missing", `No word timings for #${a.voiceId}`, {
         fix: "Run transcribe on the voice file, or provide <name>.words.json.",
       });
     const fps = typeof root.props.fps === "number" ? root.props.fps : 30;
@@ -187,7 +187,7 @@ export const alignToVoice = tool({
         i = words.findIndex((w, k) => k >= cursor && norm(w.w) === target);
         if (i < 0) i = words.findIndex((w) => norm(w.w) === target);
         if (i < 0)
-          throw new CodeCutError("invalid_edit", `The word "${m.word}" is not in the voice`, {
+          throw new FlomotionError("invalid_edit", `The word "${m.word}" is not in the voice`, {
             fix: `Words: ${words
               .slice(0, 20)
               .map((w) => w.w)
@@ -196,14 +196,14 @@ export const alignToVoice = tool({
       }
       const w = words[i];
       if (!w)
-        throw new CodeCutError(
+        throw new FlomotionError(
           "invalid_edit",
           `The voice has ${words.length} words; no index ${i}`,
         );
       cursor = i + 1;
       const hit = findById(root, m.id);
       if (!hit)
-        throw new CodeCutError("unknown_element", `No element with id "${m.id}"`, {
+        throw new FlomotionError("unknown_element", `No element with id "${m.id}"`, {
           fix: "Use project_read to list ids.",
         });
       const def = registry.get(hit.node.name);

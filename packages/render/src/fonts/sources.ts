@@ -1,6 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, extname, join, relative, resolve } from "node:path";
-import { CodeCutError, classifyFontLicense, type FontDecl } from "@codecut/core";
+import { FlomotionError, classifyFontLicense, type FontDecl } from "@flomotion/core";
 import { formatOf, inspectFont, sha256 } from "./inspect.js";
 import type { FontContext, FontFile, FontSource, FontSyncResult } from "./types.js";
 
@@ -26,7 +26,7 @@ export class LocalSource implements FontSource {
   async sync(decl: FontDecl, ctx: FontContext): Promise<FontSyncResult> {
     const abs = resolve(ctx.projectRoot, decl.source);
     if (!existsSync(abs))
-      throw new CodeCutError(
+      throw new FlomotionError(
         "font_error",
         `Font "${decl.id}": file ${decl.source} does not exist`,
         { fix: "Put the font file in the project's fonts/ folder and fix the path." },
@@ -37,7 +37,7 @@ export class LocalSource implements FontSource {
     );
     const declared = decl.license;
     if (!declared) {
-      throw new CodeCutError(
+      throw new FlomotionError(
         "font_error",
         `Font "${decl.id}" (${decl.source}) needs a license prop`,
         {
@@ -79,12 +79,12 @@ export class UrlSource implements FontSource {
   }
   async sync(decl: FontDecl, ctx: FontContext): Promise<FontSyncResult> {
     if (!decl.license)
-      throw new CodeCutError("font_error", `Font "${decl.id}" from a URL needs a license prop`, {
+      throw new FlomotionError("font_error", `Font "${decl.id}" from a URL needs a license prop`, {
         fix: 'Add license="…" with the licence the file is distributed under.',
       });
     const res = await ctx.fetch(decl.source);
     if (!res.ok)
-      throw new CodeCutError("font_error", `Could not download ${decl.source} (${res.status})`);
+      throw new FlomotionError("font_error", `Could not download ${decl.source} (${res.status})`);
     const buf = Buffer.from(await res.arrayBuffer());
     const hash = sha256(buf);
     const dir = join(ctx.cacheDir, "url");

@@ -1,4 +1,4 @@
-import { CODECUT_NAME } from "../config.js";
+import { FLOMOTION_NAME } from "../config.js";
 import type { AudioEvent, SoundCue } from "../schema/render-types.js";
 import type { ResolvedFont, ResolvedProject } from "../resolve/types.js";
 import type { BakedChannel, StaticValue } from "./bake.js";
@@ -8,9 +8,9 @@ import type { CompileOptions, CompileResult, IRLayer } from "./types.js";
 
 const BASE_CSS = `*{margin:0;padding:0;box-sizing:border-box}
 html,body{margin:0;overflow:hidden}
-.cc-l{pointer-events:none}
-.cc-xf{will-change:auto}
-.cc-xf>*{max-width:none}`;
+.fm-l{pointer-events:none}
+.fm-xf{will-change:auto}
+.fm-xf>*{max-width:none}`;
 
 function fontFaceCss(fonts: ResolvedFont[]): string {
   const rules: string[] = [];
@@ -64,7 +64,7 @@ function walkAll(layer: IRLayer, fn: (l: IRLayer) => void) {
 }
 
 const RUNTIME = `(function(){
-  var G=window.gsap, S=window.__ccStatic||[], B=window.__ccBaked||[], D=window.__ccDur||1, els={};
+  var G=window.gsap, S=window.__fmStatic||[], B=window.__fmBaked||[], D=window.__fmDur||1, els={};
   function el(sel){return els[sel]||(els[sel]=document.querySelector(sel));}
   function put(target,props){var e=el(target); if(!e)return; if(props.__text!==undefined){e.textContent=props.__text; delete props.__text;} var at=props.__attr; if(at){for(var k in at)e.setAttribute(k,at[k]); delete props.__attr;} if(Object.keys(props).length)G.set(e,props);}
   function groupBy(list){var m={};list.forEach(function(c){(m[c[0]]=m[c[0]]||[]).push(c);});return m;}
@@ -92,9 +92,9 @@ const RUNTIME = `(function(){
   var tl=G.timeline({paused:true});
   tl.to(proxy,{t:D,duration:D,ease:"none",onUpdate:function(){renderAt(proxy.t);}},0);
   renderAt(0);
-  window.__ccRenderAt=renderAt;
+  window.__fmRenderAt=renderAt;
   window.__timelines=window.__timelines||{};
-  window.__timelines[window.__ccId]=tl;
+  window.__timelines[window.__fmId]=tl;
   tl.seek(0);
 })();`;
 
@@ -131,14 +131,14 @@ export function compileProject(project: ResolvedProject, opts: CompileOptions = 
   const res =
     comp.width >= comp.height ? (comp.width === comp.height ? "square" : "landscape") : "portrait";
   const mix = opts.mix
-    ? `<audio id="cc-mix" src="${opts.mix.src}" data-start="0" data-duration="${numFmt(opts.mix.duration ?? comp.duration)}" data-volume="1"></audio>`
+    ? `<audio id="fm-mix" src="${opts.mix.src}" data-start="0" data-duration="${numFmt(opts.mix.duration ?? comp.duration)}" data-volume="1"></audio>`
     : "";
   const defs = acc.defs.length
     ? `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>${acc.defs.join("")}</defs></svg>`
     : "";
 
   const html = `<!doctype html>
-<html lang="en" data-resolution="${res}" data-generator="${CODECUT_NAME}">
+<html lang="en" data-resolution="${res}" data-generator="${FLOMOTION_NAME}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=${comp.width}, height=${comp.height}">
@@ -157,10 +157,10 @@ ${root.html}
 ${mix}
 </div>
 <script>
-window.__ccId=${JSON.stringify(comp.id)};
-window.__ccDur=${numFmt(comp.duration)};
-window.__ccStatic=${JSON.stringify(staticRows)};
-window.__ccBaked=${JSON.stringify(bakedRows)};
+window.__fmId=${JSON.stringify(comp.id)};
+window.__fmDur=${numFmt(comp.duration)};
+window.__fmStatic=${JSON.stringify(staticRows)};
+window.__fmBaked=${JSON.stringify(bakedRows)};
 </script>
 <script>
 ${RUNTIME}

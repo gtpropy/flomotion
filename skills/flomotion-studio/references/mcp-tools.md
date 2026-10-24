@@ -18,13 +18,13 @@ Every write returns `{ description, patches, undoToken }`. The undo token is a h
 | Assets | `asset_search {query, kind}`, `asset_get {ref, color?, permission?}`, `asset_capture {url, permission}`, `brand_extract {url, permission}` | Icons, brand logos, emoji, photos, illustrations; screenshots of their product; their site's brand. See `assets.md`. |
 | Voice | `voice_quote {provider, text, voice}` then, after the person's yes, `voice_generate {quoteId, confirm:true}`; `transcribe {audio}` for a recording | Providers: `recording` (their file, free), `local-tts` (macOS `say`, a timing draft), `elevenlabs` (paid). ElevenLabs returns word timings itself; for a recording run `transcribe` and read the words against the script. |
 | Align | `align_to_voice {voiceId, mapping:[{id, word, edge?, prop?, offset?}]}` | Starts elements on spoken words. Do this after the voice exists. |
-| Sound | `sound_auto` (dry run, then `apply:true`), `sound_search {tag?, query?}`, `sound_get {id, tag?}`, then `element_add Sound` | Ledger entry per sound; CC0 and CC-BY only unless `codecut.json` restricts further. |
+| Sound | `sound_auto` (dry run, then `apply:true`), `sound_search {tag?, query?}`, `sound_get {id, tag?}`, then `element_add Sound` | Ledger entry per sound; CC0 and CC-BY only unless `flomotion.json` restricts further. |
 | Mix | `mix_preview {range?}` | Measures LUFS, true peak and where each sound's peak lands. It does not play anything. |
 | Review | `lint`, `review {checklist?, deep?}`, `contact_sheet` | Up to 3 rounds. `review` returns pass / fail / warn / manual per check and a contact sheet. |
 | Render | `render {preset:"draft"\|"social"\|"final"}` | Lint errors block it. Writes `<name>.credits.txt` and `<name>.licenses.json` next to the video. Final only after G5 approval. |
 | History | `history_list`, `history_restore {id}` | Note the snapshot id at each gate approval in `LOG.md`. |
 
-Resources: `codecut://schema/{component}` (props, ranges, docs), `codecut://project/outline`, `codecut://ledger`, `codecut://looks`.
+Resources: `flomotion://schema/{component}` (props, ranges, docs), `flomotion://project/outline`, `flomotion://ledger`, `flomotion://looks`.
 
 ## Calling rules
 
@@ -40,7 +40,7 @@ Resources: `codecut://schema/{component}` (props, ranges, docs), `codecut://proj
 
 | Code | Meaning | What to do |
 |---|---|---|
-| `schema_violation` | Unknown component or prop, value out of range, TSX does not parse, or a lint error was introduced | Read `fix`; check `codecut://schema/<Component>` |
+| `schema_violation` | Unknown component or prop, value out of range, TSX does not parse, or a lint error was introduced | Read `fix`; check `flomotion://schema/<Component>` |
 | `opaque_expression` | The target is code in the file, not a literal | `scene_write` the element |
 | `track_locked`, `overlap_rejected` | Timeline rule | Change the plan or ask the person |
 | `duplicate_keyframe`, `invalid_time` | Keyframe times collide or are not literal | Give each key its own time (a frame apart) |

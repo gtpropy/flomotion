@@ -1,4 +1,4 @@
-import { CodeCutError } from "@codecut/core";
+import { FlomotionError } from "@flomotion/core";
 
 export type AssetKind = "icon" | "logo" | "emoji" | "photo" | "illustration";
 export type AssetLicenseClass = "CC0" | "permissive" | "CC-BY" | "other";
@@ -86,7 +86,7 @@ async function getJson<T>(
       signal: AbortSignal.timeout(20_000),
     });
   } catch (e) {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "missing_dependency",
       `Could not reach ${new URL(url).host}: ${e instanceof Error ? e.message : e}`,
       {
@@ -95,36 +95,36 @@ async function getJson<T>(
     );
   }
   if (res.status === 429)
-    throw new CodeCutError("render_failed", `${new URL(url).host} rate limit reached`, {
+    throw new FlomotionError("render_failed", `${new URL(url).host} rate limit reached`, {
       fix: "Wait a minute and try again, or use another source.",
     });
   if (res.status === 401 || res.status === 403)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "missing_dependency",
       `${new URL(url).host} rejected the API key (HTTP ${res.status})`,
       { fix: "Run `flomotion setup` and check the key." },
     );
   if (!res.ok)
-    throw new CodeCutError("asset_missing", `${new URL(url).host} answered HTTP ${res.status}`);
+    throw new FlomotionError("asset_missing", `${new URL(url).host} answered HTTP ${res.status}`);
   return (await res.json()) as T;
 }
 
 async function getBytes(f: typeof fetch, url: string): Promise<{ bytes: Buffer; type: string }> {
   const res = await f(url, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(60_000) });
   if (!res.ok)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "asset_missing",
       `Download failed (HTTP ${res.status}) for ${new URL(url).host}`,
     );
   const len = Number(res.headers.get("content-length") ?? 0);
   if (len > MAX_BYTES)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "asset_missing",
       `The file is ${Math.round(len / 1e6)} MB, over the 60 MB limit`,
     );
   const bytes = Buffer.from(await res.arrayBuffer());
   if (bytes.length > MAX_BYTES)
-    throw new CodeCutError("asset_missing", "The file is over the 60 MB limit");
+    throw new FlomotionError("asset_missing", "The file is over the 60 MB limit");
   return { bytes, type: res.headers.get("content-type") ?? "" };
 }
 
@@ -138,14 +138,14 @@ export function assertSafeSvg(svg: string): void {
       svg,
     );
   if (bad)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "asset_missing",
       `The SVG contains something that is not plain artwork (${bad[0].trim().slice(0, 30)}…)`,
       {
         fix: "Pick another asset, or import a file you have checked.",
       },
     );
-  if (!/<svg[\s>]/i.test(svg)) throw new CodeCutError("asset_missing", "The file is not an SVG");
+  if (!/<svg[\s>]/i.test(svg)) throw new FlomotionError("asset_missing", "The file is not an SVG");
 }
 
 // ---------- Iconify: icons, emoji and brand logos (no key) ----------
@@ -243,7 +243,7 @@ export class IconifyProvider implements AssetProvider {
   async resolve(ref: string): Promise<AssetHit> {
     const m = /^iconify:([a-z0-9-]+)\/([a-z0-9-]+)$/.exec(ref);
     if (!m)
-      throw new CodeCutError("invalid_edit", `Not an Iconify ref: ${ref}`, {
+      throw new FlomotionError("invalid_edit", `Not an Iconify ref: ${ref}`, {
         fix: "Use a ref from asset_search, like iconify:lucide/calendar.",
       });
     const [, prefix, name] = m as unknown as [string, string, string];
@@ -252,7 +252,7 @@ export class IconifyProvider implements AssetProvider {
       `${this.base}/collections?prefixes=${prefix}`,
     );
     const c = j[prefix];
-    if (!c) throw new CodeCutError("asset_missing", `No icon set "${prefix}"`);
+    if (!c) throw new FlomotionError("asset_missing", `No icon set "${prefix}"`);
     const kind: AssetKind = LOGO_PREFIXES.includes(prefix)
       ? "logo"
       : EMOJI_PREFIXES.includes(prefix)
@@ -344,7 +344,7 @@ export class OpenverseProvider implements AssetProvider {
   async resolve(ref: string): Promise<AssetHit> {
     const id = ref.replace(/^openverse:/, "");
     if (!/^[0-9a-f-]{36}$/.test(id))
-      throw new CodeCutError("invalid_edit", `Not an Openverse ref: ${ref}`, {
+      throw new FlomotionError("invalid_edit", `Not an Openverse ref: ${ref}`, {
         fix: "Use a ref from asset_search.",
       });
     const r = await getJson<OpenverseImage>(this.f, `${this.base}/v1/images/${id}/`);
@@ -434,7 +434,7 @@ export class PexelsProvider implements AssetProvider {
   async resolve(ref: string): Promise<AssetHit> {
     const id = ref.replace(/^pexels:/, "");
     if (!/^\d+$/.test(id))
-      throw new CodeCutError("invalid_edit", `Not a Pexels ref: ${ref}`, {
+      throw new FlomotionError("invalid_edit", `Not a Pexels ref: ${ref}`, {
         fix: "Use a ref from asset_search.",
       });
     return this.hit(

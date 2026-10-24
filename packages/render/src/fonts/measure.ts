@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import {
   CacheMeasurer,
-  CODECUT_DIR,
+  FLOMOTION_DIR,
   CollectingMeasurer,
   type CCNode,
   type CompileOptions,
@@ -13,7 +13,7 @@ import {
   type TextMetrics,
   compileProject,
   resolveProject,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { openFontPage } from "./chrome.js";
 import { layoutCachePath, readJson, writeJson } from "./lock.js";
 import { sha256 } from "./inspect.js";
@@ -202,7 +202,7 @@ export interface LayoutCompileOptions {
 
 /**
  * Compile with real text layout: pass 1 records which measurements are needed, Chrome measures the
- * misses (cached in .codecut/layout-cache.json by a hash of text, style, font hashes and width), and
+ * misses (cached in .flomotion/layout-cache.json by a hash of text, style, font hashes and width), and
  * we recompile until nothing is missing.
  */
 export async function compileWithLayout(
@@ -254,4 +254,4 @@ function structuredCloneNode(n: CCNode): CCNode {
 }
 
 export const layoutCacheExists = (root: string) =>
-  existsSync(join(root, CODECUT_DIR, "layout-cache.json"));
+  existsSync(join(root, FLOMOTION_DIR, "layout-cache.json"));

@@ -16,7 +16,7 @@ Format: date, what changed, why (evidence), effect on the 10-brief eval.
 - Evidence: package tests (skill files, recipes lint, looks sync, installer). Eval on the 10 briefs: not run.
 
 ## 2026-10-23: v0.2.2
-- Product name CodeCut renamed to flowmotion in all files.
+- Product name flomotion renamed to flowmotion in all files.
 
 ## 2026-10-23: v0.2.1
 - Renamed skill to flomotion-studio.

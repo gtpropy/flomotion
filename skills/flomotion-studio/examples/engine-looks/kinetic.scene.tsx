@@ -14,7 +14,7 @@ import {
   PunchZoom,
   Vignette,
   Grain,
-} from "@codecut/components";
+} from "@flomotion/components";
 
 /**
  * Reference scene for the Kinetic Look: loud, fast, hard contrast.

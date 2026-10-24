@@ -1,6 +1,6 @@
-import type { AudioEvent, Ledger, LedgerEntry } from "@codecut/core";
+import type { AudioEvent, Ledger, LedgerEntry } from "@flomotion/core";
 
-import { isNode, walk, type CCNode } from "@codecut/core";
+import { isNode, walk, type CCNode } from "@flomotion/core";
 
 /** File sources of Image, Svg, Video and Clip elements written as plain paths. */
 export function collectAssetSrcs(root: CCNode): string[] {
@@ -50,7 +50,7 @@ export function licenseReport(
       m ? x.source === m[1] && x.id === m[2] : sameFile(x, ev.src),
     );
     if (e) used.set(key(e), e);
-    else if (m || /^https?:/.test(ev.src) || /(^|\/)\.codecut\/assets\//.test(ev.src))
+    else if (m || /^https?:/.test(ev.src) || /(^|\/)\.flomotion\/assets\//.test(ev.src))
       problems.push(`${ev.src} has no ledger entry`);
     else own.add(ev.src);
   }

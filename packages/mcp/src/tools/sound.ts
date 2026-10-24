@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  CodeCutError,
+  FlomotionError,
   getLook,
   isNode,
   edit as coreEdit,
@@ -8,9 +8,9 @@ import {
   type CCNode,
   type IRLayer,
   type Patch,
-} from "@codecut/core";
+} from "@flomotion/core";
 const { makeResult, uniqueId } = coreEdit;
-import { readLedger } from "@codecut/render";
+import { readLedger } from "@flomotion/render";
 import { SOUND_TAGS, isSoundTag } from "../providers/sounds.js";
 import { tool, writeResult } from "./util.js";
 
@@ -40,7 +40,7 @@ export const soundGet = tool({
   name: "sound_get",
   title: "Get a sound",
   description:
-    'Download a sound into .codecut/assets/, measure its peak, and record it in the licence ledger. CC0 and CC-BY only by default (codecut.json soundLicenses). Returns the `ref` to use as <Sound src=… peak=… />. Pass `tag` to name the peak after the job (e.g. hit/land gives peak="land").',
+    'Download a sound into .flomotion/assets/, measure its peak, and record it in the licence ledger. CC0 and CC-BY only by default (flomotion.json soundLicenses). Returns the `ref` to use as <Sound src=… peak=… />. Pass `tag` to name the peak after the job (e.g. hit/land gives peak="land").',
   input: { id: z.string(), tag: z.string().optional() },
   async run(a, ctx) {
     ctx.requireProject();
@@ -126,7 +126,7 @@ export const soundAuto = tool({
             const found = await ctx.sound.search({ tag: c.tag, limit: 8 });
             const best = found.results.find((r) => r.allowed);
             if (!best)
-              throw new CodeCutError("asset_missing", `No allowed sound found for ${c.tag}`, {
+              throw new FlomotionError("asset_missing", `No allowed sound found for ${c.tag}`, {
                 fix: "Search by hand with sound_search.",
               });
             const got = await ctx.sound.get({ id: best.id, tag: c.tag });
@@ -193,7 +193,7 @@ export const soundAuto = tool({
       work = makeResult(work, [p], "").project;
     }
     if (!patches.length)
-      throw new CodeCutError("asset_missing", "No sound could be placed", { details: plan });
+      throw new FlomotionError("asset_missing", "No sound could be placed", { details: plan });
     const result = makeResult(root, patches, `place ${patches.length} sound(s) on impact cues`);
     const w = await ctx.store.apply(result, loaded);
     return {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   EDIT_OPS,
   KEY_OPS,
-  CodeCutError,
+  FlomotionError,
   applyPatches,
   cloneNode,
   edit,
@@ -104,7 +104,7 @@ describe("timeline edit operations (each returns { project, undo } and a one-lin
         ripple: false,
       });
     } catch (e) {
-      expect((e as CodeCutError).code).toBe("overlap_rejected");
+      expect((e as FlomotionError).code).toBe("overlap_rejected");
     }
   });
   it("overwrite trims, splits and removes what it covers", () => {
@@ -251,8 +251,8 @@ describe("timeline edit operations (each returns { project, undo } and a one-lin
         fn();
         throw new Error("should have thrown");
       } catch (e) {
-        expect((e as CodeCutError).code).toBe("track_locked");
-        expect((e as CodeCutError).fix).toMatch(/lockTrack/);
+        expect((e as FlomotionError).code).toBe("track_locked");
+        expect((e as FlomotionError).fix).toMatch(/lockTrack/);
       }
     }
     // unlock works, then writes pass
@@ -337,7 +337,7 @@ describe("keyframe operations", () => {
     const m = KEY_OPS.keyMove(root, { id: "r", prop: "opacity", from: 2, to: 4 });
     expect(keysOf(m.project, "opacity").map((k: any) => k[0])).toEqual([0, 1, 4]);
     expect(() => KEY_OPS.keyMove(root, { id: "r", prop: "opacity", from: 2, to: 1 })).toThrow(
-      CodeCutError,
+      FlomotionError,
     );
     roundTrip(root, m);
     const d = KEY_OPS.keyDelete(root, { id: "r", prop: "opacity", t: 1 });
@@ -372,7 +372,7 @@ describe("keyframe operations", () => {
     const e = KEY_OPS.keyEase(root, { id: "r", prop: "opacity", t: 1, ease: "back.out(1.7)" });
     expect(keysOf(e.project, "opacity")[1]).toEqual([1, 1, "back.out(1.7)"]);
     expect(() => KEY_OPS.keyEase(root, { id: "r", prop: "opacity", t: 1, ease: "wiggle" })).toThrow(
-      CodeCutError,
+      FlomotionError,
     );
     roundTrip(root, e);
     const md = KEY_OPS.keyMode(root, { id: "r", prop: "opacity", mode: "auto" });

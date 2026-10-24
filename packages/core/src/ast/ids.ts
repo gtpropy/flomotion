@@ -16,7 +16,7 @@ export function collectIds(root: CCNode): Set<string> {
 }
 
 /**
- * Give every element without an id a stable `cc_` id. Mutates the tree and returns what changed so a
+ * Give every element without an id a stable `fm_` id. Mutates the tree and returns what changed so a
  * codemod can write the ids back to the source on first save.
  */
 export function assignMissingIds(root: CCNode): Array<{ node: CCNode; id: string; path: string }> {

@@ -11,7 +11,7 @@ import {
   num,
   text,
   z,
-} from "@codecut/core";
+} from "@flomotion/core";
 
 const decoration = (label: string) =>
   group(

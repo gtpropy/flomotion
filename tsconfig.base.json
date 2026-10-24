@@ -14,7 +14,7 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "jsx": "react-jsx",
-    "jsxImportSource": "@codecut/core",
+    "jsxImportSource": "@flomotion/core",
     "forceConsistentCasingInFileNames": true
   }
 }

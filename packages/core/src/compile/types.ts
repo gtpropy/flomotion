@@ -15,7 +15,7 @@ export interface CompileOptions {
   gsapPath?: string;
   /** Word timings for a Voiceover id. */
   words?: (voiceId: string) => Array<{ w: string; start: number; end: number }> | undefined;
-  /** Pre-mixed audio to embed as a single <audio id="cc-mix">. */
+  /** Pre-mixed audio to embed as a single <audio id="fm-mix">. */
   mix?: { src: string; duration?: number };
 }
 

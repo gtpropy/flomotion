@@ -20,7 +20,7 @@ Without a Freesound key the server falls back to `sounds/catalog.json` (your own
 
 Optional environment for ElevenLabs quotes: `ELEVENLABS_USD_PER_1K_CREDITS` (your plan's price per 1000 credits, so the quote can show money), `ELEVENLABS_CREDITS_PER_CHAR` (default 1; about 0.5 for flash models), `ELEVENLABS_COMMERCIAL_OK=1` (only if your plan allows commercial use, so the ledger records the voice as cleared).
 
-## 1. Install CodeCut and the skill
+## 1. Install flomotion and the skill
 
 From a checkout of this repo:
 
@@ -28,7 +28,7 @@ From a checkout of this repo:
 pnpm i && pnpm build
 ```
 
-After it is published to npm you can use `npx -y flomotion …` (the npm package is `flomotion`; the command is `codecut`) instead of the path below.
+After it is published to npm you can use `npx -y flomotion …` instead of the path below.
 
 Make an empty folder for the video and register the server **in that folder's scope**:
 
@@ -37,8 +37,8 @@ mkdir ~/videos/pulse && cd ~/videos/pulse
 claude mcp add flomotion \
   -e FREESOUND_API_KEY=$FREESOUND_API_KEY \
   -e ELEVENLABS_API_KEY=$ELEVENLABS_API_KEY \
-  -- node /ABSOLUTE/PATH/TO/codeCut/packages/cli/dist/bin.mjs mcp --dir . --ui
-node /ABSOLUTE/PATH/TO/codeCut/packages/cli/dist/bin.mjs install skill      # copies the skill to ~/.claude/skills/flomotion-studio (add --project for ./.claude/skills)
+  -- node /ABSOLUTE/PATH/TO/flomotion/packages/cli/dist/bin.mjs mcp --dir . --ui
+node /ABSOLUTE/PATH/TO/flomotion/packages/cli/dist/bin.mjs install skill      # copies the skill to ~/.claude/skills/flomotion-studio (add --project for ./.claude/skills)
 ```
 
 Leave out the `-e` lines for keys you do not have. Then start `claude` in that folder and run `/mcp`: the `flomotion` server must be connected and list 39 tools. Run `/skills` (or ask "what skills do you have?"): `flomotion-studio` must be there. The server was started with `--ui`: its stderr line `live view: http://127.0.0.1:4317` (also in the `ui` field of `project_read`) is the live view address; open it before you start and keep it beside the terminal.
@@ -87,4 +87,4 @@ Watch for each item. Write "pass", "fail" or "n/a" and a note.
 
 ## 5. Report back
 
-Send me: which table rows failed and the tool error text (every error has a `code` and a `fix`), the `.codecut/history/index.json`, and the final MP4's duration. I will fix what broke and re-run the gate.
+Send me: which table rows failed and the tool error text (every error has a `code` and a `fix`), the `.flomotion/history/index.json`, and the final MP4's duration. I will fix what broke and re-run the gate.

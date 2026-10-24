@@ -11,7 +11,7 @@ import {
   type Channel,
   type RenderCtx,
   type Signal,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { round } from "./util.js";
 
 const sig = <T>(rc: RenderCtx, prop: string): Signal<T> => rc.node.props[prop] as Signal<T>;
@@ -143,7 +143,7 @@ export const Vignette = defineEffect("Vignette", {
     const amount = sig<number>(rc, "amount");
     return {
       overlay: {
-        html: `<div id="${id}" class="cc-vignette" style="position:absolute;inset:0;pointer-events:none;opacity:${round(evalSignal(amount, a))};background:radial-gradient(${p.roundness > 0.5 ? "circle" : "ellipse"} at 50% 50%, rgba(0,0,0,0) ${Math.max(0, inner)}%, ${p.color} ${outer}%)"></div>`,
+        html: `<div id="${id}" class="fm-vignette" style="position:absolute;inset:0;pointer-events:none;opacity:${round(evalSignal(amount, a))};background:radial-gradient(${p.roundness > 0.5 ? "circle" : "ellipse"} at 50% 50%, rgba(0,0,0,0) ${Math.max(0, inner)}%, ${p.color} ${outer}%)"></div>`,
         channels: [
           {
             target: `#${id}`,

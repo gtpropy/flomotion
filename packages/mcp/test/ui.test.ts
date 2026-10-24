@@ -156,8 +156,8 @@ describe("live view server", () => {
     expect(png.subarray(1, 4).toString()).toBe("PNG");
     expect(png.length).toBeGreaterThan(3000);
     // the agent's own build folder was not touched
-    expect(existsSync(join(root, ".codecut", "ui-build", "index.html"))).toBe(true);
-    expect(existsSync(join(root, ".codecut", "build"))).toBe(false);
+    expect(existsSync(join(root, ".flomotion", "ui-build", "index.html"))).toBe(true);
+    expect(existsSync(join(root, ".flomotion", "build"))).toBe(false);
     const t0 = Date.now();
     const again = await get("/api/frame?t=1.2");
     expect(Buffer.from(await again.arrayBuffer()).equals(png)).toBe(true);
@@ -186,13 +186,13 @@ describe("live view server", () => {
   it("never serves the project source, the ledger internals, or anything outside the folder", async () => {
     for (const p of [
       "/files/project.tsx",
-      "/files/.codecut/ledger.json",
-      "/files/.codecut/history/index.json",
+      "/files/.flomotion/ledger.json",
+      "/files/.flomotion/history/index.json",
       "/files/..%2F..%2Fetc%2Fpasswd",
       "/files/%2e%2e/%2e%2e/etc/hosts",
       "/files/assets/../project.tsx",
       "/files/renders/../../project.tsx",
-      "/files/.codecut/activity.jsonl",
+      "/files/.flomotion/activity.jsonl",
     ]) {
       const r = await get(p);
       expect(r.status, p).toBe(404);
@@ -202,9 +202,9 @@ describe("live view server", () => {
   it("shows gate files, the last review, assets and renders", async () => {
     writeFileSync(join(root, "brief.json"), JSON.stringify({ product: "Pulse" }));
     writeFileSync(join(root, "LOG.md"), "# Log\n- G0 approved at h0003\n");
-    mkdirSync(join(root, ".codecut", "review"), { recursive: true });
+    mkdirSync(join(root, ".flomotion", "review"), { recursive: true });
     writeFileSync(
-      join(root, ".codecut", "review", "last.json"),
+      join(root, ".flomotion", "review", "last.json"),
       JSON.stringify({
         at: Date.now(),
         pass: false,

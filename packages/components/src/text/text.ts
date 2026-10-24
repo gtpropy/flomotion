@@ -21,7 +21,7 @@ import {
   type RenderOutput,
   type Signal,
   type TextStyle,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { atControl, css, esc, fillCss, placement, round } from "../util.js";
 import { animatorChannels, PRESETS, type AnimProps, type Order } from "./animator.js";
 import { textStyleControls, typographyControls } from "./controls.js";
@@ -44,7 +44,7 @@ export function parseMarkup(src: string): Item[] {
     [/(?<![\w])_([^_]+)_(?![\w])/, "<i>", "</i>"],
     [
       /==([^=]+)==/,
-      '<span class="cc-mark" style="background:linear-gradient(#ffe14d,#ffe14d) no-repeat 0 85%/100% 45%">',
+      '<span class="fm-mark" style="background:linear-gradient(#ffe14d,#ffe14d) no-repeat 0 85%/100% 45%">',
       "</span>",
     ],
     [/~~([^~]+)~~/, "<s>", "</s>"],
@@ -426,18 +426,18 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
             table.target.char.push(cid);
             table.charText.push(c.g);
             const col = charColor ? `;color:${charColor(srcIndex.get(c)!)}` : "";
-            return `${c.open}<span id="${cid}" class="cc-c" style="display:inline-block;white-space:pre${col}">${esc(c.g)}</span>${c.close}`;
+            return `${c.open}<span id="${cid}" class="fm-c" style="display:inline-block;white-space:pre${col}">${esc(c.g)}</span>${c.close}`;
           })
           .join("");
         const sep = k < words.length - 1 || false ? " " : "";
-        return `<span id="${wid}" class="cc-w" style="display:inline-block;white-space:nowrap">${chars}</span>${sep}`;
+        return `<span id="${wid}" class="fm-w" style="display:inline-block;white-space:nowrap">${chars}</span>${sep}`;
       });
       if (needLine) {
         const lid = `${id}-l${li}`;
         table.line.push(lid);
         table.target.line.push(`${lid}-in`);
         htmlLines.push(
-          `<span id="${lid}" class="cc-l" style="display:block;${mask ? "overflow:hidden;" : ""}white-space:nowrap"><span id="${lid}-in" style="display:block">${wordHtml.join("")}</span></span>`,
+          `<span id="${lid}" class="fm-l" style="display:block;${mask ? "overflow:hidden;" : ""}white-space:nowrap"><span id="${lid}-in" style="display:block">${wordHtml.join("")}</span></span>`,
         );
       } else htmlLines.push(wordHtml.join(""));
     });
@@ -652,7 +652,7 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
       const sid = `${id}-${kind}`;
       const pos = kind === "underline" ? "0 100%" : "0 52%";
       decoOpen.push(
-        `<span id="${sid}" class="cc-deco" style="background:linear-gradient(${c},${c}) no-repeat ${pos}/${round((d.progress ?? 1) * 100, 2)}% ${th}px;padding-bottom:${kind === "underline" ? (d.offset ?? 6) : 0}px">`,
+        `<span id="${sid}" class="fm-deco" style="background:linear-gradient(${c},${c}) no-repeat ${pos}/${round((d.progress ?? 1) * 100, 2)}% ${th}px;padding-bottom:${kind === "underline" ? (d.offset ?? 6) : 0}px">`,
       );
       decoClose.unshift("</span>");
       if (animatedP)
@@ -678,7 +678,7 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     const raw = (rc.node.props.highlight as any)?.progress as Signal<number> | undefined;
     const col = withAlphaColor(hl.color ?? "#ffe14d", hl.opacity ?? 1);
     decoOpen.push(
-      `<span id="${sid}" class="cc-hl" style="background:linear-gradient(${col},${col}) no-repeat 0 0/${round((hl.progress ?? 1) * 100, 2)}% 100%;padding:${hl.padding ?? 8}px;margin:-${hl.padding ?? 8}px;border-radius:${hl.radius ?? 6}px;-webkit-box-decoration-break:clone;box-decoration-break:clone">`,
+      `<span id="${sid}" class="fm-hl" style="background:linear-gradient(${col},${col}) no-repeat 0 0/${round((hl.progress ?? 1) * 100, 2)}% 100%;padding:${hl.padding ?? 8}px;margin:-${hl.padding ?? 8}px;border-radius:${hl.radius ?? 6}px;-webkit-box-decoration-break:clone;box-decoration-break:clone">`,
     );
     decoClose.unshift("</span>");
     if (dyn(raw))
@@ -735,7 +735,7 @@ export function renderText(p: any, rc: RenderCtx, split?: SplitSpec): RenderOutp
     box.width = "max-content";
     box["max-width"] = `${round(maxW)}px`;
   }
-  let html = `<div id="${tid}" class="cc-text" ${s.lang ? `lang="${esc(s.lang)}" ` : ""}${s.direction === "rtl" ? 'dir="rtl" ' : ""}style="${css(style)}">${content}</div>`;
+  let html = `<div id="${tid}" class="fm-text" ${s.lang ? `lang="${esc(s.lang)}" ` : ""}${s.direction === "rtl" ? 'dir="rtl" ' : ""}style="${css(style)}">${content}</div>`;
   if (s.box?.height !== undefined && s.valign !== "top") {
     html = `<div style="display:flex;width:100%;height:100%;align-items:${s.valign === "middle" ? "center" : "flex-end"}">${html}</div>`;
   }
@@ -747,7 +747,7 @@ function measure(rc: RenderCtx, text: string, style: TextStyle, maxWidth: number
   if (rc.measure) return rc.measure.measureText(text, style, { maxWidth });
   return estimate(text, style, { maxWidth });
 }
-import { estimateText as estimate } from "@codecut/core";
+import { estimateText as estimate } from "@flomotion/core";
 
 // ---------- components ----------
 
@@ -892,7 +892,7 @@ export const Span = inline(
     })}">`,
 );
 
-import { list as listCtl } from "@codecut/core";
+import { list as listCtl } from "@flomotion/core";
 
 export const B = inline(
   "B",
@@ -918,7 +918,7 @@ export const Highlight = inline(
   },
   (p, rc) => {
     const prog = rc.at<number>("progress", rc.node.start);
-    return `<span id="${rc.id}" class="cc-hl" style="background:linear-gradient(${p.color},${p.color}) no-repeat 0 0/${round(prog * 100, 2)}% 100%;padding:0 ${p.padding}px;margin:0 -${p.padding}px;border-radius:${p.radius}px;-webkit-box-decoration-break:clone;box-decoration-break:clone">`;
+    return `<span id="${rc.id}" class="fm-hl" style="background:linear-gradient(${p.color},${p.color}) no-repeat 0 0/${round(prog * 100, 2)}% 100%;padding:0 ${p.padding}px;margin:0 -${p.padding}px;border-radius:${p.radius}px;-webkit-box-decoration-break:clone;box-decoration-break:clone">`;
   },
   (p, rc) => {
     const sg = rc.node.props.progress as Signal<number>;
@@ -949,7 +949,7 @@ const decoInline = (name: string, pos: string, label: string) =>
     },
     (p, rc) => {
       const prog = rc.at<number>("progress", rc.node.start);
-      return `<span id="${rc.id}" class="cc-deco" style="background:linear-gradient(${p.color},${p.color}) no-repeat ${pos}/${round(prog * 100, 2)}% ${p.thickness}px;padding-bottom:${name === "Underline" ? p.offset : 0}px">`;
+      return `<span id="${rc.id}" class="fm-deco" style="background:linear-gradient(${p.color},${p.color}) no-repeat ${pos}/${round(prog * 100, 2)}% ${p.thickness}px;padding-bottom:${name === "Underline" ? p.offset : 0}px">`;
     },
     (p, rc) => {
       const sg = rc.node.props.progress as Signal<number>;

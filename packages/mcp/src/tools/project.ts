@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CodeCutError, listLooks } from "@codecut/core";
+import { FlomotionError, listLooks } from "@flomotion/core";
 import { TEMPLATES, scaffoldProject } from "../scaffold.js";
 import { tool } from "./util.js";
 
@@ -11,7 +11,7 @@ const sizeArg = z.union([
 export const projectCreate = tool({
   name: "project_create",
   title: "Create a project",
-  description: `Create a new project in the server's folder: project.tsx, codecut.json, folders. size is "1080x1920" (9:16) or [w,h]. template: ${TEMPLATES.join(" | ")} (saas-promo makes six empty beat scenes: hook, problem, reveal, features, proof, cta over 30 s). look: a Look id (see codecut://looks). Fails if the folder already has a project.`,
+  description: `Create a new project in the server's folder: project.tsx, flomotion.json, folders. size is "1080x1920" (9:16) or [w,h]. template: ${TEMPLATES.join(" | ")} (saas-promo makes six empty beat scenes: hook, problem, reveal, features, proof, cta over 30 s). look: a Look id (see flomotion://looks). Fails if the folder already has a project.`,
   input: {
     name: z.string().min(1),
     size: sizeArg.default("1080x1920"),
@@ -23,7 +23,7 @@ export const projectCreate = tool({
   async run(a, ctx) {
     const looks = listLooks().map((l) => l.id);
     if (a.look && !looks.includes(a.look))
-      throw new CodeCutError("schema_violation", `Unknown look "${a.look}"`, {
+      throw new FlomotionError("schema_violation", `Unknown look "${a.look}"`, {
         fix: `Looks: ${looks.join(", ")}`,
       });
     const size = (typeof a.size === "string" ? a.size.split("x").map(Number) : a.size) as [
@@ -66,7 +66,7 @@ export const historyList = tool({
     if (a.id) {
       const e = all.find((x) => x.id === a.id);
       if (!e)
-        throw new CodeCutError("invalid_edit", `No snapshot "${a.id}"`, {
+        throw new FlomotionError("invalid_edit", `No snapshot "${a.id}"`, {
           fix: "Call history_list without id.",
         });
       const old = ctx.store.snapshotSource(a.id).split("\n");

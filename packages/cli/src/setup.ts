@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { createInterface } from "node:readline";
-import { runHyperframes, stripAnsi } from "@codecut/render";
+import { runHyperframes, stripAnsi } from "@flomotion/render";
 import {
   KEYS,
   KEY_NAMES,
@@ -19,7 +19,7 @@ import {
   type CheckBases,
   type FlomotionConfig,
   type KeyName,
-} from "@codecut/mcp";
+} from "@flomotion/mcp";
 
 /** Everything the wizard says or asks goes through this, so tests can script a whole session. */
 export interface SetupIO {

@@ -1,4 +1,4 @@
-import { graphemes, type LineBox, type RNode } from "@codecut/core";
+import { graphemes, type LineBox, type RNode } from "@flomotion/core";
 
 export type By = "char" | "word" | "line";
 

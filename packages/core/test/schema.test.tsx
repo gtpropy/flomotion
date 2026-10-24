@@ -17,7 +17,7 @@ import {
   docsMarkdown,
   deriveLintRules,
   isNode,
-  CodeCutError,
+  FlomotionError,
 } from "../src/index.js";
 
 const Box = defineComponent("TestBox", {
@@ -33,7 +33,7 @@ const Box = defineComponent("TestBox", {
 
 describe("defineComponent", () => {
   it("rejects missing schemas and bad names", () => {
-    expect(() => defineComponent("lower", { category: "x", controls: {} })).toThrow(CodeCutError);
+    expect(() => defineComponent("lower", { category: "x", controls: {} })).toThrow(FlomotionError);
     expect(() => defineComponent("NoSchema", { category: "x" } as any)).toThrow(/without a schema/);
   });
   it("registers and merges mixins", () => {

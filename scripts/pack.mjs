@@ -1,4 +1,4 @@
-// Assemble the publishable `codecut` package in .publish/ from the bundle, the skill and the docs.
+// Assemble the publishable `flomotion` package in .publish/ from the bundle, the skill and the docs.
 //   node scripts/pack.mjs           build the bundle and assemble .publish/
 // Then: (cd .publish && npm pack)  /  (cd .publish && npm publish)
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -46,7 +46,7 @@ const pkg = {
     "remotion-alternative",
   ],
   engines: { node: ">=22" },
-  bin: { codecut: "dist/bin.mjs", flomotion: "dist/bin.mjs" },
+  bin: { flomotion: "dist/bin.mjs" },
   exports: {
     "./components": "./dist/components.mjs",
     "./core": "./dist/core.mjs",

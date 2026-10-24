@@ -18,7 +18,7 @@ let h: Harness;
 let d: ReturnType<typeof doubles>;
 const src = () => readFileSync(`${root}/project.tsx`, "utf8");
 const ledger = () =>
-  JSON.parse(readFileSync(`${root}/.codecut/ledger.json`, "utf8")) as { entries: any[] };
+  JSON.parse(readFileSync(`${root}/.flomotion/ledger.json`, "utf8")) as { entries: any[] };
 const fails = async (p: Promise<unknown>, code: string) => {
   try {
     await p;
@@ -177,13 +177,13 @@ describe("sounds (Freesound client against a test double)", () => {
     expect(e.fix).toContain("Allowed: CC0, CC-BY");
     expect(ledger().entries.some((x) => x.id === "9003")).toBe(false);
   });
-  it("can be restricted to CC0 only in codecut.json", async () => {
-    const cfg = JSON.parse(readFileSync(`${root}/codecut.json`, "utf8"));
-    writeFileSync(`${root}/codecut.json`, JSON.stringify({ ...cfg, soundLicenses: ["CC0"] }));
+  it("can be restricted to CC0 only in flomotion.json", async () => {
+    const cfg = JSON.parse(readFileSync(`${root}/flomotion.json`, "utf8"));
+    writeFileSync(`${root}/flomotion.json`, JSON.stringify({ ...cfg, soundLicenses: ["CC0"] }));
     await fails(h.call("sound_get", { id: "9005" }), "license_blocked");
     const r = await h.call("sound_search", { query: "boom" });
     expect(r.results[0]).toMatchObject({ id: "9005", allowed: false });
-    writeFileSync(`${root}/codecut.json`, JSON.stringify(cfg));
+    writeFileSync(`${root}/flomotion.json`, JSON.stringify(cfg));
   });
   it("rejects unknown tags and empty searches", async () => {
     await fails(h.call("sound_search", { tag: "hit/nothing" }), "invalid_edit");

@@ -1,8 +1,8 @@
-# CodeCut
+# flomotion
 
 A code-first video editor. A video is one TSX file; every control a normal editor has is a typed prop or
 function. An editor UI and Claude (through MCP) edit the same project file. Rendering is done by
-[HyperFrames](https://github.com/heygen-com/hyperframes) (HTML + GSAP → headless Chrome + FFmpeg → MP4); CodeCut is
+[HyperFrames](https://github.com/heygen-com/hyperframes) (HTML + GSAP → headless Chrome + FFmpeg → MP4); flomotion is
 the authoring layer on top. The product name lives in one constant: `packages/core/src/config.ts`.
 
 ```tsx
@@ -40,11 +40,11 @@ pnpm build                      # typecheck every package and bundle the CLI to 
 pnpm run gen:docs               # docs/components/*.md and the skill's components.md from the schemas
 pnpm lint                       # eslint + prettier
 
-pnpm codecut fonts sync examples/saas-promo   # download fonts, write .codecut/fonts.lock.json and the ledger
-pnpm codecut lint examples/saas-promo
-pnpm codecut render examples/saas-promo       # → examples/saas-promo/renders/promo.mp4
-pnpm codecut frame examples/saas-promo 9.5    # one PNG
-pnpm codecut sheet examples/saas-promo        # contact sheet
+pnpm flomotion fonts sync examples/saas-promo   # download fonts, write .flomotion/fonts.lock.json and the ledger
+pnpm flomotion lint examples/saas-promo
+pnpm flomotion render examples/saas-promo       # → examples/saas-promo/renders/promo.mp4
+pnpm flomotion frame examples/saas-promo 9.5    # one PNG
+pnpm flomotion sheet examples/saas-promo        # contact sheet
 ```
 
 ## Use it from Claude Code (MCP)
@@ -74,7 +74,7 @@ packages/core        schema system, JSX runtime, resolver, compiler, keyframes, 
 packages/components  76 components and effects built with defineComponent/defineEffect
 packages/render      HyperFrames wrapper, fonts, Chrome measurement, audio mix, project build
 packages/mcp         MCP server (39 tools), codemods, sounds, voice, assets, review
-packages/cli         the codecut CLI
+packages/cli         the flomotion CLI
 skills/flomotion-studio the director skill: interview, gates, looks, block recipes, checks
 examples/            saas-promo (30 s, 9:16) and typography (fonts test project)
 tests/               golden frames, e2e, schema round trip

@@ -3,14 +3,14 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { AddressInfo } from "node:net";
 import { extname, join, relative, resolve, sep } from "node:path";
 import {
-  CODECUT_DIR,
-  CodeCutError,
-  isCodeCutError,
+  FLOMOTION_DIR,
+  FlomotionError,
+  isFlomotionError,
   isNode,
   parseTimeLiteral,
   type CCNode,
-} from "@codecut/core";
-import { collectFontDecls, readLedger } from "@codecut/render";
+} from "@flomotion/core";
+import { collectFontDecls, readLedger } from "@flomotion/render";
 import { activityFile, logActivity, readActivity } from "../activity.js";
 import { Context, type Deps } from "../context.js";
 import { outlineOf } from "../tools/util.js";
@@ -57,10 +57,10 @@ const MEDIA: Record<string, string> = {
 };
 /** Folders the page may read files from (never the TSX, ledger internals or anything outside the project). */
 const SERVED = [
-  `${CODECUT_DIR}/frames/`,
-  `${CODECUT_DIR}/sheet/`,
-  `${CODECUT_DIR}/previews/`,
-  `${CODECUT_DIR}/ui-frames/`,
+  `${FLOMOTION_DIR}/frames/`,
+  `${FLOMOTION_DIR}/sheet/`,
+  `${FLOMOTION_DIR}/previews/`,
+  `${FLOMOTION_DIR}/ui-frames/`,
   "renders/",
   "assets/",
 ];
@@ -140,7 +140,7 @@ function timelineOf(root: CCNode) {
 /** Start the live view for a project folder. Listens on 127.0.0.1 only. */
 export async function startUi(root: string, opts: UiOptions = {}): Promise<UiServer> {
   const ctx = new Context(root, opts.deps ?? {}, {
-    buildDir: join(resolve(root), CODECUT_DIR, "ui-build"),
+    buildDir: join(resolve(root), FLOMOTION_DIR, "ui-build"),
   });
   const projectRoot = ctx.root;
   const say = opts.log ?? (() => {});
@@ -180,7 +180,7 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
         cached = {
           ...(cached ?? {}),
           key,
-          error: isCodeCutError(e)
+          error: isFlomotionError(e)
             ? `${e.code}: ${e.message}`
             : e instanceof Error
               ? e.message
@@ -217,14 +217,14 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
           : undefined,
       };
     });
-    const sheet = join(projectRoot, CODECUT_DIR, "sheet", "contact-sheet.jpg");
+    const sheet = join(projectRoot, FLOMOTION_DIR, "sheet", "contact-sheet.jpg");
     return {
       renders,
-      frames: out(`${CODECUT_DIR}/frames`, /\.png$/).slice(0, 8),
+      frames: out(`${FLOMOTION_DIR}/frames`, /\.png$/).slice(0, 8),
       sheet: existsSync(sheet)
-        ? { file: `${CODECUT_DIR}/sheet/contact-sheet.jpg`, mtime: mtimeOf(sheet) }
+        ? { file: `${FLOMOTION_DIR}/sheet/contact-sheet.jpg`, mtime: mtimeOf(sheet) }
         : undefined,
-      previews: out(`${CODECUT_DIR}/previews`, /\.(png|jpg)$/).slice(0, 6),
+      previews: out(`${FLOMOTION_DIR}/previews`, /\.(png|jpg)$/).slice(0, 6),
     };
   }
 
@@ -263,7 +263,7 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
         url: e.url,
         family: e.family,
       })),
-      review: readJson(join(projectRoot, CODECUT_DIR, "review", "last.json")) ?? null,
+      review: readJson(join(projectRoot, FLOMOTION_DIR, "review", "last.json")) ?? null,
       gates: gates(),
       ...files(),
     };
@@ -277,18 +277,18 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
     } catch {
       /* no project yet */
     }
-    fp.history = mtimeOf(join(projectRoot, CODECUT_DIR, "history", "index.json"));
-    fp.ledger = mtimeOf(join(projectRoot, CODECUT_DIR, "ledger.json"));
+    fp.history = mtimeOf(join(projectRoot, FLOMOTION_DIR, "history", "index.json"));
+    fp.ledger = mtimeOf(join(projectRoot, FLOMOTION_DIR, "ledger.json"));
     fp.activity =
       mtimeOf(activityFile(projectRoot)) +
       (existsSync(activityFile(projectRoot)) ? statSync(activityFile(projectRoot)).size : 0);
-    fp.review = mtimeOf(join(projectRoot, CODECUT_DIR, "review", "last.json"));
+    fp.review = mtimeOf(join(projectRoot, FLOMOTION_DIR, "review", "last.json"));
     for (const g of GATE_FILES) fp[g] = mtimeOf(join(projectRoot, g));
     for (const d of [
       "renders",
-      `${CODECUT_DIR}/frames`,
-      `${CODECUT_DIR}/sheet`,
-      `${CODECUT_DIR}/previews`,
+      `${FLOMOTION_DIR}/frames`,
+      `${FLOMOTION_DIR}/sheet`,
+      `${FLOMOTION_DIR}/previews`,
     ]) {
       fp[d] = mtimeOf(join(projectRoot, d));
       for (const f of list(join(projectRoot, d), /./))
@@ -301,7 +301,7 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
   const frames = new Map<string, Promise<string>>();
   let queue: Promise<unknown> = Promise.resolve();
   function frameAt(t: number): Promise<string> {
-    const stamp = `${mtimeOf(ctx.store.entry)}:${mtimeOf(join(projectRoot, CODECUT_DIR, "ledger.json"))}:${mtimeOf(join(projectRoot, CODECUT_DIR, "fonts.lock.json"))}`;
+    const stamp = `${mtimeOf(ctx.store.entry)}:${mtimeOf(join(projectRoot, FLOMOTION_DIR, "ledger.json"))}:${mtimeOf(join(projectRoot, FLOMOTION_DIR, "fonts.lock.json"))}`;
     const key = `${stamp}@${t}`;
     const hit = frames.get(key);
     if (hit) return hit;
@@ -309,13 +309,13 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
       const b = await ctx.build();
       const dir = join(
         projectRoot,
-        CODECUT_DIR,
+        FLOMOTION_DIR,
         "ui-frames",
         `${String(frames.size).padStart(4, "0")}`,
       );
       const r = await ctx.snapshot(b.dir, { times: [t], outDir: dir });
       const f = r.files[0];
-      if (!f) throw new CodeCutError("render_failed", "No frame was written");
+      if (!f) throw new FlomotionError("render_failed", "No frame was written");
       return f;
     })) as Promise<string>;
     // a failed render must not be remembered, or the page would show the old error after the cause is fixed
@@ -338,7 +338,7 @@ export async function startUi(root: string, opts: UiOptions = {}): Promise<UiSer
   };
   const fail = (res: ServerResponse, e: unknown, code = 500) =>
     json(res, code, {
-      error: isCodeCutError(e)
+      error: isFlomotionError(e)
         ? e.toJSON()
         : { code: "internal_error", message: e instanceof Error ? e.message : String(e) },
     });

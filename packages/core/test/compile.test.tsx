@@ -98,14 +98,14 @@ describe("resolve + compile", () => {
     const h = out.html;
     expect(h).toContain('data-composition-id="p"');
     expect(h).toContain('data-width="400"');
-    expect(h).toMatch(/id="b1" class="clip cc-l cc-ctblock" data-start="0" data-duration="2"/);
-    expect(h).toContain('id="s2" class="clip cc-l cc-scene" data-start="2"');
-    expect(h).toContain("window.__timelines[window.__ccId]=tl");
+    expect(h).toMatch(/id="b1" class="clip fm-l fm-ctblock" data-start="0" data-duration="2"/);
+    expect(h).toContain('id="s2" class="clip fm-l fm-scene" data-start="2"');
+    expect(h).toContain("window.__timelines[window.__fmId]=tl");
     expect(h).toContain('<script src="vendor/gsap.min.js">');
     // s1 extended while s2 dissolves in (2s..2.3s): host duration 2.3
     expect(h).toMatch(/id="s1"[^>]*data-duration="2.3"/);
     // baked x channel exists for b1 (keys + effect + enter)
-    const baked = JSON.parse(h.match(/window\.__ccBaked=(.*);\n/)![1]!);
+    const baked = JSON.parse(h.match(/window\.__fmBaked=(.*);\n/)![1]!);
     const x = baked.find((b: any[]) => b[0] === "#b1-xf" && b[1] === "x");
     expect(x).toBeTruthy();
     expect(x[3]).toBe(60);

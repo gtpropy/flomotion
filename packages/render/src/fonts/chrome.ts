@@ -2,7 +2,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer, { type Browser, type Page } from "puppeteer-core";
-import { CODECUT_DIR, type ResolvedFont } from "@codecut/core";
+import { FLOMOTION_DIR, type ResolvedFont } from "@flomotion/core";
 import { findChrome } from "../env.js";
 
 export function fontFaceCss(root: string, fonts: ResolvedFont[]): string {
@@ -29,7 +29,7 @@ export interface ChromeSession {
 
 /** Headless Chrome on a local page that declares the project's fonts. Never loads anything remote. */
 export async function openFontPage(root: string, fonts: ResolvedFont[]): Promise<ChromeSession> {
-  const dir = join(root, CODECUT_DIR, "tmp");
+  const dir = join(root, FLOMOTION_DIR, "tmp");
   mkdirSync(dir, { recursive: true });
   const html = `<!doctype html><meta charset="utf-8"><style>${fontFaceCss(root, fonts)}\nbody{margin:0}</style><body></body>`;
   const file = join(dir, "font-page.html");

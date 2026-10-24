@@ -10,7 +10,7 @@ import {
   Chip,
   ProgressRing,
   DropShadow,
-} from "@codecut/components";
+} from "@flomotion/components";
 
 /**
  * Reference scene for the Minimal Look: calm, precise, lots of air.

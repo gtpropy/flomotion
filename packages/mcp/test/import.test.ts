@@ -195,9 +195,9 @@ describe("the person's own recording and transcript (through the tools)", () => 
     expect(r.voiceover).toBe('<Voiceover id="vo" src="assets/voice/voice.wav" />');
     const words = JSON.parse(readFileSync(join(root, "assets/voice/voice.words.json"), "utf8"));
     expect(words[0]).toMatchObject({ w: "Your", start: 0.3 });
-    const entry = JSON.parse(readFileSync(join(root, ".codecut/ledger.json"), "utf8")).entries.find(
-      (e: any) => e.kind === "voice",
-    );
+    const entry = JSON.parse(
+      readFileSync(join(root, ".flomotion/ledger.json"), "utf8"),
+    ).entries.find((e: any) => e.kind === "voice");
     expect(entry).toMatchObject({
       source: "own",
       id: "voice",
@@ -318,7 +318,7 @@ describe("the person's own sound effects", () => {
 
   it("imports one file: catalogue, measured peak, ledger, and it is found and allowed even when only CC0 is allowed", async () => {
     writeFileSync(
-      join(root, "codecut.json"),
+      join(root, "flomotion.json"),
       JSON.stringify({ name: "x", soundLicenses: ["CC0"] }),
     );
     const r = await h.call("sound_import", {
@@ -336,9 +336,9 @@ describe("the person's own sound effects", () => {
       license: "owned by the person",
       tags: expect.arrayContaining(["heavy", "thud", "hit", "land"]),
     });
-    const entry = JSON.parse(readFileSync(join(root, ".codecut/ledger.json"), "utf8")).entries.find(
-      (e: any) => e.id === "heavy-thud",
-    );
+    const entry = JSON.parse(
+      readFileSync(join(root, ".flomotion/ledger.json"), "utf8"),
+    ).entries.find((e: any) => e.id === "heavy-thud");
     expect(entry).toMatchObject({
       source: "local",
       kind: "sound",
@@ -376,9 +376,9 @@ describe("the person's own sound effects", () => {
     });
     const refs = r.imported.map((x: any) => x.ref).sort();
     expect(refs).toEqual(["local:heavy-thud-01", "local:soft-pop", "local:whoosh-fast"]);
-    const entry = JSON.parse(readFileSync(join(root, ".codecut/ledger.json"), "utf8")).entries.find(
-      (e: any) => e.id === "soft-pop",
-    );
+    const entry = JSON.parse(
+      readFileSync(join(root, ".flomotion/ledger.json"), "utf8"),
+    ).entries.find((e: any) => e.id === "soft-pop");
     expect(entry).toMatchObject({ license: "Acme SFX pack, standard licence", author: "Acme" });
     // a licence text of the person's own is fine for lint: the rights are theirs
     await h.call("element_add", {

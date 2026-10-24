@@ -1,6 +1,6 @@
 import { z } from "zod";
 import {
-  CodeCutError,
+  FlomotionError,
   EDIT_OPS,
   KEY_OPS,
   findById,
@@ -14,10 +14,10 @@ import {
   type ComponentDef,
   type Patch,
   type PropIssue,
-} from "@codecut/core";
-import { registry } from "@codecut/components";
-import { edit as coreEdit } from "@codecut/core";
-import { lintProjectDir } from "@codecut/render";
+} from "@flomotion/core";
+import { registry } from "@flomotion/components";
+import { edit as coreEdit } from "@flomotion/core";
+import { lintProjectDir } from "@flomotion/render";
 import { TsxDoc } from "../codemod/tsx.js";
 import { assertUnlocked, lowerFirst, outlineOf, subtreeIds, tool, writeResult } from "./util.js";
 
@@ -29,10 +29,10 @@ export function schemaError(
   def: ComponentDef,
   id: string | undefined,
   issues: PropIssue[],
-): CodeCutError {
+): FlomotionError {
   const head = issues[0]!;
-  return new CodeCutError("schema_violation", `${id ? `#${id} ` : ""}${head.message}`, {
-    fix: head.fix ?? `See codecut://schema/${def.name}`,
+  return new FlomotionError("schema_violation", `${id ? `#${id} ` : ""}${head.message}`, {
+    fix: head.fix ?? `See flomotion://schema/${def.name}`,
     details: issues,
   });
 }
@@ -44,11 +44,11 @@ function defOrThrow(name: string, kind: "component" | "effect"): ComponentDef {
       name,
       registry.list(kind).map((d) => d.name),
     );
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `Unknown ${kind} "${name}"${s ? `. Did you mean "${s}"?` : ""}`,
       {
-        fix: `See codecut://schema/<name>. ${kind === "effect" ? "Effects" : "Components"}: ${registry
+        fix: `See flomotion://schema/<name>. ${kind === "effect" ? "Effects" : "Components"}: ${registry
           .list(kind)
           .map((d) => d.name)
           .join(", ")}`,
@@ -56,13 +56,13 @@ function defOrThrow(name: string, kind: "component" | "effect"): ComponentDef {
     );
   }
   if (def.kind !== kind)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${name} is ${def.kind === "effect" ? "an effect" : "a component"}, not ${kind === "effect" ? "an effect" : "a component"}`,
       { fix: def.kind === "effect" ? "Use effect_add." : "Use element_add." },
     );
   if (def.stub)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${name} is a typed stub and cannot be rendered yet`,
       {
@@ -76,7 +76,7 @@ function checkParentAccepts(parent: CCNode, def: ComponentDef): void {
   const pdef = registry.get(parent.name);
   const rule = pdef?.children ?? "any";
   if (rule === "none")
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${parent.name} #${parent.props.id} cannot have children`,
       {
@@ -84,7 +84,7 @@ function checkParentAccepts(parent: CCNode, def: ComponentDef): void {
       },
     );
   if (rule === "effects" && def.kind !== "effect")
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${parent.name} #${parent.props.id} only accepts effects`,
       {
@@ -92,7 +92,7 @@ function checkParentAccepts(parent: CCNode, def: ComponentDef): void {
       },
     );
   if (Array.isArray(rule) && !rule.includes(def.name))
-    throw new CodeCutError("schema_violation", `${parent.name} only accepts ${rule.join(", ")}`, {
+    throw new FlomotionError("schema_violation", `${parent.name} only accepts ${rule.join(", ")}`, {
       fix: `Pick one of ${rule.join(", ")}.`,
     });
 }
@@ -103,7 +103,7 @@ function overlapCheck(root: CCNode, parent: CCNode, node: CCNode, allow?: boolea
   const t = timingOf(root, node);
   for (const o of itemsOf(root, parent)) {
     if (t.start < o.end - 1e-9 && t.end > o.start + 1e-9)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "overlap_rejected",
         `[${t.start}s, ${t.end}s) overlaps #${o.id} [${o.start}s, ${o.end}s)`,
         { fix: "Move it, trim the neighbour, or pass overlap:true." },
@@ -115,7 +115,7 @@ export const elementAdd = tool({
   name: "element_add",
   title: "Add an element",
   description:
-    "Add a component (Title, Rect, Scene, Card, …) under a parent. Props are validated against the component schema (see codecut://schema/{component}). Returns the new id, the patch, and an undo token.",
+    "Add a component (Title, Rect, Scene, Card, …) under a parent. Props are validated against the component schema (see flomotion://schema/{component}). Returns the new id, the patch, and an undo token.",
   input: {
     parent: z.string().describe("Id of the parent (Composition, Track, Scene, Group, …)."),
     type: z.string().describe("Component name, e.g. Title."),
@@ -130,14 +130,14 @@ export const elementAdd = tool({
     const def = defOrThrow(a.type, "component");
     const hit = findById(root, a.parent);
     if (!hit)
-      throw new CodeCutError("unknown_element", `No element with id "${a.parent}"`, {
+      throw new FlomotionError("unknown_element", `No element with id "${a.parent}"`, {
         fix: "Use project_read to list ids.",
       });
     assertUnlocked(root, a.parent);
     checkParentAccepts(hit.node, def);
     const id = typeof a.props.id === "string" ? a.props.id : uniqueId(root, lowerFirst(a.type));
     if (findById(root, id))
-      throw new CodeCutError("invalid_edit", `Id "${id}" is already used`, {
+      throw new FlomotionError("invalid_edit", `Id "${id}" is already used`, {
         fix: "Pick another id or omit it.",
       });
     const full = { ...a.props, id };
@@ -168,7 +168,7 @@ export const elementSet = tool({
     const root = loaded.node;
     const hit = findById(root, a.id);
     if (!hit)
-      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+      throw new FlomotionError("unknown_element", `No element with id "${a.id}"`, {
         fix: "Use project_read to list ids.",
       });
     assertUnlocked(root, a.id);
@@ -182,7 +182,7 @@ export const elementSet = tool({
       if (issues.length) throw schemaError(def, a.id, issues);
     }
     if ("id" in a.props && a.props.id !== a.id)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "invalid_edit",
         "Ids are stable and cannot be changed with element_set",
         {
@@ -210,11 +210,11 @@ export const elementRemove = tool({
     const loaded = await ctx.store.load();
     const hit = findById(loaded.node, a.id);
     if (!hit)
-      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+      throw new FlomotionError("unknown_element", `No element with id "${a.id}"`, {
         fix: "Use project_read to list ids.",
       });
     if (!hit.parent)
-      throw new CodeCutError("invalid_edit", "The root Composition cannot be removed");
+      throw new FlomotionError("invalid_edit", "The root Composition cannot be removed");
     assertUnlocked(loaded.node, a.id);
     const result = makeResult(
       loaded.node,
@@ -246,13 +246,13 @@ export const elementMove = tool({
     const root = loaded.node;
     const hit = findById(root, a.id);
     if (!hit?.parent)
-      throw new CodeCutError("unknown_element", `No movable element "${a.id}"`, {
+      throw new FlomotionError("unknown_element", `No movable element "${a.id}"`, {
         fix: "Use project_read to list ids.",
       });
     const target = a.target ? findById(root, a.target) : { node: hit.parent };
-    if (!target) throw new CodeCutError("unknown_element", `No element with id "${a.target}"`);
+    if (!target) throw new FlomotionError("unknown_element", `No element with id "${a.target}"`);
     if (subtreeIds(hit.node).has(String(target.node.props.id)))
-      throw new CodeCutError("invalid_edit", "Cannot move an element into itself");
+      throw new FlomotionError("invalid_edit", "Cannot move an element into itself");
     assertUnlocked(root, a.id);
     assertUnlocked(root, String(target.node.props.id));
     const def = registry.get(hit.node.name);
@@ -286,7 +286,7 @@ export const effectAdd = tool({
     const def = defOrThrow(a.effect, "effect");
     const hit = findById(root, a.id);
     if (!hit)
-      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+      throw new FlomotionError("unknown_element", `No element with id "${a.id}"`, {
         fix: "Use project_read to list ids.",
       });
     assertUnlocked(root, a.id);
@@ -333,18 +333,18 @@ export const keyframeSet = tool({
     const root = loaded.node;
     const hit = findById(root, a.id);
     if (!hit)
-      throw new CodeCutError("unknown_element", `No element with id "${a.id}"`, {
+      throw new FlomotionError("unknown_element", `No element with id "${a.id}"`, {
         fix: "Use project_read to list ids.",
       });
     assertUnlocked(root, a.id);
     const def = registry.get(hit.node.name);
     const control = def?.controls[a.prop];
     if (def && !control)
-      throw new CodeCutError("schema_violation", `${def.name} has no prop "${a.prop}"`, {
+      throw new FlomotionError("schema_violation", `${def.name} has no prop "${a.prop}"`, {
         fix: `Valid props: ${Object.keys(def.controls).join(", ")}`,
       });
     if (control && !control.animatable)
-      throw new CodeCutError("schema_violation", `${def!.name}.${a.prop} is not animatable`, {
+      throw new FlomotionError("schema_violation", `${def!.name}.${a.prop} is not animatable`, {
         fix: "Set it with element_set, or animate a prop marked animatable.",
       });
     const fps = typeof root.props.fps === "number" ? root.props.fps : 30;
@@ -352,7 +352,7 @@ export const keyframeSet = tool({
       const [t, v, ease] = Array.isArray(k) ? [k[0], k[1], k[2]] : [k.t, k.v, k.ease];
       const secs = typeof t === "number" ? t : parseFloat(String(t));
       if (!Number.isFinite(secs) || (typeof t === "string" && !/^-?\d+(\.\d+)?s?$/.test(t.trim())))
-        throw new CodeCutError(
+        throw new FlomotionError(
           "invalid_time",
           `Keyframe time ${JSON.stringify(t)} is not a literal time`,
           {
@@ -364,7 +364,7 @@ export const keyframeSet = tool({
     keys.sort((x, y) => x.t - y.t);
     for (let i = 1; i < keys.length; i++)
       if (keys[i]!.t === keys[i - 1]!.t)
-        throw new CodeCutError(
+        throw new FlomotionError(
           "duplicate_keyframe",
           `Two keys share ${keys[i]!.t}s on #${a.id}.${a.prop}`,
           {
@@ -409,7 +409,7 @@ function parseSnippet(tsx: string): void {
   new TsxDoc(`export default (${tsx.trim()});`).assertParses();
   const m = IMPURE.exec(tsx);
   if (m)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "impure_expression",
       `The TSX uses ${m[1]}, which makes the video differ between renders`,
       {
@@ -435,7 +435,7 @@ export const sceneWrite = tool({
     const loaded = await ctx.store.load();
     const hit = findById(loaded.node, a.id);
     if (!hit?.parent)
-      throw new CodeCutError("unknown_element", `No replaceable element "${a.id}"`, {
+      throw new FlomotionError("unknown_element", `No replaceable element "${a.id}"`, {
         fix: "Use project_read to list ids.",
       });
     assertUnlocked(loaded.node, a.id);
@@ -459,7 +459,7 @@ export const sceneWrite = tool({
         (i) => i.severity === "error" && !baseline.has(`${i.rule}|${i.id}|${i.message}`),
       );
       if (fresh.length)
-        throw new CodeCutError(
+        throw new FlomotionError(
           "schema_violation",
           `The new TSX adds ${fresh.length} lint error(s): ${fresh[0]!.message}`,
           {
@@ -512,7 +512,7 @@ export const lintTool = tool({
     let issues = r.issues;
     if (a.scope) {
       const hit = findById(r.loaded.node, a.scope);
-      if (!hit) throw new CodeCutError("unknown_element", `No element with id "${a.scope}"`);
+      if (!hit) throw new FlomotionError("unknown_element", `No element with id "${a.scope}"`);
       const ids = subtreeIds(hit.node);
       issues = issues.filter((i) => !i.id || ids.has(i.id));
     }
@@ -542,7 +542,7 @@ export const projectRead = tool({
     const loaded = await ctx.store.load();
     const start = a.path ? findById(loaded.node, a.path)?.node : loaded.node;
     if (!start)
-      throw new CodeCutError("unknown_element", `No element with id "${a.path}"`, {
+      throw new FlomotionError("unknown_element", `No element with id "${a.path}"`, {
         fix: "Use project_read without a path.",
       });
     return {

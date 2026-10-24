@@ -7,9 +7,9 @@ import {
   type LintIssue,
   type Ledger,
   type SoundCue,
-} from "@codecut/core";
-import { paginateWords } from "@codecut/components";
-import type { LicenseReport } from "@codecut/render";
+} from "@flomotion/core";
+import { paginateWords } from "@flomotion/components";
+import type { LicenseReport } from "@flomotion/render";
 
 export type CheckStatus = "pass" | "fail" | "warn" | "manual" | "skipped";
 

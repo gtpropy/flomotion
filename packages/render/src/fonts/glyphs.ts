@@ -1,6 +1,6 @@
 import { join } from "node:path";
-import type { ResolvedFont } from "@codecut/core";
-import { graphemes } from "@codecut/core";
+import type { ResolvedFont } from "@flomotion/core";
+import { graphemes } from "@flomotion/core";
 import { inspectFont } from "./inspect.js";
 
 const IGNORABLE = new RegExp("[\\s\\u200b-\\u200f\\u2028\\u2029\\u00ad\\ufeff]", "u");

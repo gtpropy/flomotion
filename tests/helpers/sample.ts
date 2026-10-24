@@ -1,4 +1,4 @@
-import type { AnyControl } from "@codecut/components";
+import type { AnyControl } from "@flomotion/components";
 
 /** A valid sample value for any control, derived from its declaration. */
 export function sample(c: AnyControl): unknown {

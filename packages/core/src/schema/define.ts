@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { FRAGMENT, flattenChildren, type CCNode } from "../ast/node.js";
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import {
   angle,
   bool,
@@ -147,7 +147,7 @@ export const BLEND_MODES = [
 
 /** Stable identity and timing, shared by everything placed in a composition. */
 export const timingControls = () => ({
-  id: text({ label: "Id", description: "Stable unique id. Written back as cc_… when missing." }),
+  id: text({ label: "Id", description: "Stable unique id. Written back as fm_… when missing." }),
   label: text({ label: "Label" }),
   start: time({
     label: "Start",
@@ -298,10 +298,10 @@ function makeDef<C extends Controls>(
   },
 ): ComponentDef<C> {
   if (!/^[A-Z][A-Za-z0-9]*$/.test(name)) {
-    throw new CodeCutError("schema_violation", `Component name "${name}" must be PascalCase`);
+    throw new FlomotionError("schema_violation", `Component name "${name}" must be PascalCase`);
   }
   if (!base.own || typeof base.own !== "object") {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${name}: components without a schema are rejected`,
       {
@@ -313,7 +313,7 @@ function makeDef<C extends Controls>(
   if (!controls.id)
     controls.id = text({
       label: "Id",
-      description: "Stable unique id. Written back as cc_… when missing.",
+      description: "Stable unique id. Written back as fm_… when missing.",
     });
   const def: ComponentDef<C> = {
     kind,
@@ -402,7 +402,7 @@ export function defineEffect<C extends Controls>(
 }
 
 /** Built-in fragment tag (no schema; flattened by the runtime). */
-export const Fragment = Symbol.for("codecut.fragment");
+export const Fragment = Symbol.for("flomotion.fragment");
 export { FRAGMENT };
 
 // ---------- validation ----------
@@ -522,12 +522,12 @@ function rangeHint(c: AnyControl): string | undefined {
   return undefined;
 }
 
-/** Throw a schema_violation CodeCutError when any issue exists. */
+/** Throw a schema_violation FlomotionError when any issue exists. */
 export function assertProps(def: ComponentDef, props: Record<string, unknown>, id?: string): void {
   const issues = validateProps(def, props);
   if (issues.length) {
     const head = issues[0]!;
-    throw new CodeCutError("schema_violation", `${id ? `#${id} ` : ""}${head.message}`, {
+    throw new FlomotionError("schema_violation", `${id ? `#${id} ` : ""}${head.message}`, {
       fix: head.fix,
       details: issues,
     });

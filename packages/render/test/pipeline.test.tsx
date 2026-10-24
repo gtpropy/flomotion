@@ -13,7 +13,7 @@ import {
   color,
   resolveProject,
   compileProject,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { materialize, renderProjectDir, snapshotFrames } from "../src/index.js";
 
 const Block = defineComponent("PBlock", {
@@ -60,7 +60,7 @@ function redCenterX(file: string): number {
 
 describe("HyperFrames pipeline", () => {
   it("renders baked animation correctly at any seek order, and twice identically", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "cc-pipe-"));
+    const dir = mkdtempSync(join(tmpdir(), "fm-pipe-"));
     const compiled = compileProject(resolveProject(project));
     materialize(dir, compiled, { id: "pipe" });
     const times = [0, 0.5, 1.0, 0.2, 1.9];

@@ -15,7 +15,7 @@ import {
   type Channel,
   type ComponentDef,
   type RenderCtx,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { atControl, css, esc, placement, round } from "./util.js";
 import { renderText } from "./text/text.js";
 import { textStyleControls, typographyControls } from "./text/controls.js";

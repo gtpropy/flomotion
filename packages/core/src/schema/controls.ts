@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { Animatable } from "../anim/types.js";
 import type { ValueKind } from "../anim/keyframes.js";
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import { parseAngle } from "../values/angle.js";
 import { parseEase } from "../values/ease.js";
 import { parseLength } from "../values/length.js";
@@ -555,7 +555,7 @@ export function group<F extends Controls, const O extends ControlOpts<GroupValue
 export function parseControlValue<T>(c: Control<T, any>, v: unknown, name = "value"): T {
   const r = c.prop.safeParse(v);
   if (!r.success) {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${name}: ${r.error.issues.map((i) => i.message).join("; ")}`,
     );

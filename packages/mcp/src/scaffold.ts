@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { CODECUT_DIR, CODECUT_NAME, CODECUT_SCOPE, CodeCutError } from "@codecut/core";
+import { FLOMOTION_DIR, FLOMOTION_NAME, FLOMOTION_SCOPE, FlomotionError } from "@flomotion/core";
 
 export const TEMPLATES = ["blank", "saas-promo"] as const;
 export type Template = (typeof TEMPLATES)[number];
@@ -31,13 +31,13 @@ const BEATS: Array<[string, number]> = [
   ["cta", 3],
 ];
 
-/** Write a new project into `dir`: project.tsx, codecut.json, tsconfig.json, folders. */
+/** Write a new project into `dir`: project.tsx, flomotion.json, tsconfig.json, folders. */
 export function scaffoldProject(dir: string, o: ScaffoldOptions): { file: string; id: string } {
-  if (existsSync(join(dir, "project.tsx")) || existsSync(join(dir, "codecut.json")))
-    throw new CodeCutError("invalid_edit", `${dir} already contains a project`, {
+  if (existsSync(join(dir, "project.tsx")) || existsSync(join(dir, "flomotion.json")))
+    throw new FlomotionError("invalid_edit", `${dir} already contains a project`, {
       fix: "Use project_read to inspect it, or start the server in an empty folder.",
     });
-  for (const d of ["assets", "fonts", "recordings", CODECUT_DIR])
+  for (const d of ["assets", "fonts", "recordings", FLOMOTION_DIR])
     mkdirSync(join(dir, d), { recursive: true });
   const id = slug(o.name);
   const [w, h] = o.size;
@@ -55,7 +55,7 @@ export function scaffoldProject(dir: string, o: ScaffoldOptions): { file: string
         })()
       : `      <Scene id="main" start="0s" duration="${o.duration ?? 5}s" />`;
   const total = template === "saas-promo" ? 30 : (o.duration ?? 5);
-  const src = `import { Composition, Track, Scene } from "${CODECUT_SCOPE}/components";
+  const src = `import { Composition, Track, Scene } from "${FLOMOTION_SCOPE}/components";
 
 export default (
   <Composition id="${id}" size={[${w}, ${h}]} fps={${o.fps}} duration="${total}s" theme="$look.${look}">
@@ -67,7 +67,7 @@ ${scenes}
 `;
   writeFileSync(join(dir, "project.tsx"), src);
   writeFileSync(
-    join(dir, "codecut.json"),
+    join(dir, "flomotion.json"),
     JSON.stringify(
       { name: o.name, entry: "project.tsx", soundLicenses: ["CC0", "CC-BY"] },
       null,
@@ -84,7 +84,7 @@ ${scenes}
           moduleResolution: "Bundler",
           strict: true,
           jsx: "react-jsx",
-          jsxImportSource: `${CODECUT_SCOPE}/core`,
+          jsxImportSource: `${FLOMOTION_SCOPE}/core`,
           skipLibCheck: true,
         },
       },
@@ -94,8 +94,8 @@ ${scenes}
   );
   writeFileSync(
     join(dir, ".gitignore"),
-    `${CODECUT_DIR}/build/\n${CODECUT_DIR}/frames/\n${CODECUT_DIR}/sheet/\n${CODECUT_DIR}/tmp/\nrenders/\n`,
+    `${FLOMOTION_DIR}/build/\n${FLOMOTION_DIR}/frames/\n${FLOMOTION_DIR}/sheet/\n${FLOMOTION_DIR}/tmp/\nrenders/\n`,
   );
-  void CODECUT_NAME;
+  void FLOMOTION_NAME;
   return { file: join(dir, "project.tsx"), id };
 }

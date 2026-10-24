@@ -2,15 +2,15 @@ import { readFileSync, statSync } from "node:fs";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import {
-  CODECUT_NAME,
-  CodeCutError,
+  FLOMOTION_NAME,
+  FlomotionError,
   docsMarkdown,
-  isCodeCutError,
+  isFlomotionError,
   listLooks,
   propsJsonSchema,
-} from "@codecut/core";
-import { registry } from "@codecut/components";
-import { readLedger } from "@codecut/render";
+} from "@flomotion/core";
+import { registry } from "@flomotion/components";
+import { readLedger } from "@flomotion/render";
 import { Context, type Deps } from "./context.js";
 import { logActivity, summarizeArgs, summarizeResult } from "./activity.js";
 import { outlineOf, type ToolDef } from "./tools/util.js";
@@ -83,7 +83,7 @@ const MAX_IMAGE_BYTES = 3_500_000;
 
 /** The result shape every tool error uses: typed code, message, fix hint. */
 export function errorResult(e: unknown): CallToolResult {
-  const err = isCodeCutError(e)
+  const err = isFlomotionError(e)
     ? e.toJSON()
     : {
         code: "internal_error",
@@ -96,18 +96,18 @@ export function errorResult(e: unknown): CallToolResult {
   };
 }
 
-export interface CodeCutServer {
+export interface FlomotionServer {
   server: McpServer;
   ctx: Context;
 }
 
 /** Build the MCP server for one project folder. */
-export function createServer(root: string, deps: Deps = {}): CodeCutServer {
+export function createServer(root: string, deps: Deps = {}): FlomotionServer {
   const ctx = new Context(root, deps);
   const server = new McpServer(
     { name: "flomotion", version: "0.4.0" },
     {
-      instructions: `${CODECUT_NAME} (flomotion) edits a video that is one TSX file. Every tool works on the project in ${ctx.root}. Writes return a patch, a description and an undo token. Errors are typed with a fix hint. You cannot hear audio or judge taste: describe what you measured and ask the user to listen and approve.`,
+      instructions: `${FLOMOTION_NAME} edits a video that is one TSX file. Every tool works on the project in ${ctx.root}. Writes return a patch, a description and an undo token. Errors are typed with a fix hint. You cannot hear audio or judge taste: describe what you measured and ask the user to listen and approve.`,
     },
   );
 
@@ -151,7 +151,7 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
           }
           return { content };
         } catch (e) {
-          const err = isCodeCutError(e)
+          const err = isFlomotionError(e)
             ? `${e.code}: ${e.message}`
             : e instanceof Error
               ? e.message
@@ -177,13 +177,13 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
 
   server.registerResource(
     "component-schema",
-    new ResourceTemplate("codecut://schema/{component}", {
+    new ResourceTemplate("flomotion://schema/{component}", {
       list: async () => ({
         resources: registry
           .list()
           .filter((d) => !/^(Test|CT|PBlock)/.test(d.name))
           .map((d) => ({
-            uri: `codecut://schema/${d.name}`,
+            uri: `flomotion://schema/${d.name}`,
             name: d.name,
             description: d.description,
             mimeType: "application/json",
@@ -197,7 +197,7 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
     async (uri, { component }) => {
       const def = registry.get(String(component));
       if (!def)
-        throw new CodeCutError("schema_violation", `Unknown component "${component}"`, {
+        throw new FlomotionError("schema_violation", `Unknown component "${component}"`, {
           fix: `One of: ${registry.names().join(", ")}`,
         });
       return json(uri.href, {
@@ -212,7 +212,7 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
   );
   server.registerResource(
     "project-outline",
-    "codecut://project/outline",
+    "flomotion://project/outline",
     {
       title: "Project outline",
       description: "Tracks, scenes and element ids.",
@@ -226,7 +226,7 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
   );
   server.registerResource(
     "ledger",
-    "codecut://ledger",
+    "flomotion://ledger",
     {
       title: "Licence ledger",
       description: "Every sound, font and voice file with its licence.",
@@ -236,7 +236,7 @@ export function createServer(root: string, deps: Deps = {}): CodeCutServer {
   );
   server.registerResource(
     "looks",
-    "codecut://looks",
+    "flomotion://looks",
     {
       title: "Looks",
       description:

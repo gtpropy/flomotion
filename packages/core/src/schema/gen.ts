@@ -58,7 +58,8 @@ export function mcpToolSchemas(reg: Registry): McpToolSchemas {
         type: { type: "string", enum: comps.map((d) => d.name) },
         props: {
           type: "object",
-          description: "Validated against the component schema (see codecut://schema/{component}).",
+          description:
+            "Validated against the component schema (see flomotion://schema/{component}).",
         },
         at: { type: "integer", description: "Child index to insert at (default: append)." },
       },

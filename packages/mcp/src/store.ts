@@ -2,15 +2,15 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import {
-  CODECUT_DIR,
-  CodeCutError,
+  FLOMOTION_DIR,
+  FlomotionError,
   serializeNode,
   type CCNode,
   type EditResult,
   type LintConfig,
   type Patch,
-} from "@codecut/core";
-import { findEntry, insideRoot, loadProject, type LoadedProject } from "@codecut/render";
+} from "@flomotion/core";
+import { findEntry, insideRoot, loadProject, type LoadedProject } from "@flomotion/render";
 import { TsxDoc, applyPatchesToSource } from "./codemod/tsx.js";
 
 export interface HistoryEntry {
@@ -53,7 +53,7 @@ export class ProjectStore {
     return insideRoot(this.root, p);
   }
   get dir(): string {
-    return join(this.root, CODECUT_DIR);
+    return join(this.root, FLOMOTION_DIR);
   }
   get entry(): string {
     return findEntry(this.root);
@@ -70,7 +70,7 @@ export class ProjectStore {
     return readFileSync(this.entry, "utf8");
   }
   config(): ProjectConfig {
-    const f = join(this.root, "codecut.json");
+    const f = join(this.root, "flomotion.json");
     return existsSync(f) ? (JSON.parse(readFileSync(f, "utf8")) as ProjectConfig) : {};
   }
   load(): Promise<LoadedProject> {
@@ -105,7 +105,7 @@ export class ProjectStore {
   snapshotSource(id: string): string {
     const f = join(this.histDir, `${id}.tsx`);
     if (!existsSync(f))
-      throw new CodeCutError("invalid_edit", `No history snapshot "${id}"`, {
+      throw new FlomotionError("invalid_edit", `No history snapshot "${id}"`, {
         fix: "Use history_list to see snapshot ids.",
       });
     return readFileSync(f, "utf8");
@@ -146,7 +146,7 @@ export class ProjectStore {
     const expected = stable(result.project);
     const { undoToken } = await this.write(text, result.description, (l) => {
       if (stable(l.node) !== expected) {
-        throw new CodeCutError(
+        throw new FlomotionError(
           "invalid_edit",
           "The edit could not be written to the TSX file faithfully (the re-read project differs from the edit).",
           {
@@ -163,7 +163,7 @@ export class ProjectStore {
     };
   }
 
-  /** Give every element without an id a stable `cc_` id and save (first-save behaviour). */
+  /** Give every element without an id a stable `fm_` id and save (first-save behaviour). */
   async ensureIds(): Promise<string[]> {
     const loaded = await this.load();
     const { doc, written } = new TsxDoc(this.source()).writeIds(loaded.node);

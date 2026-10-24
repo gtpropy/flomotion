@@ -4,7 +4,7 @@ import { checkPurity } from "../anim/expr.js";
 import type { CtxBase } from "../anim/expr.js";
 import { assignMissingIds, generateId } from "../ast/ids.js";
 import { isNode, type CCNode } from "../ast/node.js";
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import { getLook, type FontDecl } from "../theme.js";
 import { registry as defaultRegistry, validateProps, type Registry } from "../schema/define.js";
 import type { AnyControl } from "../schema/controls.js";
@@ -36,7 +36,7 @@ export interface ResolveOptions {
   mediaDuration?: (src: string) => number | undefined;
   /** Word timings for a Voiceover id. */
   words?: (voiceId: string) => Array<{ w: string; start: number; end: number }> | undefined;
-  /** Assign `cc_` ids to elements without one (default true; lint reports them). */
+  /** Assign `fm_` ids to elements without one (default true; lint reports them). */
   assignIds?: boolean;
 }
 
@@ -57,7 +57,7 @@ const err = (env: Env, i: ResolveIssue) => env.issues.push(i);
 export function resolveProject(source: CCNode, opts: ResolveOptions = {}): ResolvedProject {
   const reg = opts.registry ?? defaultRegistry;
   if (source.name !== "Composition") {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `Project root must be <Composition>, got <${source.name}>`,
       {
@@ -129,7 +129,7 @@ function build(
 ): RNode {
   const def = env.reg.get(node.name);
   if (!def) {
-    throw new CodeCutError("unknown_component", `Unknown component <${node.name}>`, {
+    throw new FlomotionError("unknown_component", `Unknown component <${node.name}>`, {
       fix: `Known: ${env.reg.names().slice(0, 40).join(", ")}…`,
     });
   }
@@ -432,7 +432,7 @@ const timed = new WeakSet<RNode>();
 function timeNode(env: Env, n: RNode, visiting: Set<string>): void {
   if (timed.has(n)) return;
   if (visiting.has(n.id)) {
-    throw new CodeCutError("unresolved_ref", `Timing reference cycle through #${n.id}`, {
+    throw new FlomotionError("unresolved_ref", `Timing reference cycle through #${n.id}`, {
       fix: "Break the cycle: a start/end cannot depend on itself.",
     });
   }
@@ -639,7 +639,7 @@ function resolveProps(env: Env, n: RNode): void {
       const words = env.opts.words?.(voice);
       const w = words?.[i];
       if (!w)
-        throw new CodeCutError(
+        throw new FlomotionError(
           "unresolved_ref",
           `ctx.word(${JSON.stringify(voice)}, ${i}) has no timing`,
           { fix: "Run transcribe for this voice first." },
@@ -781,7 +781,7 @@ function resolveProps(env: Env, n: RNode): void {
         message: `${def.name}.${k}: ${(e as Error).message}`,
         id: n.id,
         prop: k,
-        fix: (e as CodeCutError).fix,
+        fix: (e as FlomotionError).fix,
       });
     }
   }
@@ -811,7 +811,7 @@ function resolveKeyTime(env: Env, n: RNode, t: Time): number {
     case "marker": {
       const m = env.markers.find((x) => x.id === spec.name || x.label === spec.name);
       if (!m)
-        throw new CodeCutError("unresolved_ref", `Unknown marker "${spec.name}"`, {
+        throw new FlomotionError("unresolved_ref", `Unknown marker "${spec.name}"`, {
           fix: "Add a <Marker label=…/>.",
         });
       return m.at + spec.offset - n.parentStart;
@@ -819,7 +819,7 @@ function resolveKeyTime(env: Env, n: RNode, t: Time): number {
     case "ref": {
       const target = env.byId.get(spec.id);
       if (!target)
-        throw new CodeCutError("unresolved_ref", `Unknown element #${spec.id}`, {
+        throw new FlomotionError("unresolved_ref", `Unknown element #${spec.id}`, {
           fix: "Check the id.",
         });
       const v =
@@ -873,11 +873,11 @@ function normFill(v: unknown, tok: (s: string) => string): unknown {
 function readRef(env: Env, ref: string, t: number): unknown {
   const m = ref.match(/^#([\w-]+)\.([\w.]+)$/);
   if (!m)
-    throw new CodeCutError("unresolved_ref", `Bad ref ${JSON.stringify(ref)}`, {
+    throw new FlomotionError("unresolved_ref", `Bad ref ${JSON.stringify(ref)}`, {
       fix: 'Use "#id.prop".',
     });
   const node = env.byId.get(m[1]!);
-  if (!node) throw new CodeCutError("unresolved_ref", `Unknown element #${m[1]}`);
+  if (!node) throw new FlomotionError("unresolved_ref", `Unknown element #${m[1]}`);
   const v = node.props[m[2]!];
   if (v && typeof v === "object" && "kind" in v) return evalSig(v as Signal, t);
   return v;

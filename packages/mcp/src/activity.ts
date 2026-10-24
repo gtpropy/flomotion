@@ -1,6 +1,6 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { CODECUT_DIR } from "@codecut/core";
+import { FLOMOTION_DIR } from "@flomotion/core";
 
 /** One tool call, as the live view shows it. */
 export interface ActivityEntry {
@@ -86,7 +86,7 @@ export function summarizeResult(tool: string, data: unknown): string {
   }
 }
 
-export const activityFile = (root: string) => join(root, CODECUT_DIR, "activity.jsonl");
+export const activityFile = (root: string) => join(root, FLOMOTION_DIR, "activity.jsonl");
 
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
 
@@ -105,7 +105,7 @@ export function summarizeArgs(args: unknown): string {
 /** Append one entry. Logging must never break a tool call. */
 export function logActivity(root: string, e: ActivityEntry): void {
   try {
-    mkdirSync(join(root, CODECUT_DIR), { recursive: true });
+    mkdirSync(join(root, FLOMOTION_DIR), { recursive: true });
     appendFileSync(activityFile(root), JSON.stringify(e) + "\n");
   } catch {
     /* read-only folder or similar: the tool call still succeeds */

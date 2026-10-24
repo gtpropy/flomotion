@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { registry, validateProps } from "@codecut/components";
-import { findById, walk, type CCNode } from "@codecut/core";
-import { loadProject } from "@codecut/render";
+import { registry, validateProps } from "@flomotion/components";
+import { findById, walk, type CCNode } from "@flomotion/core";
+import { loadProject } from "@flomotion/render";
 import {
   cleanup,
   connect,

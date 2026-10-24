@@ -1,6 +1,6 @@
 // Bundle the CLI and the libraries that project files import into packages/cli/dist.
 // Several entry points with code splitting: one copy of core and components is shared, so the component
-// registry the CLI uses is the same one a project's `import … from "@codecut/components"` gets.
+// registry the CLI uses is the same one a project's `import … from "@flomotion/components"` gets.
 import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { build } from "esbuild";
 

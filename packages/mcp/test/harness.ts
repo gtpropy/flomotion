@@ -13,14 +13,14 @@ import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import type { FontDecl } from "@codecut/core";
+import type { FontDecl } from "@flomotion/core";
 import {
   formatOf,
   sha256,
   type FontContext,
   type FontSource,
   type FontSyncResult,
-} from "@codecut/render";
+} from "@flomotion/render";
 import { createServer } from "../src/server.js";
 import type { Deps } from "../src/context.js";
 import {
@@ -36,7 +36,7 @@ import type { Transcriber } from "../src/providers/transcribe.js";
 export const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 export const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
-/** A scratch project folder inside the repo so `@codecut/*` imports resolve. */
+/** A scratch project folder inside the repo so `@flomotion/*` imports resolve. */
 export function tmpProject(name: string): string {
   const base = join(REPO, "tests", ".tmp");
   mkdirSync(base, { recursive: true });
@@ -560,7 +560,7 @@ const parse = (r: CallToolResult) => {
   return j;
 };
 
-/** Connect an MCP client to a CodeCut server through the SDK's in-memory transport. */
+/** Connect an MCP client to a flomotion server through the SDK's in-memory transport. */
 export async function connect(root: string, deps: Deps = {}): Promise<Harness> {
   const { server } = createServer(root, deps);
   const [a, b] = InMemoryTransport.createLinkedPair();

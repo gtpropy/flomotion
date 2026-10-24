@@ -113,7 +113,7 @@ describe("element_add", () => {
     expect(r.patches[0]).toMatchObject({ op: "insert", parent: "hook" });
     const after = src();
     expect(after).toContain('<Title id="t1" text="Hello world" size={90} at="center" />');
-    expect(after).toMatch(/import \{[^}]*Title[^}]*\} from "@codecut\/components"/);
+    expect(after).toMatch(/import \{[^}]*Title[^}]*\} from "@flomotion\/components"/);
     expect(after.replace(/ Title,?/, "")).toContain(before.split("\n")[2]!); // the rest of the file is untouched
     expect(r.description).toBe("add Title #t1 to #hook");
   });

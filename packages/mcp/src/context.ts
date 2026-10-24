@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { CODECUT_DIR, CodeCutError, type CCNode } from "@codecut/core";
+import { FLOMOTION_DIR, FlomotionError, type CCNode } from "@flomotion/core";
 import {
   buildLoaded,
   renderProjectDir,
@@ -10,8 +10,8 @@ import {
   stripAnsi,
   ledgerPath,
   type BuildResult,
-} from "@codecut/render";
-import type { FontSource } from "@codecut/render";
+} from "@flomotion/render";
+import type { FontSource } from "@flomotion/render";
 import type { HfCheck } from "./review.js";
 import { ProjectStore } from "./store.js";
 import { SoundService, soundProviders, type SoundProvider } from "./providers/sounds.js";
@@ -127,7 +127,7 @@ export class Context {
 
   requireProject(): void {
     if (!this.store.exists())
-      throw new CodeCutError("asset_missing", `No project in ${this.root}`, {
+      throw new FlomotionError("asset_missing", `No project in ${this.root}`, {
         fix: "Call project_create first (or start the server in a project folder).",
       });
   }
@@ -137,13 +137,13 @@ export class Context {
       [
         this.store.source(),
         readIf(ledgerPath(this.root)),
-        readIf(join(this.root, CODECUT_DIR, "fonts.lock.json")),
-        readIf(join(this.root, "codecut.json")),
+        readIf(join(this.root, FLOMOTION_DIR, "fonts.lock.json")),
+        readIf(join(this.root, "flomotion.json")),
       ].join("\u0000"),
     );
   }
 
-  /** Build the project into .codecut/build. Reused while the source, ledger and font lock are unchanged. */
+  /** Build the project into .flomotion/build. Reused while the source, ledger and font lock are unchanged. */
   async build(opts: { mix?: boolean; targetLufs?: number } = {}): Promise<BuildResult> {
     this.requireProject();
     const key = this.stateKey() + `|${opts.targetLufs ?? ""}`;

@@ -12,7 +12,7 @@ Children: any layers and effects.
 | `thickness` | `number` | `4` | range 0..∞; unit px |
 | `offset` | `number` | `4` | unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface StrikeProps {
@@ -24,7 +24,7 @@ export interface StrikeProps {
   offset?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }

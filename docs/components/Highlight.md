@@ -12,7 +12,7 @@ Children: any layers and effects.
 | `padding` | `number` | `6` | range 0..∞; unit px |
 | `radius` | `number` | `6` | range 0..∞; unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface HighlightProps {
@@ -24,7 +24,7 @@ export interface HighlightProps {
   radius?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }

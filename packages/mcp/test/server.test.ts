@@ -27,31 +27,35 @@ describe("resources", () => {
   it("lists the schema template and the fixed resources", async () => {
     const fixed = (await h.client.listResources()).resources.map((r) => r.uri);
     expect(fixed).toEqual(
-      expect.arrayContaining(["codecut://project/outline", "codecut://ledger", "codecut://looks"]),
+      expect.arrayContaining([
+        "flomotion://project/outline",
+        "flomotion://ledger",
+        "flomotion://looks",
+      ]),
     );
-    expect(fixed).toContain("codecut://schema/Title");
-    expect(fixed.filter((u) => u.startsWith("codecut://schema/")).length).toBeGreaterThan(70);
+    expect(fixed).toContain("flomotion://schema/Title");
+    expect(fixed.filter((u) => u.startsWith("flomotion://schema/")).length).toBeGreaterThan(70);
   });
-  it("codecut://schema/{component} has the JSON schema and the generated docs", async () => {
-    const r = text(await h.client.readResource({ uri: "codecut://schema/Title" }));
+  it("flomotion://schema/{component} has the JSON schema and the generated docs", async () => {
+    const r = text(await h.client.readResource({ uri: "flomotion://schema/Title" }));
     expect(r).toMatchObject({ name: "Title", kind: "component", stub: false });
     expect(Object.keys(r.schema.properties)).toEqual(
       expect.arrayContaining(["text", "size", "weight", "tracking", "enter"]),
     );
     expect(r.docs).toContain("# Title");
-    const fx = text(await h.client.readResource({ uri: "codecut://schema/Shake" }));
+    const fx = text(await h.client.readResource({ uri: "flomotion://schema/Shake" }));
     expect(fx.kind).toBe("effect");
-    await expect(h.client.readResource({ uri: "codecut://schema/Nope" })).rejects.toThrow(
+    await expect(h.client.readResource({ uri: "flomotion://schema/Nope" })).rejects.toThrow(
       /Unknown component/,
     );
   });
-  it("codecut://project/outline", async () => {
-    const r = text(await h.client.readResource({ uri: "codecut://project/outline" }));
+  it("flomotion://project/outline", async () => {
+    const r = text(await h.client.readResource({ uri: "flomotion://project/outline" }));
     expect(r.type).toBe("Composition");
     expect(r.children[0].children).toHaveLength(6);
   });
-  it("codecut://looks has every Look as data", async () => {
-    const r = text(await h.client.readResource({ uri: "codecut://looks" }));
+  it("flomotion://looks has every Look as data", async () => {
+    const r = text(await h.client.readResource({ uri: "flomotion://looks" }));
     expect(r.map((l: any) => l.id)).toEqual([
       "clean-light",
       "dark-product",
@@ -68,10 +72,10 @@ describe("resources", () => {
       expect(l.sound).toBeTruthy();
     }
   });
-  it("codecut://ledger starts empty and shows entries after sound_get", async () => {
-    expect(text(await h.client.readResource({ uri: "codecut://ledger" })).entries).toEqual([]);
+  it("flomotion://ledger starts empty and shows entries after sound_get", async () => {
+    expect(text(await h.client.readResource({ uri: "flomotion://ledger" })).entries).toEqual([]);
     await h.call("sound_get", { id: "9004", tag: "ui/pop" });
-    const l = text(await h.client.readResource({ uri: "codecut://ledger" }));
+    const l = text(await h.client.readResource({ uri: "flomotion://ledger" }));
     expect(l.entries[0]).toMatchObject({ source: "freesound", id: "9004", license: "CC0-1.0" });
   });
 });

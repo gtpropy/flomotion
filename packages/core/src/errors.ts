@@ -20,13 +20,13 @@ export type ErrorCode =
   | "invalid_edit";
 
 /** Typed error carrying a machine code and a human fix hint (MCP surfaces both). */
-export class CodeCutError extends Error {
+export class FlomotionError extends Error {
   readonly code: ErrorCode;
   readonly fix?: string;
   readonly details?: unknown;
   constructor(code: ErrorCode, message: string, opts: { fix?: string; details?: unknown } = {}) {
     super(message);
-    this.name = "CodeCutError";
+    this.name = "FlomotionError";
     this.code = code;
     this.fix = opts.fix;
     this.details = opts.details;
@@ -36,4 +36,4 @@ export class CodeCutError extends Error {
   }
 }
 
-export const isCodeCutError = (e: unknown): e is CodeCutError => e instanceof CodeCutError;
+export const isFlomotionError = (e: unknown): e is FlomotionError => e instanceof FlomotionError;

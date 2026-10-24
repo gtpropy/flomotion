@@ -10,7 +10,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `size` | `number | Vec2` | `[1920,1080]` | [width, height]; unit px |
 | `fps` | `number` | `30` | range 1..240 |
 | `duration` | `Time` |  | unit s |
@@ -21,7 +21,7 @@ Children: any layers and effects.
 
 ```ts
 export interface CompositionProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   /** [width, height]; unit px; default [1920,1080] */
   size?: number | Vec2;
@@ -53,7 +53,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `kind` | `video` \| `audio` \| `overlay` \| `graphics` \| `captions` | `"video"` |  |
 | `locked` | `boolean` | `false` |  |
@@ -64,7 +64,7 @@ Children: any layers and effects.
 
 ```ts
 export interface TrackProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** default "video" */
@@ -95,7 +95,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -119,7 +119,7 @@ Children: any layers and effects.
 
 ```ts
 export interface SceneProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -175,7 +175,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -199,7 +199,7 @@ Children: any layers and effects.
 
 ```ts
 export interface SequenceProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -255,7 +255,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -280,7 +280,7 @@ Children: any layers and effects.
 
 ```ts
 export interface GroupProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -337,14 +337,14 @@ Children: none.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `at` | `Time` |  | unit s |
 | `label` | `string` |  |  |
 | `color` | `Color` |  |  |
 
 ```ts
 export interface MarkerProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   /** unit s */
   at?: Time;
@@ -366,7 +366,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -391,7 +391,7 @@ Children: any layers and effects.
 
 ```ts
 export interface PrecompProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -448,7 +448,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -471,7 +471,7 @@ Children: effects only.
 
 ```ts
 export interface AdjustmentProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -525,12 +525,12 @@ Children: Font.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `allowSystem` | `boolean` | `false` | Permit system fonts (output differs per machine). |
 
 ```ts
 export interface FontsProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   /** Permit system fonts (output differs per machine).; default false */
   allowSystem?: boolean;
@@ -634,7 +634,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -659,7 +659,7 @@ Children: any layers and effects.
 
 ```ts
 export interface StaggerProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -717,7 +717,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -746,7 +746,7 @@ Children: effects only.
 
 ```ts
 export interface RectProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -811,7 +811,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -840,7 +840,7 @@ Children: effects only.
 
 ```ts
 export interface RoundRectProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -905,7 +905,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -933,7 +933,7 @@ Children: effects only.
 
 ```ts
 export interface CircleProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -996,7 +996,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1026,7 +1026,7 @@ Children: effects only.
 
 ```ts
 export interface LineProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -1094,7 +1094,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1124,7 +1124,7 @@ Children: effects only.
 
 ```ts
 export interface PolygonProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -1190,7 +1190,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1222,7 +1222,7 @@ Children: effects only.
 
 ```ts
 export interface PathProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -1293,7 +1293,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1321,7 +1321,7 @@ Children: effects only.
 
 ```ts
 export interface SvgProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -1474,7 +1474,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1505,7 +1505,7 @@ Children: any layers and effects.
 
 ```ts
 export interface StackProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -1574,7 +1574,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1607,7 +1607,7 @@ Children: any layers and effects.
 
 ```ts
 export interface GridProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -1678,7 +1678,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1703,7 +1703,7 @@ Children: any layers and effects.
 
 ```ts
 export interface CenterProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -1761,7 +1761,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -1786,7 +1786,7 @@ Children: any layers and effects.
 
 ```ts
 export interface SafeAreaProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -2962,7 +2962,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -3027,7 +3027,7 @@ Children: any layers and effects.
 
 ```ts
 export interface TextProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -3160,7 +3160,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -3225,7 +3225,7 @@ Children: any layers and effects.
 
 ```ts
 export interface TitleProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -3358,7 +3358,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -3431,7 +3431,7 @@ Children: any layers and effects.
 
 ```ts
 export interface SplitTextProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -3586,7 +3586,7 @@ Children: any layers and effects.
 | `tracking` | `number` |  | unit ‰em |
 | `features` | `string[]` |  |  |
 | `style` | `normal` \| `italic` \| `oblique` |  |  |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface SpanProps {
@@ -3600,7 +3600,7 @@ export interface SpanProps {
   tracking?: number;
   features?: string[];
   style?: "normal" | "italic" | "oblique";
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }
@@ -3619,13 +3619,13 @@ Children: any layers and effects.
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `weight` | `number` | `700` | range 1..1000 |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface BProps {
   /** range 1..1000; default 700 */
   weight?: number;
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }
@@ -3644,13 +3644,13 @@ Children: any layers and effects.
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `skew` | `number` | `0` |  |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface IProps {
   /** default 0 */
   skew?: number;
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }
@@ -3672,7 +3672,7 @@ Children: any layers and effects.
 | `padding` | `number` | `6` | range 0..∞; unit px |
 | `radius` | `number` | `6` | range 0..∞; unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface HighlightProps {
@@ -3684,7 +3684,7 @@ export interface HighlightProps {
   radius?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }
@@ -3706,7 +3706,7 @@ Children: any layers and effects.
 | `thickness` | `number` | `4` | range 0..∞; unit px |
 | `offset` | `number` | `4` | unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface UnderlineProps {
@@ -3718,7 +3718,7 @@ export interface UnderlineProps {
   offset?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }
@@ -3740,7 +3740,7 @@ Children: any layers and effects.
 | `thickness` | `number` | `4` | range 0..∞; unit px |
 | `offset` | `number` | `4` | unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface StrikeProps {
@@ -3752,7 +3752,7 @@ export interface StrikeProps {
   offset?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }
@@ -3770,7 +3770,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -3804,7 +3804,7 @@ Children: any layers and effects.
 
 ```ts
 export interface UIMockProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -3880,7 +3880,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -3914,7 +3914,7 @@ Children: any layers and effects.
 
 ```ts
 export interface CardProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -3988,7 +3988,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4022,7 +4022,7 @@ Children: any layers and effects.
 
 ```ts
 export interface GlassCardProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -4096,7 +4096,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4126,7 +4126,7 @@ Children: effects only.
 
 ```ts
 export interface CursorProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -4193,7 +4193,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` | `"Label"` |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4226,7 +4226,7 @@ Children: effects only.
 
 ```ts
 export interface ChipProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   /** default "Label" */
   label?: string;
@@ -4300,7 +4300,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4372,7 +4372,7 @@ Children: effects only.
 
 ```ts
 export interface CounterProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -4519,7 +4519,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4554,7 +4554,7 @@ Children: effects only.
 
 ```ts
 export interface ProgressRingProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -4632,7 +4632,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4669,7 +4669,7 @@ Children: effects only.
 
 ```ts
 export interface ChartProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -4750,7 +4750,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4783,7 +4783,7 @@ Children: effects only.
 
 ```ts
 export interface CodeBlockProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -4856,7 +4856,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4885,7 +4885,7 @@ Children: effects only.
 
 ```ts
 export interface ImageProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -4948,7 +4948,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -4982,7 +4982,7 @@ Children: effects only.
 
 ```ts
 export interface VideoProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -5055,7 +5055,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -5089,7 +5089,7 @@ Children: effects only.
 
 ```ts
 export interface ClipProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -5162,7 +5162,7 @@ Children: none.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -5179,7 +5179,7 @@ Children: none.
 
 ```ts
 export interface AudioProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */
@@ -5301,7 +5301,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -5370,7 +5370,7 @@ Children: effects only.
 
 ```ts
 export interface CaptionsProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */

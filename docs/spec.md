@@ -1,4 +1,4 @@
-# CodeCut spec (condensed, as implemented)
+# flomotion spec (condensed, as implemented)
 
 Sections 5–9 of the project brief, with the decisions made while building. Reference pages for every
 component are generated from the schemas into `docs/components/` (`pnpm run gen:docs`).
@@ -34,7 +34,7 @@ internals. Constants become static styles.
 
 ## 3. Syntax and timing rules (§5.3)
 
-- Every element has an `id`. A missing id is a lint warning and gets a stable `cc_` id (hash of its path).
+- Every element has an `id`. A missing id is a lint warning and gets a stable `fm_` id (hash of its path).
 - Effects are children of the layer they affect and apply in source order.
 - **Child timing is relative to the parent Scene/Group/Sequence start.** `start="@12s"` is absolute.
   Keyframe times are relative to the parent (the spec's "parent's local time"); expression `t` is relative to
@@ -93,7 +93,7 @@ rippleDelete snap lockTrack muteTrack soloTrack addMarker removeMarker`, as `edi
 
 ## 8. MCP server (§10.1)
 
-`codecut mcp --dir <project>` (or `npx -y flomotion mcp`) serves 39 tools over stdio for one project folder. All
+`flomotion mcp --dir <project>` (or `npx -y flomotion mcp`) serves 39 tools over stdio for one project folder. All
 paths are checked to stay inside it (`path_outside_project`). Every write returns `{ description, patches,
 undoToken }`; the undo token is the id of the history snapshot taken before the write (`history_restore`).
 Errors are `{ error: { code, message, fix, details } }` with `isError: true`. Codes: `schema_violation`,
@@ -103,7 +103,7 @@ Errors are `{ error: { code, message, fix, details } }` with `isError: true`. Co
 
 | Tool                                                                     | Does                                                                                                                                         |
 | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `project_create` `project_read`                                          | scaffold (blank, saas-promo) and outline (`path` = element id, `depth`); first read writes stable `cc_` ids                                  |
+| `project_create` `project_read`                                          | scaffold (blank, saas-promo) and outline (`path` = element id, `depth`); first read writes stable `fm_` ids                                  |
 | `element_add` `element_set` `element_remove` `element_move` `effect_add` | structured edits, props validated by the component schema                                                                                    |
 | `keyframe_set`                                                           | replaces all keys of an animatable prop; times snap to the frame grid                                                                        |
 | `edit`                                                                   | any timeline op (§7) or keyframe op (§6)                                                                                                     |
@@ -119,8 +119,8 @@ Errors are `{ error: { code, message, fix, details } }` with `isError: true`. Co
 | `voice_import` `transcript_import` `sound_import` `asset_import`         | the person's own recording, transcript or captions, sound files, images and video, from anywhere on their computer, with their stated rights |
 | `asset_search` `asset_get` `asset_capture` `brand_extract`               | icons, emoji, logos, photos, illustrations from open sources; screenshots and brand from the person's own site                               |
 
-Resources: `codecut://schema/{component}` (JSON schema + docs), `codecut://project/outline`, `codecut://ledger`,
-`codecut://looks`.
+Resources: `flomotion://schema/{component}` (JSON schema + docs), `flomotion://project/outline`, `flomotion://ledger`,
+`flomotion://looks`.
 
 ### Editing TSX (codemods)
 
@@ -137,9 +137,9 @@ than writing something different.
 
 Sound tags: `ui/pop ui/tap ui/tick move/whip move/whoosh-deep hit/land hit/punch hit/boom tech/click tech/data
 tech/glass tech/success tech/glitch`. `sound_get` records `{source,id,author,license,url,attributionRequired,
-commercialOk,peak}` in `.codecut/ledger.json` (peak names merge when one sound serves several tags).
+commercialOk,peak}` in `.flomotion/ledger.json` (peak names merge when one sound serves several tags).
 `<Sound at peak>` starts early by the peak so it lands on `at`. Ledger licence strings are SPDX-like (`CC0-1.0`,
-`CC-BY-4.0`); `codecut.json` `soundLicenses` lists the allowed families (`["CC0"]` restricts). Voice providers:
+`CC-BY-4.0`); `flomotion.json` `soundLicenses` lists the allowed families (`["CC0"]` restricts). Voice providers:
 `recording` (default), `local-tts` (macOS `say`), `elevenlabs` (quote, then `confirm:true`). Mix presets set the
 master LUFS (-14).
 
@@ -151,18 +151,18 @@ Manual items are for the agent's second pass over the contact sheet; the tool ne
 
 ## 9. Live view (`flomotion ui`, `flomotion mcp --ui`)
 
-A small local web page that shows what the agent is doing while it makes the video. `codecut ui` serves it for a
-folder; `codecut mcp --ui` serves it from the MCP process (the address goes to stderr and into the `ui` field of
+A small local web page that shows what the agent is doing while it makes the video. `flomotion ui` serves it for a
+folder; `flomotion mcp --ui` serves it from the MCP process (the address goes to stderr and into the `ui` field of
 `project_read` and `project_create`). It binds `127.0.0.1` only and answers only requests whose `Host` is
 localhost (no DNS rebinding); the page loads nothing from the network.
 
-- **Activity:** every tool call is appended to `.codecut/activity.jsonl` by the MCP server (tool, shortened
+- **Activity:** every tool call is appended to `.flomotion/activity.jsonl` by the MCP server (tool, shortened
   arguments, ok, duration, one-line summary, undo token). The page lists them newest first.
 - **State:** `GET /api/state` gives the outline and timeline (from evaluating the TSX; a file that fails to load
   keeps the last good picture and shows the error), history, activity, the ledger, the last `review` result
-  (`.codecut/review/last.json`), gate files (`interview.md brief.json script.json storyboard.json LOG.md`), renders
+  (`.flomotion/review/last.json`), gate files (`interview.md brief.json script.json storyboard.json LOG.md`), renders
   and frames. Changes reach the page over Server-Sent Events (`/events`), which polls the files twice a second.
-- **Preview:** `GET /api/frame?t=` builds the project in its own folder (`.codecut/ui-build`, never the agent's)
+- **Preview:** `GET /api/frame?t=` builds the project in its own folder (`.flomotion/ui-build`, never the agent's)
   and snapshots one frame, one build at a time, cached while the files are unchanged.
 - **Files:** `/files/...` serves only frames, sheets, previews, renders and assets (with range requests for video).
   Source, ledger internals, history and the activity log are never served.
@@ -195,7 +195,7 @@ is recorded in the ledger as `rights asserted by the person`, never verified.
 **Assets.** Sources: Iconify (icons, emoji, brand logos; per-set SPDX licence from its API; no key), Openverse
 (photos and illustrations, filtered to CC0, PDM and CC-BY; no key), Pexels (key). Allowed licence classes by default:
 CC0, permissive (MIT, Apache, ISC, BSD, OFL), CC-BY; share-alike, non-commercial and unknown are refused
-(`codecut.json` `assetLicenses` narrows it). Brand logos are trademarks and need `permission:true`. Files go to
+(`flomotion.json` `assetLicenses` narrows it). Brand logos are trademarks and need `permission:true`. Files go to
 `assets/third-party/<source>/` (pulled), `assets/captures/` (screenshots), `assets/brand/` (from the person's site),
 `assets/imported/` (the person's own), each with a ledger entry (`assetKind`, licence, author, hash, source URL).
 SVG that contains scripts, event handlers, `foreignObject` or external references is refused. `lint` requires a

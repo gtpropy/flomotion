@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, relative } from "node:path";
-import { CodeCutError, upsertEntry, type LedgerEntry } from "@codecut/core";
-import { ledgerPath, probeMedia, readLedger, requireFfmpeg } from "@codecut/render";
+import { FlomotionError, upsertEntry, type LedgerEntry } from "@flomotion/core";
+import { ledgerPath, probeMedia, readLedger, requireFfmpeg } from "@flomotion/render";
 import type { ProjectStore } from "../store.js";
 
 export interface Word {
@@ -77,12 +77,12 @@ export class RecordingProvider implements VoiceProvider {
   }
   async generate(req: VoiceRequest, dest: string, ctx: { root: string }) {
     if (!req.voice)
-      throw new CodeCutError("asset_missing", "No recording path given", {
+      throw new FlomotionError("asset_missing", "No recording path given", {
         fix: "Pass voice: 'recordings/voice.wav'.",
       });
     const src = join(ctx.root, req.voice);
     if (!existsSync(src))
-      throw new CodeCutError("asset_missing", `Recording not found: ${req.voice}`);
+      throw new FlomotionError("asset_missing", `Recording not found: ${req.voice}`);
     mkdirSync(dirname(dest), { recursive: true });
     copyFileSync(src, dest);
     return {};
@@ -109,9 +109,13 @@ export class LocalTtsProvider implements VoiceProvider {
   }
   async generate(req: VoiceRequest, dest: string) {
     if (process.platform !== "darwin")
-      throw new CodeCutError("missing_dependency", "The local TTS stub only supports macOS `say`", {
-        fix: "Install piper or espeak-ng, render the script to a file, and use provider 'recording'.",
-      });
+      throw new FlomotionError(
+        "missing_dependency",
+        "The local TTS stub only supports macOS `say`",
+        {
+          fix: "Install piper or espeak-ng, render the script to a file, and use provider 'recording'.",
+        },
+      );
     requireFfmpeg();
     mkdirSync(dirname(dest), { recursive: true });
     const tmp = dest.replace(/\.wav$/, ".aiff");
@@ -187,11 +191,11 @@ export class ElevenLabsProvider implements VoiceProvider {
   async generate(req: VoiceRequest, dest: string) {
     const key = this.opts.apiKey ?? this.env.ELEVENLABS_API_KEY;
     if (!key)
-      throw new CodeCutError("missing_dependency", "ELEVENLABS_API_KEY is not set", {
+      throw new FlomotionError("missing_dependency", "ELEVENLABS_API_KEY is not set", {
         fix: "Export ELEVENLABS_API_KEY, or use provider 'recording' with your own file.",
       });
     if (!req.voice)
-      throw new CodeCutError("invalid_edit", "ElevenLabs needs a voice id", {
+      throw new FlomotionError("invalid_edit", "ElevenLabs needs a voice id", {
         fix: "Pass voice: '<voice_id>'.",
       });
     const res = await (this.opts.fetch ?? fetch)(
@@ -203,7 +207,7 @@ export class ElevenLabsProvider implements VoiceProvider {
       },
     );
     if (!res.ok)
-      throw new CodeCutError("render_failed", `ElevenLabs returned ${res.status}`, {
+      throw new FlomotionError("render_failed", `ElevenLabs returned ${res.status}`, {
         fix:
           res.status === 401 ? "Check ELEVENLABS_API_KEY." : "Check the voice id and your credits.",
       });
@@ -281,7 +285,7 @@ export class VoiceService {
   private provider(id: string): VoiceProvider {
     const p = this.providers.get(id as VoiceProviderId);
     if (!p)
-      throw new CodeCutError("invalid_edit", `Unknown voice provider "${id}"`, {
+      throw new FlomotionError("invalid_edit", `Unknown voice provider "${id}"`, {
         fix: `Providers: ${[...this.providers.keys()].join(", ")}`,
       });
     return p;
@@ -316,11 +320,11 @@ export class VoiceService {
   }> {
     const q = this.quotes()[a.quoteId];
     if (!q)
-      throw new CodeCutError("quote_required", `No quote "${a.quoteId}"`, {
+      throw new FlomotionError("quote_required", `No quote "${a.quoteId}"`, {
         fix: "Call voice_quote first, show the price to the user, then call voice_generate with confirm:true.",
       });
     if (q.spends && a.confirm !== true)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "quote_required",
         `This spends about ${q.credits} ${q.provider} credits${q.usd !== undefined ? ` (~$${q.usd})` : ""}. Nothing was run.`,
         {
@@ -333,7 +337,7 @@ export class VoiceService {
     const dest = this.store.path(rel);
     const out = await p.generate(q.request, dest, { root: this.store.root });
     const info = probeMedia(dest);
-    if (!info?.hasAudio) throw new CodeCutError("asset_missing", "The voice file is not audio");
+    if (!info?.hasAudio) throw new FlomotionError("asset_missing", "The voice file is not audio");
     let wordsFile: string | undefined;
     if (out.words?.length) {
       wordsFile = join("assets", "voice", `${id}.words.json`);

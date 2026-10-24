@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import { cloneNode, findById, isNode, walk, type CCNode } from "../ast/node.js";
 
 /** One structural change to the element tree, addressed by element id. Serializable; applied by codemods too. */
@@ -29,7 +29,7 @@ export interface EditResult {
 export function elementOrThrow(root: CCNode, id: string) {
   const hit = findById(root, id);
   if (!hit)
-    throw new CodeCutError("unknown_element", `No element with id "${id}"`, {
+    throw new FlomotionError("unknown_element", `No element with id "${id}"`, {
       fix: "Use project_read to list ids.",
     });
   return hit;
@@ -69,7 +69,7 @@ export function applyPatches(root: CCNode, patches: Patch[]): { project: CCNode;
       }
       case "remove": {
         const { node, parent, index } = elementOrThrow(project, p.id);
-        if (!parent) throw new CodeCutError("invalid_edit", "Cannot remove the root element");
+        if (!parent) throw new FlomotionError("invalid_edit", "Cannot remove the root element");
         parent.children.splice(index, 1);
         inverse.unshift({
           op: "insert",

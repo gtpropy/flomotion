@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CodeCutError, isNode, walk, type CCNode } from "@codecut/core";
+import { FlomotionError, isNode, walk, type CCNode } from "@flomotion/core";
 import type { Context } from "../context.js";
 
 export interface ToolOutput {
@@ -75,7 +75,7 @@ export function assertUnlocked(root: CCNode, id: string): void {
   dfs(root, []);
   const t = chain.find((n) => n.name === "Track" && n.props.locked === true);
   if (t)
-    throw new CodeCutError("track_locked", `Track #${t.props.id} is locked`, {
+    throw new FlomotionError("track_locked", `Track #${t.props.id} is locked`, {
       fix: `Unlock it first: edit {op:"lockTrack", args:{track:"${t.props.id}", value:false}}.`,
     });
 }

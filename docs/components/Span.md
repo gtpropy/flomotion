@@ -15,7 +15,7 @@ Children: any layers and effects.
 | `tracking` | `number` |  | unit ‰em |
 | `features` | `string[]` |  |  |
 | `style` | `normal` \| `italic` \| `oblique` |  |  |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface SpanProps {
@@ -29,7 +29,7 @@ export interface SpanProps {
   tracking?: number;
   features?: string[];
   style?: "normal" | "italic" | "oblique";
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   children?: unknown;
 }

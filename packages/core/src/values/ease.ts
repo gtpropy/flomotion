@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 
 /**
  * Ease specs: "linear", "expo.out", "power2.inOut", "back.out(1.7)", "elastic.out(1,0.3)",
@@ -109,7 +109,7 @@ export function parseEase(spec: Ease): EaseFn {
 export const evalEase = (spec: Ease, p: number): number => parseEase(spec)(clamp01(p));
 
 function badEase(spec: string): never {
-  throw new CodeCutError("invalid_value", `Unknown ease: ${JSON.stringify(spec)}`, {
+  throw new FlomotionError("invalid_value", `Unknown ease: ${JSON.stringify(spec)}`, {
     fix: 'Use e.g. "expo.out", "back.out(1.7)", "bezier(.2,.8,.2,1)" or "spring(180,18)".',
   });
 }

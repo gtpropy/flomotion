@@ -1,5 +1,5 @@
 {
-  "name": "codecut",
+  "name": "flomotion",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,10 +7,10 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@codecut/components": "workspace:*",
-    "@codecut/core": "workspace:*",
-    "@codecut/mcp": "workspace:*",
-    "@codecut/render": "workspace:*",
+    "@flomotion/components": "workspace:*",
+    "@flomotion/core": "workspace:*",
+    "@flomotion/mcp": "workspace:*",
+    "@flomotion/render": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "citty": "latest",
     "fontkit": "^2.0.4",
@@ -24,6 +24,6 @@
     "typecheck": "tsc -p ../../tsconfig.json --noEmit"
   },
   "bin": {
-    "codecut": "./src/bin.ts"
+    "flomotion": "./src/bin.ts"
   }
 }

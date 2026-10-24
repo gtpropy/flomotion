@@ -1,24 +1,20 @@
 // Node module hooks for the published CLI (registered by bin.ts; not used in the repo, where tsx does this).
 //
-// 1. Project files import "@codecut/components" and the JSX runtime "@codecut/core/jsx-runtime". In a published
-//    install those names are not in any node_modules, so map them (and the public "codecut/…" names) to the files
+// 1. Project files import "@flomotion/components" and the JSX runtime "@flomotion/core/jsx-runtime". In a published
+//    install those names are not in any node_modules, so map them (and the public "flomotion/…" names) to the files
 //    of the running install. One copy of each module means one component registry, whatever else is installed.
 // 2. TypeScript and TSX files outside node_modules are compiled with esbuild using the JSX runtime of
-//    @codecut/core. Nothing depends on the working directory or on a tsconfig.json that may not exist yet.
+//    @flomotion/core. Nothing depends on the working directory or on a tsconfig.json that may not exist yet.
 import { readFileSync, existsSync, statSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { transformSync } from "esbuild";
 
 const here = new URL("./", import.meta.url);
 const LIBS = new Map([
-  ["@codecut/core", "core.mjs"],
-  ["@codecut/components", "components.mjs"],
-  ["@codecut/core/jsx-runtime", "jsx-runtime.mjs"],
-  ["@codecut/core/jsx-dev-runtime", "jsx-dev-runtime.mjs"],
-  ["codecut/core", "core.mjs"],
-  ["codecut/components", "components.mjs"],
-  ["codecut/jsx-runtime", "jsx-runtime.mjs"],
-  ["codecut/jsx-dev-runtime", "jsx-dev-runtime.mjs"],
+  ["@flomotion/core", "core.mjs"],
+  ["@flomotion/components", "components.mjs"],
+  ["@flomotion/core/jsx-runtime", "jsx-runtime.mjs"],
+  ["@flomotion/core/jsx-dev-runtime", "jsx-dev-runtime.mjs"],
   ["flomotion/core", "core.mjs"],
   ["flomotion/components", "components.mjs"],
   ["flomotion/jsx-runtime", "jsx-runtime.mjs"],
@@ -56,7 +52,7 @@ export async function load(url, context, nextLoad) {
       format: "esm",
       target: "es2023",
       jsx: "automatic",
-      jsxImportSource: "@codecut/core",
+      jsxImportSource: "@flomotion/core",
       sourcefile: path,
       sourcemap: "inline",
     });

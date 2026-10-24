@@ -5,7 +5,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { AddressInfo } from "node:net";
 import { PNG } from "pngjs";
-import { licenseReport, readLedger } from "@codecut/render";
+import { licenseReport, readLedger } from "@flomotion/render";
 import { assertSafeSvg, classifyAssetLicense } from "../src/providers/assets.js";
 import { classifyColors } from "../src/assets.js";
 import { cleanup, connect, doubles, ToolError, tmpProject, type Harness } from "./harness.js";
@@ -147,11 +147,11 @@ describe("icons, logos and photos (sources stood in by test doubles)", () => {
     expect(e.message).toContain("CC-BY-SA-4.0");
     expect(e.fix).toContain("assetLicenses");
     writeFileSync(
-      join(root, "codecut.json"),
+      join(root, "flomotion.json"),
       JSON.stringify({ name: "x", assetLicenses: ["CC0"] }),
     );
     await fails(h.call("asset_get", { ref: "iconify:tabler/calendar" }), "license_blocked");
-    writeFileSync(join(root, "codecut.json"), JSON.stringify({ name: "x" }));
+    writeFileSync(join(root, "flomotion.json"), JSON.stringify({ name: "x" }));
     const ok = await h.call("asset_get", { ref: "iconify:tabler/calendar" });
     expect(ok.entry.license).toBe("MIT");
   });
@@ -289,7 +289,7 @@ describe("icons, logos and photos (sources stood in by test doubles)", () => {
         )
         .map((i: any) => i.rule);
     expect(await rules()).toEqual([]);
-    const file = join(root, ".codecut/ledger.json");
+    const file = join(root, ".flomotion/ledger.json");
     const original = readFileSync(file, "utf8");
     const j = JSON.parse(original);
     j.entries = j.entries.filter(

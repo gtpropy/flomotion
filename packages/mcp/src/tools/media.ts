@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { z } from "zod";
-import { CODECUT_DIR, CodeCutError } from "@codecut/core";
+import { FLOMOTION_DIR, FlomotionError } from "@flomotion/core";
 import {
   collectAssetSrcs,
   licenseReport,
@@ -11,7 +11,7 @@ import {
   probeMedia,
   readLedger,
   requireFfmpeg,
-} from "@codecut/render";
+} from "@flomotion/render";
 import { runChecklist, summarize, CHECKLIST, type MixFacts } from "../review.js";
 import { tool } from "./util.js";
 
@@ -53,17 +53,17 @@ export const frameRender = tool({
   async run(a, ctx) {
     const b = await ctx.build();
     if (a.time > b.compile.ir.end)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "invalid_time",
         `Time ${a.time}s is after the end (${b.compile.ir.end}s)`,
         {
           fix: "Pick a time inside the film.",
         },
       );
-    const outDir = ctx.store.path(join(CODECUT_DIR, "frames"));
+    const outDir = ctx.store.path(join(FLOMOTION_DIR, "frames"));
     const s = await ctx.snapshot(b.dir, { times: [a.time], outDir });
     let file = s.files[0];
-    if (!file) throw new CodeCutError("render_failed", "No frame was written");
+    if (!file) throw new FlomotionError("render_failed", "No frame was written");
     const scale = a.scale ?? 0.5;
     if (scale < 1) file = downscale(file, join(outDir, `frame-${a.time}s@${scale}.png`), scale);
     return {
@@ -92,9 +92,9 @@ export const contactSheet = tool({
         { length: a.count ?? 12 },
         (_, i) => Math.round(Math.min(end - 0.05, ((i + 0.5) / (a.count ?? 12)) * end) * 100) / 100,
       );
-    const outDir = ctx.store.path(join(CODECUT_DIR, "sheet"));
+    const outDir = ctx.store.path(join(FLOMOTION_DIR, "sheet"));
     const s = await ctx.snapshot(b.dir, { times, outDir });
-    if (!s.contactSheet) throw new CodeCutError("render_failed", "No contact sheet was written");
+    if (!s.contactSheet) throw new FlomotionError("render_failed", "No contact sheet was written");
     return {
       data: {
         path: rel(ctx.root, s.contactSheet),
@@ -121,10 +121,10 @@ export const mixPreview = tool({
   async run(a, ctx) {
     const b = await ctx.build({ mix: true });
     if (!b.mix)
-      throw new CodeCutError("asset_missing", "The project has no audio to mix", {
+      throw new FlomotionError("asset_missing", "The project has no audio to mix", {
         fix: "Add a Voiceover, Audio or Sound first.",
       });
-    const out = ctx.store.path(join(CODECUT_DIR, "previews", "mix.wav"));
+    const out = ctx.store.path(join(FLOMOTION_DIR, "previews", "mix.wav"));
     mkdirSync(dirname(out), { recursive: true });
     if (a.range) {
       requireFfmpeg();
@@ -181,7 +181,7 @@ export const renderTool = tool({
   async run(a, ctx) {
     ctx.requireProject();
     if (a.variants?.length)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "invalid_edit",
         "Format variants (9:16, 16:9, 1:1, 4:5) are not built yet",
         {
@@ -192,7 +192,7 @@ export const renderTool = tool({
     const lint = await lintProjectDir(ctx.root, ctx.store.config().lint);
     if (lint.errors) {
       const first = lint.issues.find((i) => i.severity === "error")!;
-      throw new CodeCutError(
+      throw new FlomotionError(
         "schema_violation",
         `${lint.errors} lint error(s) block the render: ${first.message}`,
         {
@@ -330,7 +330,7 @@ export const reviewTool = tool({
     );
     const s = await ctx.snapshot(b.dir, {
       times,
-      outDir: ctx.store.path(join(CODECUT_DIR, "sheet")),
+      outDir: ctx.store.path(join(FLOMOTION_DIR, "sheet")),
     });
     const summary = summarize(results);
     const data = {
@@ -345,9 +345,9 @@ export const reviewTool = tool({
         : `Fix the failing checks (${summary.failing.join(", ")}) first. ${SECOND_PASS}`,
     };
     // the live view shows the latest review
-    mkdirSync(ctx.store.path(join(CODECUT_DIR, "review")), { recursive: true });
+    mkdirSync(ctx.store.path(join(FLOMOTION_DIR, "review")), { recursive: true });
     writeFileSync(
-      ctx.store.path(join(CODECUT_DIR, "review", "last.json")),
+      ctx.store.path(join(FLOMOTION_DIR, "review", "last.json")),
       JSON.stringify({ at: Date.now(), ...data }, null, 2) + "\n",
     );
     return {

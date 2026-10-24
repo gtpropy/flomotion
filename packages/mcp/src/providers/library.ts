@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, relative } from "node:path";
-import { CodeCutError } from "@codecut/core";
+import { FlomotionError } from "@flomotion/core";
 import { AUDIO_EXT, assertReadable, listFiles } from "../assets.js";
 
 const slug = (s: string) =>
@@ -37,7 +37,7 @@ export function indexSoundLibrary(
   opts: { rights: boolean; license?: string; max?: number },
 ): LibraryIndex {
   if (!opts.rights)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "license_blocked",
       "Say that you may use these sounds in videos before they are indexed",
       {
@@ -47,7 +47,10 @@ export function indexSoundLibrary(
   const root = assertReadable(folder, AUDIO_EXT);
   const files = listFiles(root, AUDIO_EXT, true, opts.max ?? 20000);
   if (!files.length)
-    throw new CodeCutError("asset_missing", `No audio files (${AUDIO_EXT.join(" ")}) in ${folder}`);
+    throw new FlomotionError(
+      "asset_missing",
+      `No audio files (${AUDIO_EXT.join(" ")}) in ${folder}`,
+    );
   const used = new Set<string>();
   const entries = files.map((f) => {
     const rel = relative(root, f);

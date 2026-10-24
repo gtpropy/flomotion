@@ -9,7 +9,7 @@ import { main } from "./main.js";
 const here = dirname(fileURLToPath(import.meta.url));
 
 if (existsSync(join(here, "hooks.mjs")) && existsSync(join(here, "components.mjs"))) {
-  // Bundled/published install: project files (TSX) and "@codecut/*" imports are handled by our own hooks.
+  // Bundled/published install: project files (TSX) and "@flomotion/*" imports are handled by our own hooks.
   registerHooks(join(here, "hooks.mjs"), import.meta.url);
 } else if (
   !process.execArgv.some((a) => a.includes("tsx")) &&

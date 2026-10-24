@@ -18,7 +18,7 @@ import {
   type RenderCtx,
   type Signal,
   type SoundCue,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { round } from "./util.js";
 
 // ---------- pure math (also used by tests and docs) ----------
@@ -505,7 +505,7 @@ export const RGBSplit = defineEffect("RGBSplit", {
     };
   },
 });
-import { evalSignal as evalAmt } from "@codecut/core";
+import { evalSignal as evalAmt } from "@flomotion/core";
 
 export const Pulse = defineEffect("Pulse", {
   category: "impact",

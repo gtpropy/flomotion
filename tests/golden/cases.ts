@@ -1,4 +1,4 @@
-import type { CCNode } from "@codecut/components";
+import type { CCNode } from "@flomotion/components";
 
 export const el = (name: string, props: Record<string, unknown> = {}, children: Array<CCNode | string> = []): CCNode => ({ $cc: 1, name, props, children });
 

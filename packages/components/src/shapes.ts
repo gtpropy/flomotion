@@ -17,7 +17,7 @@ import {
   type RNode,
   type RenderCtx,
   type Signal,
-} from "@codecut/core";
+} from "@flomotion/core";
 import {
   atControl,
   at0,
@@ -193,7 +193,7 @@ function pick(sig: Signal, i: number): Signal<number> {
     undefined,
   );
 }
-import { evalSignal as evalAt } from "@codecut/core";
+import { evalSignal as evalAt } from "@flomotion/core";
 
 /** Draw-on: dasharray/offset from trimStart/trimEnd on a pathLength=1 element. */
 function trimChannels(id: string, s: Signal, e: Signal): Channel[] {

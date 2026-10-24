@@ -6,7 +6,7 @@ export default tseslint.config(
     ignores: [
       "**/dist/**",
       "**/node_modules/**",
-      "**/.codecut/**",
+      "**/.flomotion/**",
       "docs/components/**",
       "tests/golden/**",
       "examples/**/renders/**",

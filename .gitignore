@@ -1,6 +1,6 @@
 node_modules/
 dist/
-.codecut/
+.flomotion/
 renders/
 *.log
 .DS_Store

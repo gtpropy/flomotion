@@ -50,7 +50,7 @@ const transition = () =>
   );
 
 const ident = () => ({
-  id: text({ label: "Id", description: "Stable unique id. Written back as cc_… when missing." }),
+  id: text({ label: "Id", description: "Stable unique id. Written back as fm_… when missing." }),
 });
 
 export const Composition = defineComponent("Composition", {

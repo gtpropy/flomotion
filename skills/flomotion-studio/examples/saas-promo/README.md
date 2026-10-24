@@ -4,4 +4,4 @@
 
 The sounds and the voice in the repo copy are synthetic stand-ins made by `make-assets.sh` (FFmpeg tones and the macOS `say` voice, with estimated word timings). They show the structure; a real project uses `sound_get`, a recording or `voice_generate`.
 
-Run it from the repo: `pnpm codecut render examples/saas-promo`.
+Run it from the repo: `pnpm flomotion render examples/saas-promo`.

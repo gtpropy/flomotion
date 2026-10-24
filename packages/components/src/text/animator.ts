@@ -20,7 +20,7 @@ import {
   toCss,
   type Channel,
   type Signal,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { round } from "../util.js";
 import { getUnitTable, type By, type UnitTable } from "./units.js";
 

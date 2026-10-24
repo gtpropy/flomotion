@@ -12,7 +12,7 @@ import {
   toGsapEase,
 } from "../src/values/ease.js";
 import { mulberry32, noise1D, noise2D } from "../src/values/noise.js";
-import { CodeCutError } from "../src/errors.js";
+import { FlomotionError } from "../src/errors.js";
 
 describe("time", () => {
   it("parses every literal form", () => {
@@ -24,7 +24,7 @@ describe("time", () => {
     expect(parseTimeLiteral("00:01:00:00", 24)).toBe(60);
   });
   it("rejects garbage with a typed error", () => {
-    expect(() => parseTimeLiteral("soon", 30)).toThrow(CodeCutError);
+    expect(() => parseTimeLiteral("soon", 30)).toThrow(FlomotionError);
   });
   it("parses references", () => {
     expect(parseTimeSpec("@12s", 30)).toEqual({ kind: "abs", seconds: 12 });
@@ -73,7 +73,7 @@ describe("length / angle / color", () => {
     const red = parseColor("oklch(0.628 0.2577 29.23)");
     expect(red.r).toBeGreaterThan(240);
     expect(red.g).toBeLessThan(20);
-    expect(() => parseColor("$brand.primary")).toThrow(CodeCutError);
+    expect(() => parseColor("$brand.primary")).toThrow(FlomotionError);
     expect(contrastRatio(parseColor("#000"), parseColor("#fff"))).toBeCloseTo(21, 0);
   });
 });
@@ -157,8 +157,8 @@ describe("ease", () => {
     ).toBeLessThanOrEqual(1);
   });
   it("rejects unknown eases", () => {
-    expect(() => parseEase("wiggle.out")).toThrow(CodeCutError);
-    expect(() => parseEase("bezier(1,2)")).toThrow(CodeCutError);
+    expect(() => parseEase("wiggle.out")).toThrow(FlomotionError);
+    expect(() => parseEase("bezier(1,2)")).toThrow(FlomotionError);
   });
   it("bezier(.25,.1,.25,1) approximates CSS ease", () => {
     expect(ease("bezier(.25,.1,.25,1)", 0.5)).toBeCloseTo(0.8024, 3);

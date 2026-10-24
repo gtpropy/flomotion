@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { CODECUT_DIR, CodeCutError, type FontDecl } from "@codecut/core";
+import { FLOMOTION_DIR, FlomotionError, type FontDecl } from "@flomotion/core";
 import { FontsourceSource, GoogleCssSource } from "./google.js";
 import {
   declHash,
@@ -39,11 +39,11 @@ export interface SyncReport {
   synced: Array<{ id: string; route: string; files: number; skipped?: boolean }>;
 }
 
-/** `codecut fonts sync`: fetch whatever is missing, write hashes to the lock and licences to the ledger. */
+/** `flomotion fonts sync`: fetch whatever is missing, write hashes to the lock and licences to the ledger. */
 export async function syncFonts(opts: SyncOptions): Promise<SyncReport> {
   const ctx: FontContext = {
     projectRoot: opts.projectRoot,
-    cacheDir: join(opts.projectRoot, CODECUT_DIR, "fonts"),
+    cacheDir: join(opts.projectRoot, FLOMOTION_DIR, "fonts"),
     log: opts.log ?? (() => {}),
     fetch: opts.fetch ?? fetch,
   };
@@ -53,7 +53,7 @@ export async function syncFonts(opts: SyncOptions): Promise<SyncReport> {
   const report: SyncReport = { synced: [] };
   for (const decl of opts.decls) {
     if (decl.source === "system" && !opts.allowSystem) {
-      throw new CodeCutError(
+      throw new FlomotionError(
         "font_error",
         `Font "${decl.id}" uses a system font, which renders differently per machine`,
         { fix: "Add allowSystem to <Fonts> if you really want that." },
@@ -76,7 +76,7 @@ export async function syncFonts(opts: SyncOptions): Promise<SyncReport> {
       } catch (e) {
         if (
           !opts.updateLock &&
-          (e as CodeCutError).message.includes("hash mismatch") &&
+          (e as FlomotionError).message.includes("hash mismatch") &&
           !/^https?:|google/.test(decl.source)
         )
           throw e;
@@ -97,7 +97,7 @@ export async function syncFonts(opts: SyncOptions): Promise<SyncReport> {
     if (!result)
       throw (
         lastErr ??
-        new CodeCutError("font_error", `No font source can provide "${decl.id}" (${decl.source})`)
+        new FlomotionError("font_error", `No font source can provide "${decl.id}" (${decl.source})`)
       );
     lock.fonts[decl.id] = lockEntry(decl, result);
     recordLedger(opts.projectRoot, decl, result);

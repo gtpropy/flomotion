@@ -10,7 +10,7 @@ import {
   type ComponentDef,
   type ResolvedComp,
   type Vec2,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { css, placement, round } from "./util.js";
 
 export const SAFE_PRESETS = ["reels", "shorts", "tiktok", "feed"] as const;

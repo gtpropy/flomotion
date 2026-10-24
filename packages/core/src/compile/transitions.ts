@@ -125,7 +125,7 @@ export function transitionPlan(
   const overlay = (suffix: string, color: string, opacityAt: (t: number) => number) => {
     const id = `${scene.id}-${suffix}`;
     plan.overlays.push({
-      html: `<div id="${id}" class="cc-tx" style="position:absolute;inset:0;background:${color};opacity:0;z-index:9000;pointer-events:none"></div>`,
+      html: `<div id="${id}" class="fm-tx" style="position:absolute;inset:0;background:${color};opacity:0;z-index:9000;pointer-events:none"></div>`,
       channels: [{ target: `#${id}`, prop: "opacity", signal: num(opacityAt), span }],
     });
   };

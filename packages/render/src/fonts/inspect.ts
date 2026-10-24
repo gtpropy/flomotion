@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { extname } from "node:path";
 import * as fontkit from "fontkit";
-import { classifyFontLicense } from "@codecut/core";
+import { classifyFontLicense } from "@flomotion/core";
 import type { LicenseInfo } from "./types.js";
 
 export const sha256 = (buf: Buffer | string) => createHash("sha256").update(buf).digest("hex");

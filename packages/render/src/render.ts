@@ -1,6 +1,6 @@
 import { existsSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { CodeCutError } from "@codecut/core";
+import { FlomotionError } from "@flomotion/core";
 import { requireFfmpeg } from "./env.js";
 import { runHyperframes, stripAnsi } from "./hf.js";
 
@@ -38,8 +38,8 @@ export async function renderProjectDir(
   const r = await runHyperframes(args, { cwd: dir, onLine: opts.onLine, timeoutMs: 30 * 60_000 });
   const log = stripAnsi(r.stdout + "\n" + r.stderr);
   if (r.code !== 0 || !existsSync(output)) {
-    throw new CodeCutError("render_failed", `hyperframes render failed (exit ${r.code})`, {
-      fix: "See the details for the HyperFrames log; run `codecut lint` first.",
+    throw new FlomotionError("render_failed", `hyperframes render failed (exit ${r.code})`, {
+      fix: "See the details for the HyperFrames log; run `flomotion lint` first.",
       details: (() => {
         const lines = log.split("\n").filter((l) => l.trim());
         const hits = lines.filter((l) => /error|fail|404|timeout/i.test(l)).slice(0, 20);
@@ -67,7 +67,7 @@ export async function snapshotFrames(
   if (opts.software) args.push("--no-browser-gpu");
   const r = await runHyperframes(args, { cwd: dir, timeoutMs: 10 * 60_000 });
   if (r.code !== 0) {
-    throw new CodeCutError("render_failed", `hyperframes snapshot failed (exit ${r.code})`, {
+    throw new FlomotionError("render_failed", `hyperframes snapshot failed (exit ${r.code})`, {
       details: stripAnsi(r.stdout + r.stderr)
         .split("\n")
         .slice(-15),

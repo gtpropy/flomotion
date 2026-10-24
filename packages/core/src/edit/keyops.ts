@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import { evalTrack, isKeyframes, normalizeTrack, type ValueKind } from "../anim/keyframes.js";
 import type { InterpMode, Keyframe, KeyframeObject, KeyframeTrack } from "../anim/types.js";
 import { cloneNode, type CCNode } from "../ast/node.js";
@@ -19,7 +19,7 @@ const num = (t: Time, id: string): number => {
   if (typeof t === "number") return t;
   const m = /^(-?\d+(?:\.\d+)?)s?$/.exec(t.trim());
   if (!m)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "opaque_expression",
       `Keyframe time ${JSON.stringify(t)} on #${id} is a reference; structured keyframe edits need literal times`,
       { fix: "Replace it with a literal time first." },
@@ -37,20 +37,20 @@ function read(
   const raw = node.props[prop];
   if (raw === undefined) {
     if (!create)
-      throw new CodeCutError("invalid_edit", `#${id}.${prop} has no keyframes`, {
+      throw new FlomotionError("invalid_edit", `#${id}.${prop} has no keyframes`, {
         fix: "Use keyAdd to create the first key.",
       });
     return { set: { keys: [], opts: {} }, node, raw };
   }
   if (typeof raw === "function")
-    throw new CodeCutError(
+    throw new FlomotionError(
       "opaque_expression",
       `#${id}.${prop} is an expression; it cannot be edited as keyframes`,
       { fix: "Replace the expression with keyframes first." },
     );
   if (!isKeyframes(raw)) {
     if (!create)
-      throw new CodeCutError("invalid_edit", `#${id}.${prop} is a static value, not keyframes`, {
+      throw new FlomotionError("invalid_edit", `#${id}.${prop} is a static value, not keyframes`, {
         fix: "Use keyAdd to turn it into keyframes.",
       });
     return { set: { keys: [], opts: {} }, node, raw };
@@ -84,7 +84,7 @@ function write(
   const keys = [...set.keys].sort((a, b) => (a.t as number) - (b.t as number));
   for (let i = 1; i < keys.length; i++) {
     if (keys[i]!.t === keys[i - 1]!.t)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "duplicate_keyframe",
         `Two keyframes share time ${keys[i]!.t}s on #${id}.${prop}`,
         { fix: "Give each key a unique time (at least one frame apart)." },
@@ -120,9 +120,13 @@ export function keyAdd(
     if (t > 0) set.keys.push({ t: 0, v: node.props[a.prop] });
   }
   if (set.keys.some((k) => same(k.t as number, t)))
-    throw new CodeCutError("duplicate_keyframe", `#${a.id}.${a.prop} already has a key at ${t}s`, {
-      fix: "Use keySet to change it.",
-    });
+    throw new FlomotionError(
+      "duplicate_keyframe",
+      `#${a.id}.${a.prop} already has a key at ${t}s`,
+      {
+        fix: "Use keySet to change it.",
+      },
+    );
   set.keys.push({ t, v: a.value, ...(a.ease ? { ease: a.ease } : {}) });
   return write(root, a.id, a.prop, set, `add key ${a.prop} @ ${t}s on #${a.id}`);
 }
@@ -143,7 +147,7 @@ export function keySet(
   const t = snap(root, num(a.t, a.id));
   const k = set.keys.find((x) => same(x.t as number, t));
   if (!k)
-    throw new CodeCutError("invalid_edit", `#${a.id}.${a.prop} has no key at ${t}s`, {
+    throw new FlomotionError("invalid_edit", `#${a.id}.${a.prop} has no key at ${t}s`, {
       fix: "Use keyAdd to create one.",
     });
   if (a.value !== undefined) k.v = a.value;
@@ -161,9 +165,9 @@ export function keyMove(
   const f = snap(root, num(a.from, a.id));
   const t = snap(root, num(a.to, a.id));
   const k = set.keys.find((x) => same(x.t as number, f));
-  if (!k) throw new CodeCutError("invalid_edit", `#${a.id}.${a.prop} has no key at ${f}s`);
+  if (!k) throw new FlomotionError("invalid_edit", `#${a.id}.${a.prop} has no key at ${f}s`);
   if (set.keys.some((x) => x !== k && same(x.t as number, t)))
-    throw new CodeCutError("duplicate_keyframe", `#${a.id}.${a.prop} already has a key at ${t}s`);
+    throw new FlomotionError("duplicate_keyframe", `#${a.id}.${a.prop} already has a key at ${t}s`);
   k.t = t;
   return write(root, a.id, a.prop, set, `move key ${a.prop} ${f}s → ${t}s on #${a.id}`);
 }
@@ -177,7 +181,7 @@ export function keyDelete(
   const before = set.keys.length;
   set.keys = set.keys.filter((x) => !same(x.t as number, t));
   if (set.keys.length === before)
-    throw new CodeCutError("invalid_edit", `#${a.id}.${a.prop} has no key at ${t}s`);
+    throw new FlomotionError("invalid_edit", `#${a.id}.${a.prop} has no key at ${t}s`);
   if (set.keys.length === 0)
     return makeResult(
       root,
@@ -210,13 +214,13 @@ export function keyPaste(
   },
 ): EditResult {
   const { set } = read(root, a.id, a.prop, true);
-  if (!a.keys.length) throw new CodeCutError("invalid_edit", "nothing to paste");
+  if (!a.keys.length) throw new FlomotionError("invalid_edit", "nothing to paste");
   const base = Math.min(...a.keys.map((k) => num(k.t, a.id)));
   const at = snap(root, num(a.at, a.id));
   for (const k of a.keys) {
     const t = snap(root, at + num(k.t, a.id) - base);
     if (set.keys.some((x) => same(x.t as number, t)))
-      throw new CodeCutError(
+      throw new FlomotionError(
         "duplicate_keyframe",
         `paste would put two keys at ${t}s on #${a.id}.${a.prop}`,
       );
@@ -235,7 +239,7 @@ export function keyScale(
   root: CCNode,
   a: { id: string; prop: string; factor: number; origin?: number | string },
 ): EditResult {
-  if (!(a.factor > 0)) throw new CodeCutError("invalid_edit", "factor must be > 0");
+  if (!(a.factor > 0)) throw new FlomotionError("invalid_edit", "factor must be > 0");
   const { set } = read(root, a.id, a.prop);
   const origin = a.origin === undefined ? (set.keys[0]!.t as number) : num(a.origin, a.id);
   for (const k of set.keys) k.t = snap(root, origin + ((k.t as number) - origin) * a.factor);
@@ -370,7 +374,7 @@ export function keySimplify(
   const tol = a.tolerance ?? 0.01;
   const vecs = set.keys.map((k) => (Array.isArray(k.v) ? (k.v as number[]) : [k.v as number]));
   if (vecs.some((v) => v.some((x) => typeof x !== "number")))
-    throw new CodeCutError("invalid_edit", "keySimplify works on numeric or vector keys");
+    throw new FlomotionError("invalid_edit", "keySimplify works on numeric or vector keys");
   const t = set.keys.map((k) => k.t as number);
   const keep = new Set<number>([0, set.keys.length - 1]);
   const rec = (i: number, j: number) => {
@@ -410,7 +414,7 @@ const AXES = ["x", "y", "z"];
 export function keySeparate(root: CCNode, a: { id: string; prop: string }): EditResult {
   const { set } = read(root, a.id, a.prop);
   const dim = Array.isArray(set.keys[0]!.v) ? (set.keys[0]!.v as number[]).length : 0;
-  if (!dim) throw new CodeCutError("invalid_edit", `#${a.id}.${a.prop} is not a vector property`);
+  if (!dim) throw new FlomotionError("invalid_edit", `#${a.id}.${a.prop} is not a vector property`);
   const value: Record<string, unknown> = {};
   for (let c = 0; c < dim; c++) {
     value[AXES[c]!] = set.keys.map((k) =>
@@ -429,7 +433,7 @@ export function keyCombine(root: CCNode, a: { id: string; prop: string }): EditR
   const { node } = elementOrThrow(root, a.id);
   const raw = node.props[a.prop] as Record<string, Keyframe<number>[]> | undefined;
   if (!raw || Array.isArray(raw) || typeof raw !== "object")
-    throw new CodeCutError("invalid_edit", `#${a.id}.${a.prop} is not per-axis`);
+    throw new FlomotionError("invalid_edit", `#${a.id}.${a.prop} is not per-axis`);
   const axes = AXES.filter((x) => raw[x]);
   const lists = axes.map((x) =>
     raw[x]!.map((k) =>
@@ -481,7 +485,7 @@ export type KeyOpName = keyof typeof KEY_OPS;
 export function runKeyOp(root: CCNode, op: string, args: Record<string, unknown>): EditResult {
   const fn = (KEY_OPS as Record<string, (r: CCNode, a: any) => EditResult>)[op];
   if (!fn)
-    throw new CodeCutError("invalid_edit", `Unknown keyframe op "${op}"`, {
+    throw new FlomotionError("invalid_edit", `Unknown keyframe op "${op}"`, {
       fix: `Ops: ${Object.keys(KEY_OPS).join(", ")}`,
     });
   return fn(root, args);

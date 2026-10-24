@@ -11,7 +11,7 @@ import {
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createHash } from "node:crypto";
-import "@codecut/components";
+import "@flomotion/components";
 import {
   buildProject,
   collectFontDecls,
@@ -20,7 +20,7 @@ import {
   readLock,
   renderProjectDir,
   syncFonts,
-} from "@codecut/render";
+} from "@flomotion/render";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..", "..");
@@ -31,14 +31,14 @@ const online = await fetch("https://fonts.googleapis.com/css2?family=Inter", {
   () => false,
 );
 
-/** Copy an example into tests/.tmp so imports of @codecut/* still resolve. */
+/** Copy an example into tests/.tmp so imports of @flomotion/* still resolve. */
 function stage(name: string, from: string): string {
   const dir = join(repo, "tests", ".tmp", name);
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(dir, { recursive: true });
   cpSync(join(repo, "examples", from), dir, {
     recursive: true,
-    filter: (s) => !/[\\/](\.codecut|renders)([\\/]|$)/.test(s),
+    filter: (s) => !/[\\/](\.flomotion|renders)([\\/]|$)/.test(s),
   });
   return dir;
 }
@@ -124,8 +124,8 @@ describe.skipIf(!online)("saas-promo compiles to stable HyperFrames HTML", () =>
     const b = await buildProject(dir, { mix: false, skipGate: true });
     const html = b.html;
     const markup = html.match(/<div id="root"[\s\S]*?<\/div>\n<script>/)![0];
-    const baked = html.match(/window\.__ccBaked=([\s\S]*?);\n/)![1]!;
-    const statics = html.match(/window\.__ccStatic=([\s\S]*?);\nwindow\.__ccBaked/)![1]!;
+    const baked = html.match(/window\.__fmBaked=([\s\S]*?);\n/)![1]!;
+    const statics = html.match(/window\.__fmStatic=([\s\S]*?);\nwindow\.__fmBaked/)![1]!;
     const sum = (s: string) => createHash("sha256").update(s).digest("hex").slice(0, 16);
     expect({
       markup,

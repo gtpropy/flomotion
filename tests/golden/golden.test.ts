@@ -4,8 +4,8 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import "@codecut/components";
-import { buildLoaded, collectFontDecls, snapshotFrames, syncFonts } from "@codecut/render";
+import "@flomotion/components";
+import { buildLoaded, collectFontDecls, snapshotFrames, syncFonts } from "@flomotion/render";
 import { CASES } from "./cases.js";
 import { contrastScore, dHash, hamming, thumbnail } from "./phash.js";
 
@@ -37,9 +37,9 @@ describe("golden frames (perceptual hash, tolerance " + TOLERANCE + "/256 bits)"
         await syncFonts({ projectRoot: root, decls });
         synced = true;
       }
-      const out = await buildLoaded({ root, entry: join(root, "project.tsx"), node: c.node }, { outDir: join(tmpdir(), `cc-golden-${c.name}`), mix: false });
+      const out = await buildLoaded({ root, entry: join(root, "project.tsx"), node: c.node }, { outDir: join(tmpdir(), `fm-golden-${c.name}`), mix: false });
       expect(out.issues.filter((i) => i.severity === "error")).toEqual([]);
-      const shots = mkdtempSync(join(tmpdir(), `cc-shots-${c.name}-`));
+      const shots = mkdtempSync(join(tmpdir(), `fm-shots-${c.name}-`));
       const snap = await snapshotFrames(out.dir, { times: c.times, outDir: shots, software: true });
       expect(snap.files).toHaveLength(c.times.length);
       mkdirSync(FRAMES, { recursive: true });

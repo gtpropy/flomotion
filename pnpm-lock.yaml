@@ -182,18 +182,18 @@ importers:
         specifier: ^28.0.0
         version: 28.0.0
     devDependencies:
-      '@codecut/components':
-        specifier: workspace:*
-        version: link:packages/components
-      '@codecut/core':
-        specifier: workspace:*
-        version: link:packages/core
-      '@codecut/render':
-        specifier: workspace:*
-        version: link:packages/render
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.13.0)
+      '@flomotion/components':
+        specifier: workspace:*
+        version: link:packages/components
+      '@flomotion/core':
+        specifier: workspace:*
+        version: link:packages/core
+      '@flomotion/render':
+        specifier: workspace:*
+        version: link:packages/render
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -230,16 +230,16 @@ importers:
 
   packages/cli:
     dependencies:
-      '@codecut/components':
+      '@flomotion/components':
         specifier: workspace:*
         version: link:../components
-      '@codecut/core':
+      '@flomotion/core':
         specifier: workspace:*
         version: link:../core
-      '@codecut/mcp':
+      '@flomotion/mcp':
         specifier: workspace:*
         version: link:../mcp
-      '@codecut/render':
+      '@flomotion/render':
         specifier: workspace:*
         version: link:../render
       '@modelcontextprotocol/sdk':
@@ -269,7 +269,7 @@ importers:
 
   packages/components:
     dependencies:
-      '@codecut/core':
+      '@flomotion/core':
         specifier: workspace:*
         version: link:../core
       zod:
@@ -287,13 +287,13 @@ importers:
 
   packages/mcp:
     dependencies:
-      '@codecut/components':
+      '@flomotion/components':
         specifier: workspace:*
         version: link:../components
-      '@codecut/core':
+      '@flomotion/core':
         specifier: workspace:*
         version: link:../core
-      '@codecut/render':
+      '@flomotion/render':
         specifier: workspace:*
         version: link:../render
       '@modelcontextprotocol/sdk':
@@ -311,10 +311,10 @@ importers:
 
   packages/render:
     dependencies:
-      '@codecut/components':
+      '@flomotion/components':
         specifier: workspace:*
         version: link:../components
-      '@codecut/core':
+      '@flomotion/core':
         specifier: workspace:*
         version: link:../core
       fontkit:

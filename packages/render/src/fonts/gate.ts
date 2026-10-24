@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { CodeCutError, type ResolvedFont } from "@codecut/core";
+import { FlomotionError, type ResolvedFont } from "@flomotion/core";
 import { openFontPage, remoteRequests } from "./chrome.js";
 
 export interface GateReport {
@@ -21,8 +21,8 @@ export async function fontGate(
   for (const f of targets) {
     if (f.source === "system") continue;
     if (!f.files.length)
-      throw new CodeCutError("font_error", `Font "${f.id}" (${f.family}) has no files on disk`, {
-        fix: "Run `codecut fonts sync`.",
+      throw new FlomotionError("font_error", `Font "${f.id}" (${f.family}) has no files on disk`, {
+        fix: "Run `flomotion fonts sync`.",
         details: { id: f.id },
       });
   }
@@ -60,8 +60,8 @@ export async function fontGate(
           file.format,
         );
         if (!ok)
-          throw new CodeCutError("font_error", `Font "${f.id}" failed to load: ${file.path}`, {
-            fix: "The file is corrupt or not a font. Re-run `codecut fonts sync --force`.",
+          throw new FlomotionError("font_error", `Font "${f.id}" failed to load: ${file.path}`, {
+            fix: "The file is corrupt or not a font. Re-run `flomotion fonts sync --force`.",
             details: { id: f.id, path: file.path },
           });
       }
@@ -74,7 +74,7 @@ export async function fontGate(
         );
         faces += loaded;
         if (loaded === 0 && !f.files.some((x) => x.unicodeRange)) {
-          throw new CodeCutError(
+          throw new FlomotionError(
             "font_error",
             `Font "${f.id}" (${f.family}): no face matched "${c}"`,
             { fix: "Declare the weight/style you use in <Font weights=…>.", details: { id: f.id } },
@@ -85,7 +85,7 @@ export async function fontGate(
     }
     const remote = remoteRequests(session);
     if (remote.length)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "font_error",
         `Fonts tried to reach the network at render time: ${remote[0]}`,
         { fix: "All font files must be local." },

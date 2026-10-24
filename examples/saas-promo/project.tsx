@@ -32,7 +32,7 @@ import {
   Sound,
   Voiceover,
   Audio,
-} from "@codecut/components";
+} from "@flomotion/components";
 
 const SFX = (n: string) => `./assets/sfx/${n}.wav`;
 
@@ -192,7 +192,7 @@ export default (
         <SafeArea id="reveal-safe" preset="reels">
           <Title
             id="r-title"
-            text="Meet CodeCut"
+            text="Meet flomotion"
             at="top"
             size={92}
             start="0.2s"
@@ -493,7 +493,7 @@ export default (
             id="cta-chip"
             at="center"
             position={[0, 250]}
-            label="codecut.dev"
+            label="flomotion.dev"
             fill="$brand.primary"
             textColor="#ffffff"
             size={52}

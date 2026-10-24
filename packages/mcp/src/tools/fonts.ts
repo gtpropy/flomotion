@@ -3,8 +3,8 @@ import { mkdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { z } from "zod";
 import {
-  CODECUT_DIR,
-  CodeCutError,
+  FLOMOTION_DIR,
+  FlomotionError,
   findById,
   getLook,
   isNode,
@@ -13,7 +13,7 @@ import {
   type FontDecl,
   type Patch,
   edit as coreEdit,
-} from "@codecut/core";
+} from "@flomotion/core";
 
 const { makeResult } = coreEdit;
 import {
@@ -26,7 +26,7 @@ import {
   readLock,
   resolveFromLock,
   syncFonts,
-} from "@codecut/render";
+} from "@flomotion/render";
 import type { Context } from "../context.js";
 import { tool, writeResult } from "./util.js";
 
@@ -85,7 +85,7 @@ const lookOf = (root: CCNode) => {
 function resolvedFont(ctx: Context, decls: FontDecl[], id: string) {
   const decl = decls.find((d) => d.id === id);
   if (!decl)
-    throw new CodeCutError("font_error", `No font with id "${id}" in this project`, {
+    throw new FlomotionError("font_error", `No font with id "${id}" in this project`, {
       fix: `Declared: ${decls.map((d) => d.id).join(", ") || "none"}. Add one with font_get.`,
     });
   return resolveFromLock(ctx.root, decl, readLock(ctx.root));
@@ -113,7 +113,7 @@ export const fontList = tool({
           try {
             resolveFromLock(ctx.root, d, lock);
           } catch (e) {
-            status = e instanceof CodeCutError ? `${e.message} (${e.fix ?? ""})` : String(e);
+            status = e instanceof FlomotionError ? `${e.message} (${e.fix ?? ""})` : String(e);
           }
           const entry = ledger.entries.find((e) => e.kind === "font" && e.family === d.family);
           return {
@@ -137,7 +137,7 @@ export const fontGet = tool({
   name: "font_get",
   title: "Get a font",
   description:
-    "Download a font into .codecut/fonts/, lock its hash, and record its licence in the ledger. `id` is a font id already declared in the project or Look, or a Google Fonts family name (which adds a <Font> declaration). Needs the network once; renders never do.",
+    "Download a font into .flomotion/fonts/, lock its hash, and record its licence in the ledger. `id` is a font id already declared in the project or Look, or a Google Fonts family name (which adds a <Font> declaration). Needs the network once; renders never do.",
   input: {
     id: z.string(),
     weights: z.array(z.number().int().min(1).max(1000)).optional(),
@@ -191,7 +191,7 @@ export const fontGet = tool({
       const fonts = loaded.node.children.find((c): c is CCNode => isNode(c) && c.name === "Fonts");
       const fontEl = fonts?.children.find((c): c is CCNode => isNode(c) && c.props.id === decl!.id);
       if (!el && !fontEl)
-        throw new CodeCutError(
+        throw new FlomotionError(
           "opaque_expression",
           `Font "${decl.id}" comes from the Look, not the project file`,
           {
@@ -258,7 +258,7 @@ export const fontSearch = tool({
   async run(a, ctx) {
     const key = ctx.env.GOOGLE_FONTS_API_KEY;
     if (!key)
-      throw new CodeCutError("missing_dependency", "GOOGLE_FONTS_API_KEY is not set", {
+      throw new FlomotionError("missing_dependency", "GOOGLE_FONTS_API_KEY is not set", {
         fix: "Create a key (Google Fonts Developer API), export GOOGLE_FONTS_API_KEY, or skip search and call font_get with a family name.",
       });
     const api = ctx.deps.googleFonts ?? ((q) => googleFontsApi({ ...q, fetch: ctx.deps.fetch }));
@@ -315,7 +315,7 @@ export const fontPreview = tool({
     const { decls } = collectFontDecls(node);
     const font = resolvedFont(ctx, decls, a.fontId);
     const size = a.size ?? 96;
-    const dir = ctx.store.path(join(CODECUT_DIR, "previews"));
+    const dir = ctx.store.path(join(FLOMOTION_DIR, "previews"));
     mkdirSync(dir, { recursive: true });
     const hash = createHash("sha256")
       .update(JSON.stringify([a.fontId, a.text, size, a.weight]))
@@ -338,7 +338,7 @@ export const fontPreview = tool({
       })()`;
       const ok = (await session.page.evaluate(js)) as boolean;
       if (!ok)
-        throw new CodeCutError("font_error", `Font "${a.fontId}" did not load in the browser`, {
+        throw new FlomotionError("font_error", `Font "${a.fontId}" did not load in the browser`, {
           fix: "Run font_get to download it again.",
         });
       const el = await session.page.$("#s");

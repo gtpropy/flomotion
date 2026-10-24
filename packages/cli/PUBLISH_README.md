@@ -1,15 +1,13 @@
-# flomotion (CodeCut)
-
-The npm package is **`flomotion`**. The tool is called CodeCut and its command is `codecut` (`flomotion` works as an alias).
+# flomotion
 
 A code-first video editor. A video is one TSX file; every control a normal editor has is a typed prop or
 function. Claude edits it through an MCP server; rendering is done by
 [HyperFrames](https://github.com/heygen-com/hyperframes) (HTML + GSAP → headless Chrome + FFmpeg → MP4).
 
-> **Status: early (0.3).** The engine, the MCP server, the `flomotion-studio` skill and the live view are built and tested against
+> **Status: early (0.4).** The engine, the MCP server, the `flomotion-studio` skill and the live view are built and tested against
 > test doubles for Freesound, ElevenLabs and Whisper. Nothing has been run in a real Claude Code session yet:
 > see `docs/gate2-manual-checklist.md` in the repository. Editor type hints for project files are not shipped
-> yet (projects run; editors will not resolve `@codecut/*` types).
+> yet (projects run; editors will not resolve `@flomotion/*` types).
 
 ## Requirements
 
@@ -44,19 +42,19 @@ nothing from the network.
 ## CLI
 
 ```bash
-codecut mcp --dir . [--ui]      # MCP server over stdio (39 tools, 4 resources); --ui also serves the live view
-codecut ui [--open]             # the live view for this folder
-codecut install skill [--project]
-codecut init my-video           # scaffold a project
-codecut fonts sync my-video     # download and lock fonts (the only network use besides sound/voice tools)
-codecut lint my-video
-codecut render my-video         # -> my-video/renders/<id>.mp4 (+ .credits.txt, .licenses.json)
-codecut frame my-video 2.5      # one PNG
-codecut sheet my-video          # contact sheet
-codecut docs                    # reference docs for every component, from the schemas
+flomotion mcp --dir . [--ui]      # MCP server over stdio (39 tools, 4 resources); --ui also serves the live view
+flomotion ui [--open]             # the live view for this folder
+flomotion install skill [--project]
+flomotion init my-video           # scaffold a project
+flomotion fonts sync my-video     # download and lock fonts (the only network use besides sound/voice tools)
+flomotion lint my-video
+flomotion render my-video         # -> my-video/renders/<id>.mp4 (+ .credits.txt, .licenses.json)
+flomotion frame my-video 2.5      # one PNG
+flomotion sheet my-video          # contact sheet
+flomotion docs                    # reference docs for every component, from the schemas
 ```
 
-A project is `project.tsx` exporting a `<Composition>`; components are imported from `@codecut/components`
+A project is `project.tsx` exporting a `<Composition>`; components are imported from `@flomotion/components`
 (or `flomotion/components`). Renders never use the network: fonts are locked by hash and checked before the first
 frame; a missing or changed font file fails the render with the font id and path.
 

@@ -12,7 +12,7 @@ import {
   Card,
   Wobble,
   Grain,
-} from "@codecut/components";
+} from "@flomotion/components";
 
 /**
  * Reference scene for the Sketch Look: hand-drawn, playful, bouncy.

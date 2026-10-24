@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import { generateId } from "../ast/ids.js";
 import { cloneNode, isNode, walk, type CCNode } from "../ast/node.js";
 import { parseTimeLiteral, snapToFrame, type Time } from "../values/time.js";
@@ -18,14 +18,14 @@ const snap = (root: CCNode, t: number) => snapToFrame(t, fpsOf(root));
 
 function lit(root: CCNode, v: unknown, what: string, id: string): number {
   if (v === undefined)
-    throw new CodeCutError("invalid_edit", `#${id} has no explicit ${what}`, {
+    throw new FlomotionError("invalid_edit", `#${id} has no explicit ${what}`, {
       fix: `Give #${id} a literal ${what} (e.g. ${what}="2s") before editing its timing.`,
     });
   try {
     if (typeof v === "string" && /^[@#]/.test(v)) throw new Error("reference");
     return parseTimeLiteral(v as Time, fpsOf(root));
   } catch {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "opaque_expression",
       `#${id}.${what} is ${JSON.stringify(v)}, which is not a literal time`,
       { fix: "Replace the reference/expression with a literal time first." },
@@ -41,7 +41,7 @@ export function timingOf(root: CCNode, node: CCNode): ItemTiming {
   if (node.props.duration !== undefined) duration = lit(root, node.props.duration, "duration", id);
   else if (node.props.end !== undefined) duration = lit(root, node.props.end, "end", id) - start;
   else
-    throw new CodeCutError("invalid_edit", `#${id} has no explicit duration`, {
+    throw new FlomotionError("invalid_edit", `#${id} has no explicit duration`, {
       fix: `Give #${id} a duration (e.g. duration="2s") before editing its timing.`,
     });
   return { node, id, start, duration, end: start + duration };
@@ -72,7 +72,7 @@ export function trackOf(root: CCNode, id: string): CCNode {
     node.name !== "Composition" &&
     node.name !== "Group"
   ) {
-    throw new CodeCutError("invalid_edit", `#${id} is a ${node.name}, not a Track`, {
+    throw new FlomotionError("invalid_edit", `#${id} is a ${node.name}, not a Track`, {
       fix: "Pass the id of a Track.",
     });
   }
@@ -81,7 +81,7 @@ export function trackOf(root: CCNode, id: string): CCNode {
 
 function assertWritable(track: CCNode): void {
   if (track.name === "Track" && track.props.locked === true) {
-    throw new CodeCutError("track_locked", `Track #${track.props.id} is locked`, {
+    throw new FlomotionError("track_locked", `Track #${track.props.id} is locked`, {
       fix: `Unlock it first with edit lockTrack {track:"${track.props.id}", value:false}.`,
     });
   }
@@ -89,7 +89,7 @@ function assertWritable(track: CCNode): void {
 
 function parentTrackOf(root: CCNode, id: string): CCNode {
   const { parent } = elementOrThrow(root, id);
-  if (!parent) throw new CodeCutError("invalid_edit", "The root has no track");
+  if (!parent) throw new FlomotionError("invalid_edit", "The root has no track");
   return parent;
 }
 
@@ -104,7 +104,7 @@ function overlapCheck(
   for (const o of items) {
     if (ignore.includes(o.id)) continue;
     if (start < o.end - 1e-9 && end > o.start + 1e-9) {
-      throw new CodeCutError(
+      throw new FlomotionError(
         "overlap_rejected",
         `[${fmt(start)}, ${fmt(end)}) overlaps #${o.id} [${fmt(o.start)}, ${fmt(o.end)})`,
         { fix: "Move it, trim the neighbour, or pass overlap:true." },
@@ -235,7 +235,7 @@ export function overwrite(
 /** Swap an element for another, keeping the original's start, duration and place in the track. */
 export function replace(root: CCNode, a: { id: string; node: CCNode }): EditResult {
   const { node: old, parent, index } = elementOrThrow(root, a.id);
-  if (!parent) throw new CodeCutError("invalid_edit", "Cannot replace the root");
+  if (!parent) throw new FlomotionError("invalid_edit", "Cannot replace the root");
   assertWritable(parent);
   const node = cloneNode(a.node);
   const keep: Record<string, unknown> = {};
@@ -283,7 +283,7 @@ export function extract(
   assertWritable(track);
   const from = snap(root, lit(root, a.from, "from", a.track));
   const to = snap(root, lit(root, a.to, "to", a.track));
-  if (to <= from) throw new CodeCutError("invalid_edit", "extract needs to > from");
+  if (to <= from) throw new FlomotionError("invalid_edit", "extract needs to > from");
   const span = to - from;
   const fps = fpsOf(root);
   const patches: Patch[] = [];
@@ -337,7 +337,7 @@ export function split(root: CCNode, a: { id: string; at: number | string }): Edi
   const it = timingOf(root, elementOrThrow(root, a.id).node);
   const at = snap(root, lit(root, a.at, "at", a.id));
   if (at <= it.start + 1e-9 || at >= it.end - 1e-9)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "invalid_edit",
       `split time ${fmt(at)} is outside #${a.id} (${fmt(it.start)} to ${fmt(it.end)})`,
     );
@@ -358,7 +358,7 @@ export function trim(
   const fps = fpsOf(root);
   const start = a.start === undefined ? it.start : snap(root, lit(root, a.start, "start", a.id));
   const end = a.end === undefined ? it.end : snap(root, lit(root, a.end, "end", a.id));
-  if (end <= start) throw new CodeCutError("invalid_edit", "trim would make the clip empty");
+  if (end <= start) throw new FlomotionError("invalid_edit", "trim would make the clip empty");
   overlapCheck(itemsOf(root, parent), [a.id], start, end, a.overlap);
   const patches: Patch[] = [setTime(a.id, "start", start), setTime(a.id, "duration", end - start)];
   if (it.node.props.end !== undefined) patches.push(dropProp(a.id, "end"));
@@ -383,12 +383,12 @@ export function roll(
   const A = timingOf(root, elementOrThrow(root, a.a).node);
   const B = timingOf(root, elementOrThrow(root, a.b).node);
   if (Math.abs(A.end - B.start) > 1e-6)
-    throw new CodeCutError("invalid_edit", `#${a.a} and #${a.b} are not adjacent`, {
+    throw new FlomotionError("invalid_edit", `#${a.a} and #${a.b} are not adjacent`, {
       fix: "Roll needs clips that touch.",
     });
   const d = snap(root, lit(root, a.delta, "delta", a.a));
   if (A.duration + d <= 0 || B.duration - d <= 0)
-    throw new CodeCutError("invalid_edit", "roll would collapse a clip");
+    throw new FlomotionError("invalid_edit", "roll would collapse a clip");
   const fps = fpsOf(root);
   const patches: Patch[] = [
     setTime(a.a, "duration", A.duration + d),
@@ -421,7 +421,8 @@ export function slide(root: CCNode, a: { id: string; delta: number | string }): 
   assertWritable(parent);
   const items = itemsOf(root, parent);
   const i = items.findIndex((x) => x.id === a.id);
-  if (i < 0) throw new CodeCutError("unknown_element", `#${a.id} is not a timed item of its track`);
+  if (i < 0)
+    throw new FlomotionError("unknown_element", `#${a.id} is not a timed item of its track`);
   const it = items[i]!;
   const d = snap(root, lit(root, a.delta, "delta", a.id));
   const prev = items[i - 1];
@@ -430,12 +431,12 @@ export function slide(root: CCNode, a: { id: string; delta: number | string }): 
   const patches: Patch[] = [setTime(a.id, "start", it.start + d)];
   if (prev && Math.abs(prev.end - it.start) < 1e-6) {
     if (prev.duration + d <= 0)
-      throw new CodeCutError("invalid_edit", "slide would collapse the previous clip");
+      throw new FlomotionError("invalid_edit", "slide would collapse the previous clip");
     patches.push(setTime(prev.id, "duration", prev.duration + d));
   }
   if (next && Math.abs(it.end - next.start) < 1e-6) {
     if (next.duration - d <= 0)
-      throw new CodeCutError("invalid_edit", "slide would collapse the next clip");
+      throw new FlomotionError("invalid_edit", "slide would collapse the next clip");
     patches.push(
       setTime(next.id, "start", next.start + d),
       setTime(next.id, "duration", next.duration - d),
@@ -454,7 +455,7 @@ export function move(
   a: { id: string; to: number | string; track?: string; overlap?: boolean },
 ): EditResult {
   const { node, parent, index } = elementOrThrow(root, a.id);
-  if (!parent) throw new CodeCutError("invalid_edit", "Cannot move the root");
+  if (!parent) throw new FlomotionError("invalid_edit", "Cannot move the root");
   assertWritable(parent);
   const it = timingOf(root, node);
   const to = snap(root, lit(root, a.to, "to", a.id));
@@ -505,11 +506,11 @@ function wrap(
   id: string | undefined,
 ): EditResult {
   if (!ids.length)
-    throw new CodeCutError("invalid_edit", `${name.toLowerCase()} needs at least one id`);
+    throw new FlomotionError("invalid_edit", `${name.toLowerCase()} needs at least one id`);
   const els = ids.map((i) => elementOrThrow(root, i));
   const parent = els[0]!.parent!;
   if (els.some((e) => e.parent !== parent))
-    throw new CodeCutError("invalid_edit", "All elements must share one parent");
+    throw new FlomotionError("invalid_edit", "All elements must share one parent");
   assertWritable(parent);
   const times = els.map((e) => timingOf(root, e.node));
   const start = Math.min(...times.map((t) => t.start));
@@ -548,10 +549,10 @@ export const nest = (root: CCNode, a: { ids: string[]; id?: string }) =>
 /** Dissolve a Group: children return to the parent with their times shifted by the group's start. */
 export function ungroup(root: CCNode, a: { id: string }): EditResult {
   const { node, parent, index } = elementOrThrow(root, a.id);
-  if (!parent) throw new CodeCutError("invalid_edit", "Cannot ungroup the root");
+  if (!parent) throw new FlomotionError("invalid_edit", "Cannot ungroup the root");
   assertWritable(parent);
   if (node.name !== "Group" && node.name !== "Precomp")
-    throw new CodeCutError("invalid_edit", `#${a.id} is a ${node.name}, not a Group`);
+    throw new FlomotionError("invalid_edit", `#${a.id} is a ${node.name}, not a Group`);
   const gs = timingOf(root, node).start;
   const patches: Patch[] = [{ op: "remove", id: a.id }];
   node.children.filter(isNode).forEach((c, k) => {
@@ -571,7 +572,7 @@ export function ungroup(root: CCNode, a: { id: string }): EditResult {
 /** Retime a clip. Keeps the source range, so the duration changes. */
 export function setSpeed(root: CCNode, a: { id: string; speed: number }): EditResult {
   assertWritable(parentTrackOf(root, a.id));
-  if (!(a.speed > 0)) throw new CodeCutError("invalid_edit", "speed must be > 0");
+  if (!(a.speed > 0)) throw new FlomotionError("invalid_edit", "speed must be > 0");
   const it = timingOf(root, elementOrThrow(root, a.id).node);
   const old = speedOf(it.node);
   const dur = snap(root, (it.duration * old) / a.speed);
@@ -588,7 +589,7 @@ export function snapOp(
   a: { id: string; to?: "markers" | "clips" | "grid"; threshold?: number; edge?: "start" | "end" },
 ): EditResult {
   const { node, parent } = elementOrThrow(root, a.id);
-  if (!parent) throw new CodeCutError("invalid_edit", "Cannot snap the root");
+  if (!parent) throw new FlomotionError("invalid_edit", "Cannot snap the root");
   assertWritable(parent);
   const it = timingOf(root, node);
   const fps = fpsOf(root);
@@ -664,7 +665,7 @@ export function addMarker(
 
 export function removeMarker(root: CCNode, a: { id: string }): EditResult {
   const { node } = elementOrThrow(root, a.id);
-  if (node.name !== "Marker") throw new CodeCutError("invalid_edit", `#${a.id} is not a Marker`);
+  if (node.name !== "Marker") throw new FlomotionError("invalid_edit", `#${a.id} is not a Marker`);
   return makeResult(root, [{ op: "remove", id: a.id }], `remove marker #${a.id}`);
 }
 
@@ -701,7 +702,7 @@ export type EditOpName = keyof typeof EDIT_OPS;
 export function runEdit(root: CCNode, op: string, args: Record<string, unknown>): EditResult {
   const fn = (EDIT_OPS as Record<string, (r: CCNode, a: any) => EditResult>)[op];
   if (!fn)
-    throw new CodeCutError("invalid_edit", `Unknown edit op "${op}"`, {
+    throw new FlomotionError("invalid_edit", `Unknown edit op "${op}"`, {
       fix: `Ops: ${Object.keys(EDIT_OPS).join(", ")}`,
     });
   return fn(root, args);

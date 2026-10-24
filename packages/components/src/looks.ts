@@ -10,7 +10,7 @@ import {
   time,
   z,
   type LookSpec,
-} from "@codecut/core";
+} from "@flomotion/core";
 
 // ---------- the flomotion-studio looks (data: skills/flomotion-studio/looks/*.json is the source) ----------
 

@@ -1,5 +1,5 @@
 {
-  "name": "@codecut/mcp",
+  "name": "@flomotion/mcp",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,9 +7,9 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@codecut/core": "workspace:*",
-    "@codecut/components": "workspace:*",
-    "@codecut/render": "workspace:*",
+    "@flomotion/core": "workspace:*",
+    "@flomotion/components": "workspace:*",
+    "@flomotion/render": "workspace:*",
     "@modelcontextprotocol/sdk": "latest",
     "puppeteer-core": "^25.15.0",
     "ts-morph": "latest",

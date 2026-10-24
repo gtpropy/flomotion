@@ -8,14 +8,14 @@ import {
   type SourceFile,
 } from "ts-morph";
 import {
-  CodeCutError,
+  FlomotionError,
   applyPatches,
   assignMissingIds,
   findById,
   isNode,
   type CCNode,
   type Patch,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { printAttr, printAttrInit, printNode } from "./print.js";
 
 type Tag = JsxOpeningElement | JsxSelfClosingElement;
@@ -121,7 +121,7 @@ export class TsxDoc {
   private find(sf: SourceFile, id: string): Found {
     const tag = tagsOf(sf).find((t) => tagIdOf(t) === id);
     if (!tag)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "opaque_expression",
         `Element #${id} is not written literally in the source file`,
         {
@@ -143,7 +143,7 @@ export class TsxDoc {
     const text = this.text;
     if (attr && Node.isJsxAttribute(attr)) {
       if (!attrStructured(attr))
-        throw new CodeCutError(
+        throw new FlomotionError(
           "opaque_expression",
           `#${id}.${prop} is an expression (${attr.getInitializer()?.getText().slice(0, 40)}…) that structured edits cannot change`,
           { fix: "Edit it by hand, or rewrite the element with scene_write." },
@@ -163,7 +163,7 @@ export class TsxDoc {
     }
     if (value === undefined) return this; // nothing to remove
     if (attr) {
-      throw new CodeCutError("opaque_expression", `#${id}.${prop} comes from a spread`);
+      throw new FlomotionError("opaque_expression", `#${id}.${prop} comes from a spread`);
     }
     const attrs = tag.getAttributes();
     const last = attrs[attrs.length - 1];
@@ -235,7 +235,7 @@ export class TsxDoc {
       );
     }
     if (!Node.isJsxElement(el))
-      throw new CodeCutError("invalid_edit", `Cannot insert into #${parentId}`);
+      throw new FlomotionError("invalid_edit", `Cannot insert into #${parentId}`);
     const kids = el
       .getJsxChildren()
       .filter((c) => !(Node.isJsxText(c) && c.getText().trim() === ""));
@@ -320,7 +320,7 @@ export class TsxDoc {
   }
 
   /** Add named imports for components the file does not import yet (from the module it already imports components from). */
-  ensureImports(names: string[], moduleName = "@codecut/components"): TsxDoc {
+  ensureImports(names: string[], moduleName = "@flomotion/components"): TsxDoc {
     const sf = this.sf();
     const have = new Set<string>();
     for (const d of sf.getImportDeclarations())
@@ -331,7 +331,7 @@ export class TsxDoc {
     if (!need.length) return this;
     const decl =
       sf.getImportDeclaration((d) =>
-        /^(@codecut\/components|codecut\/components)$/.test(d.getModuleSpecifierValue()),
+        /^(@flomotion\/components|flomotion\/components)$/.test(d.getModuleSpecifierValue()),
       ) ?? undefined;
     if (decl) {
       const named = decl.getNamedImports();
@@ -381,7 +381,7 @@ export class TsxDoc {
       const d = diags[0]!;
       const msg =
         typeof d.getMessageText() === "string" ? (d.getMessageText() as string) : "syntax error";
-      throw new CodeCutError(
+      throw new FlomotionError(
         "schema_violation",
         `TSX does not parse: ${msg} (line ${d.getLineNumber() ?? "?"})`,
         { fix: "Fix the syntax and try again." },

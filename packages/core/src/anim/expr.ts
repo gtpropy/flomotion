@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import { clamp, lerp, remap, smoothstep, springSettleTime, springValue } from "../values/ease.js";
 import { noise1D } from "../values/noise.js";
 import type { Ctx, Expr } from "./types.js";
@@ -19,7 +19,7 @@ export function makeCtx(base: CtxBase, t: number, value?: unknown): Ctx {
     value,
     prop: (ref) => {
       if (!base.prop) {
-        throw new CodeCutError(
+        throw new FlomotionError(
           "unresolved_ref",
           `ctx.prop(${JSON.stringify(ref)}) is not available here`,
         );
@@ -29,12 +29,12 @@ export function makeCtx(base: CtxBase, t: number, value?: unknown): Ctx {
     noise: (seed = 1, freq = 1) => noise1D(t * freq, seed),
     beat: (n) => {
       if (!base.beat)
-        throw new CodeCutError("unresolved_ref", "ctx.beat needs a tempo or beat map");
+        throw new FlomotionError("unresolved_ref", "ctx.beat needs a tempo or beat map");
       return base.beat(n);
     },
     word: (voiceId, i) => {
       if (!base.word)
-        throw new CodeCutError("unresolved_ref", "ctx.word needs a Voiceover with timings");
+        throw new FlomotionError("unresolved_ref", "ctx.word needs a Voiceover with timings");
       return base.word(voiceId, i);
     },
     lerp,

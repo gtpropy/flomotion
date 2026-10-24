@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, join } from "node:path";
-import { findChrome, requireFfmpeg } from "@codecut/render";
+import { findChrome, requireFfmpeg } from "@flomotion/render";
 
 /** The services flomotion can use. Keys are optional: every one has a way to work without it. */
 export const KEYS = {

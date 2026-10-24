@@ -8,12 +8,12 @@ Children: Font.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `allowSystem` | `boolean` | `false` | Permit system fonts (output differs per machine). |
 
 ```ts
 export interface FontsProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   /** Permit system fonts (output differs per machine).; default false */
   allowSystem?: boolean;

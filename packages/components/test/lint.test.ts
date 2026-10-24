@@ -55,8 +55,8 @@ describe("linter: one failing fixture per rule", () => {
   it("missing id", () => {
     const issues = lintTree(comp([el("Rect", { width: 10 })])).issues;
     const m = issues.find((i) => i.rule === "missing-id")!;
-    expect(m.message).toMatch(/cc_/);
-    expect(m.fix).toMatch(/id="cc_/);
+    expect(m.message).toMatch(/fm_/);
+    expect(m.fix).toMatch(/id="fm_/);
   });
   it("duplicate id and unknown component", () => {
     expect(rules(comp([el("Rect", { id: "d" }), el("Rect", { id: "d" })]))).toContain(

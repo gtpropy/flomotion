@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { AudioEvent, CCNode, IRLayer, LintIssue, Ledger, SoundCue } from "@codecut/core";
-import { licenseReport } from "@codecut/render";
+import type { AudioEvent, CCNode, IRLayer, LintIssue, Ledger, SoundCue } from "@flomotion/core";
+import { licenseReport } from "@flomotion/render";
 import {
   CHECKLIST,
   activityOf,

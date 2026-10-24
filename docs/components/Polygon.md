@@ -8,7 +8,7 @@ Children: effects only.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `label` | `string` |  |  |
 | `start` | `Time` |  | Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s |
 | `duration` | `Time` |  | Defaults to the rest of the parent.; unit s |
@@ -38,7 +38,7 @@ Children: effects only.
 
 ```ts
 export interface PolygonProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   label?: string;
   /** Start relative to the parent Scene/Precomp. Use "@12s" for absolute time.; unit s */

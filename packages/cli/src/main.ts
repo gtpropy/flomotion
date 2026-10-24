@@ -5,7 +5,7 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { join, resolve } from "node:path";
 import { defineCommand } from "citty";
-import { CODECUT_NAME, CodeCutError, isCodeCutError, listLooks } from "@codecut/core";
+import { FLOMOTION_NAME, FlomotionError, isFlomotionError, listLooks } from "@flomotion/core";
 import {
   buildProject,
   collectFontDecls,
@@ -19,8 +19,8 @@ import {
   collectAssetSrcs,
   licenseReport,
   readLedger,
-} from "@codecut/render";
-import { registry, docsMarkdown, docsIndexMarkdown } from "@codecut/components";
+} from "@flomotion/render";
+import { registry, docsMarkdown, docsIndexMarkdown } from "@flomotion/components";
 import {
   KEY_NAMES,
   checkKey,
@@ -32,7 +32,7 @@ import {
   startUi,
   writeConfig,
   type KeyName,
-} from "@codecut/mcp";
+} from "@flomotion/mcp";
 import {
   addKeyInteractive,
   checkAll,
@@ -45,10 +45,10 @@ import {
 } from "./setup.js";
 
 const fail = (e: unknown): never => {
-  if (isCodeCutError(e)) {
+  if (isFlomotionError(e)) {
     console.error(`\n✖ ${e.code}: ${e.message}`);
     if (e.fix) console.error(`  fix: ${e.fix}`);
-    if (process.env.CODECUT_DEBUG && e.details) console.error(JSON.stringify(e.details, null, 2));
+    if (process.env.FLOMOTION_DEBUG && e.details) console.error(JSON.stringify(e.details, null, 2));
   } else console.error(e);
   process.exit(1);
 };
@@ -76,7 +76,7 @@ const render = defineCommand({
     try {
       requireFfmpeg();
       const dir = resolve(String(args.dir));
-      console.log(`${CODECUT_NAME}: building ${dir}`);
+      console.log(`${FLOMOTION_NAME}: building ${dir}`);
       const b = await buildProject(dir, {
         log: (m) => console.log("  " + m),
         mix: !args["no-mix"],
@@ -125,7 +125,7 @@ const frame = defineCommand({
     try {
       const dir = resolve(String(args.dir));
       const b = await buildProject(dir, { mix: false });
-      const outDir = resolve(args.output ? String(args.output) : join(dir, ".codecut", "frames"));
+      const outDir = resolve(args.output ? String(args.output) : join(dir, ".flomotion", "frames"));
       const s = await snapshotFrames(b.dir, { times: [Number(args.time)], outDir });
       console.log(s.files[0]);
     } catch (e) {
@@ -151,7 +151,7 @@ const sheet = defineCommand({
         : Array.from({ length: Number(args.count) }, (_, i) =>
             Math.min(dur - 0.05, ((i + 0.5) / Number(args.count)) * dur),
           );
-      const outDir = join(dir, ".codecut", "sheet");
+      const outDir = join(dir, ".flomotion", "sheet");
       mkdirSync(outDir, { recursive: true });
       const s = await snapshotFrames(b.dir, { times, outDir });
       console.log(s.contactSheet ?? s.files.join("\n"));
@@ -266,7 +266,7 @@ const init = defineCommand({
   async run({ args }) {
     const dir = resolve(String(args.dir));
     if (existsSync(join(dir, "project.tsx")))
-      fail(new CodeCutError("invalid_edit", `${dir}/project.tsx already exists`));
+      fail(new FlomotionError("invalid_edit", `${dir}/project.tsx already exists`));
     mkdirSync(join(dir, "assets"), { recursive: true });
     mkdirSync(join(dir, "fonts"), { recursive: true });
     const [w, h] = String(args.size).split("x").map(Number);
@@ -280,7 +280,7 @@ const init = defineCommand({
             moduleResolution: "Bundler",
             strict: true,
             jsx: "react-jsx",
-            jsxImportSource: "@codecut/core",
+            jsxImportSource: "@flomotion/core",
             skipLibCheck: true,
           },
         },
@@ -290,13 +290,13 @@ const init = defineCommand({
     );
     writeFileSync(
       join(dir, "project.tsx"),
-      `import { Composition, Track, Scene, Title } from "@codecut/components";
+      `import { Composition, Track, Scene, Title } from "@flomotion/components";
 
 export default (
   <Composition id="main" size={[${w}, ${h}]} fps={30} duration="5s" theme="$look.kinetic">
     <Track id="v1" kind="video">
       <Scene id="hello" start="0s" duration="5s">
-        <Title id="t1" text="Hello, ${CODECUT_NAME}" at="center" enter={{ from: "s", distance: 120, ease: "expo.out", duration: 0.6 }} />
+        <Title id="t1" text="Hello, ${FLOMOTION_NAME}" at="center" enter={{ from: "s", distance: 120, ease: "expo.out", duration: 0.6 }} />
       </Scene>
     </Track>
   </Composition>
@@ -305,7 +305,7 @@ export default (
     );
     void copyFileSync;
     console.log(
-      `Created ${dir}. Next: codecut fonts sync ${args.dir} && codecut render ${args.dir}`,
+      `Created ${dir}. Next: flomotion fonts sync ${args.dir} && flomotion render ${args.dir}`,
     );
   },
 });
@@ -390,7 +390,7 @@ function skillSource(): string {
     const p = resolve(here, rel);
     if (existsSync(join(p, "SKILL.md"))) return p;
   }
-  throw new CodeCutError(
+  throw new FlomotionError(
     "asset_missing",
     "The flomotion-studio skill files were not found next to this install",
   );
@@ -448,7 +448,7 @@ const install = defineCommand({
   subCommands: { skill: installSkillCmd },
 });
 
-/** Older spelling from 0.2.0: `codecut skill install` (project-level by default, as before). */
+/** Older spelling from 0.2.0: `flomotion skill install` (project-level by default, as before). */
 const skillInstallLegacy = defineCommand({
   meta: { name: "install", description: "Same as `install skill` (kept from 0.2.0)" },
   args: { ...skillArgs, global: { type: "boolean", description: "Install for all projects" } },
@@ -509,7 +509,7 @@ const setupSet = defineCommand({
     try {
       const name = String(args.name) as KeyName;
       if (!KEY_NAMES.includes(name))
-        throw new CodeCutError("invalid_value", `Unknown key "${name}"`, {
+        throw new FlomotionError("invalid_value", `Unknown key "${name}"`, {
           fix: `One of: ${KEY_NAMES.join(", ")}`,
         });
       const cfg = readConfig();
@@ -538,7 +538,7 @@ const setupUnset = defineCommand({
     const name = String(args.name) as KeyName;
     if (!KEY_NAMES.includes(name))
       return fail(
-        new CodeCutError("invalid_value", `Unknown key "${name}"`, {
+        new FlomotionError("invalid_value", `Unknown key "${name}"`, {
           fix: `One of: ${KEY_NAMES.join(", ")}`,
         }),
       );
@@ -645,6 +645,6 @@ const setup = defineCommand({
 });
 
 export const main = defineCommand({
-  meta: { name: "codecut", description: `${CODECUT_NAME}: a code-first video editor` },
+  meta: { name: "flomotion", description: `${FLOMOTION_NAME}: a code-first video editor` },
   subCommands: { setup, render, frame, sheet, fonts, init, lint, docs, mcp, ui, install, skill },
 });

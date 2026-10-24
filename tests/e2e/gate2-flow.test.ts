@@ -215,7 +215,7 @@ describe("Gate 2: the flomotion-studio flow against test doubles", () => {
   it("3. Look and style frames (OK): project, look fonts, style frame", async () => {
     step("look");
     const looks = JSON.parse(
-      ((await h.client.readResource({ uri: "codecut://looks" })).contents[0] as any).text,
+      ((await h.client.readResource({ uri: "flomotion://looks" })).contents[0] as any).text,
     );
     expect(looks.map((l: any) => l.id)).toEqual([
       "clean-light",
@@ -405,7 +405,7 @@ describe("Gate 2: the flomotion-studio flow against test doubles", () => {
     expect(mix.events.filter((e: any) => e.bus === "sfx").length).toBeGreaterThanOrEqual(4);
     expect(Math.abs(mix.lufs - -14)).toBeLessThan(1.5);
     expect(mix.note).toMatch(/not auditioned/i);
-    const ledger = JSON.parse(readFileSync(join(root, ".codecut/ledger.json"), "utf8")).entries;
+    const ledger = JSON.parse(readFileSync(join(root, ".flomotion/ledger.json"), "utf8")).entries;
     expect(
       ledger
         .filter((e: any) => e.kind === "sound")
@@ -492,6 +492,6 @@ describe("Gate 2: the flomotion-studio flow against test doubles", () => {
     expect(text).toContain('<Composition id="pulse-promo"');
     expect(text).toContain('theme="$look.dark-product"');
     expect(text.split("\n").length).toBeGreaterThan(100);
-    expect(existsSync(join(root, ".codecut/history/index.json"))).toBe(true);
+    expect(existsSync(join(root, ".flomotion/history/index.json"))).toBe(true);
   });
 });

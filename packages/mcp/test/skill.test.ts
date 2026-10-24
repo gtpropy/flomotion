@@ -12,8 +12,8 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { PNG } from "pngjs";
-import { docsMarkdown, getLook, listLooks } from "@codecut/core";
-import { registry } from "@codecut/components";
+import { docsMarkdown, getLook, listLooks } from "@flomotion/core";
+import { registry } from "@flomotion/components";
 import { TOOL_NAMES } from "../src/server.js";
 import { CHECKLIST } from "../src/review.js";
 import { SOUND_TAGS } from "../src/providers/sounds.js";
@@ -273,7 +273,7 @@ describe("block recipes (references/block-recipes.md) are real, lint clean and r
         const imports = [...new Set([...used, "Composition", "Track", "Scene"])].sort().join(", ");
         writeFileSync(
           join(root, "project.tsx"),
-          `import { ${imports} } from "@codecut/components";\n\nexport default (\n  <Composition id="recipes" size={[1080, 1920]} fps={30} duration="38s" theme="$look.${look}">\n    <Track id="v1" kind="video">\n${scenes.join("\n")}\n    </Track>\n${track}\n  </Composition>\n);\n`,
+          `import { ${imports} } from "@flomotion/components";\n\nexport default (\n  <Composition id="recipes" size={[1080, 1920]} fps={30} duration="38s" theme="$look.${look}">\n    <Track id="v1" kind="video">\n${scenes.join("\n")}\n    </Track>\n${track}\n  </Composition>\n);\n`,
         );
         writeFileSync(
           join(root, "tsconfig.json"),
@@ -284,7 +284,7 @@ describe("block recipes (references/block-recipes.md) are real, lint clean and r
               moduleResolution: "Bundler",
               strict: true,
               jsx: "react-jsx",
-              jsxImportSource: "@codecut/core",
+              jsxImportSource: "@flomotion/core",
               skipLibCheck: true,
             },
           }),
@@ -377,7 +377,7 @@ describe("engine look reference scenes (examples/engine-looks)", () => {
               moduleResolution: "Bundler",
               strict: true,
               jsx: "react-jsx",
-              jsxImportSource: "@codecut/core",
+              jsxImportSource: "@flomotion/core",
               skipLibCheck: true,
             },
           }),

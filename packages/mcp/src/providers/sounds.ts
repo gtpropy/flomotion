@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
-import { CodeCutError, upsertEntry, type LedgerEntry } from "@codecut/core";
-import { ledgerPath, measurePeakTime, probeMedia, readLedger } from "@codecut/render";
+import { FlomotionError, upsertEntry, type LedgerEntry } from "@flomotion/core";
+import { ledgerPath, measurePeakTime, probeMedia, readLedger } from "@flomotion/render";
 import type { ProjectStore } from "../store.js";
 
 // ---------- tags ----------
@@ -160,15 +160,19 @@ export class FreesoundClient implements SoundProvider {
   private async json<T>(url: string): Promise<T> {
     const res = await this.f(url, { headers: { Authorization: `Token ${this.opts.apiKey}` } });
     if (res.status === 401 || res.status === 403)
-      throw new CodeCutError("license_blocked", `Freesound rejected the API key (${res.status})`, {
-        fix: "Check FREESOUND_API_KEY (create one at https://freesound.org/apiv2/apply).",
-      });
+      throw new FlomotionError(
+        "license_blocked",
+        `Freesound rejected the API key (${res.status})`,
+        {
+          fix: "Check FREESOUND_API_KEY (create one at https://freesound.org/apiv2/apply).",
+        },
+      );
     if (res.status === 429)
-      throw new CodeCutError("render_failed", "Freesound rate limit reached", {
+      throw new FlomotionError("render_failed", "Freesound rate limit reached", {
         fix: "Wait a minute and retry; results are cached once downloaded.",
       });
     if (!res.ok)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "asset_missing",
         `Freesound returned ${res.status} for ${url.split("?")[0]}`,
       );
@@ -192,12 +196,13 @@ export class FreesoundClient implements SoundProvider {
   }
   async download(hit: SoundHit, dest: string): Promise<void> {
     if (!hit.audioUrl)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "asset_missing",
         `Freesound sound ${hit.id} has no downloadable preview`,
       );
     const res = await this.f(hit.audioUrl);
-    if (!res.ok) throw new CodeCutError("asset_missing", `Preview download failed (${res.status})`);
+    if (!res.ok)
+      throw new FlomotionError("asset_missing", `Preview download failed (${res.status})`);
     mkdirSync(dirname(dest), { recursive: true });
     writeFileSync(dest, Buffer.from(await res.arrayBuffer()));
   }
@@ -254,7 +259,7 @@ export class LocalCatalogProvider implements SoundProvider {
       !existsSync(project) &&
       !(this.libraryIndex && existsSync(this.libraryIndex))
     )
-      throw new CodeCutError(
+      throw new FlomotionError(
         "missing_dependency",
         "No sound source: no Freesound key, no sounds/catalog.json and no sound library",
         {
@@ -309,7 +314,7 @@ export class LocalCatalogProvider implements SoundProvider {
   async get(id: string): Promise<SoundHit> {
     const h = this.catalog().find((x) => x.id === id);
     if (!h)
-      throw new CodeCutError("asset_missing", `No sound "${id}" in your sound catalogue`, {
+      throw new FlomotionError("asset_missing", `No sound "${id}" in your sound catalogue`, {
         fix: "Use sound_search to list what is there, or import it with sound_import.",
       });
     this.durationOf(h);
@@ -371,7 +376,7 @@ export class SoundService {
     if (name) {
       const p = this.providers.find((x) => x.name === name);
       if (!p)
-        throw new CodeCutError("missing_dependency", `No "${name}" sound source is set up`, {
+        throw new FlomotionError("missing_dependency", `No "${name}" sound source is set up`, {
           fix:
             name === "freesound"
               ? "Run `flomotion setup` and add a Freesound key."
@@ -395,18 +400,18 @@ export class SoundService {
   }): Promise<{ results: SoundResult[]; tag?: SoundTagInfo; note: string; notes: string[] }> {
     const tag = isSoundTag(a.tag) ? SOUND_TAGS[a.tag] : undefined;
     if (a.tag && !tag)
-      throw new CodeCutError("invalid_edit", `Unknown sound tag "${a.tag}"`, {
+      throw new FlomotionError("invalid_edit", `Unknown sound tag "${a.tag}"`, {
         fix: `Tags: ${Object.keys(SOUND_TAGS).join(", ")}`,
       });
     const query = [a.query, tag?.query].filter(Boolean).join(" ").trim();
     if (!query)
-      throw new CodeCutError("invalid_edit", "Give a query or a tag", {
+      throw new FlomotionError("invalid_edit", "Give a query or a tag", {
         fix: `Tags: ${Object.keys(SOUND_TAGS).join(", ")}`,
       });
     const limit = a.limit ?? 8;
     const chosen = this.providers.filter((p) => !a.source || p.name === a.source);
     if (!chosen.length)
-      throw new CodeCutError("missing_dependency", `No "${a.source}" sound source is set up`);
+      throw new FlomotionError("missing_dependency", `No "${a.source}" sound source is set up`);
     const settled = await Promise.allSettled(
       chosen.map((p) =>
         p.search({ query, tags: a.tags, duration: a.duration ?? tag?.duration, limit }),
@@ -462,7 +467,7 @@ export class SoundService {
     };
   }
 
-  /** Download one sound into .codecut/assets/, measure its peak, and record it in the ledger. */
+  /** Download one sound into .flomotion/assets/, measure its peak, and record it in the ledger. */
   async get(a: { id: string; tag?: string; source?: string }): Promise<{
     ref: string;
     path: string;
@@ -474,7 +479,7 @@ export class SoundService {
     const hit = await provider.get(id);
     const cls: LicenseClass = hit.rights ? "own" : classifyLicense(hit.license);
     if (!this.allowedClasses().includes(cls)) {
-      throw new CodeCutError(
+      throw new FlomotionError(
         "license_blocked",
         `Sound ${hit.id} is ${hit.license}, which this project does not allow`,
         {
@@ -487,12 +492,12 @@ export class SoundService {
     const ext = (
       basename(hit.audioUrl ?? hit.localFile ?? "x.mp3").match(/\.[a-z0-9]+$/i)?.[0] ?? ".mp3"
     ).toLowerCase();
-    const rel = join(".codecut", "assets", provider.name, `${hit.id}${ext}`);
+    const rel = join(".flomotion", "assets", provider.name, `${hit.id}${ext}`);
     const dest = this.store.path(rel);
     await provider.download(hit, dest);
     const info = probeMedia(dest);
     if (!info?.hasAudio)
-      throw new CodeCutError("asset_missing", `Downloaded file for ${hit.id} is not audio`);
+      throw new FlomotionError("asset_missing", `Downloaded file for ${hit.id} is not audio`);
     const m = await measurePeakTime(dest);
     const peakName = a.tag?.split("/").pop() ?? "main";
     // the same sound can serve several jobs: keep the peak names it already has (e.g. both "land" and "punch")

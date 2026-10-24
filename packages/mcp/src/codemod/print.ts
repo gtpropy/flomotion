@@ -1,4 +1,4 @@
-import { CodeCutError, isNode, type CCNode } from "@codecut/core";
+import { FlomotionError, isNode, type CCNode } from "@flomotion/core";
 
 const IDENT = /^[A-Za-z_$][\w$]*$/;
 const MAX_LINE = 96;
@@ -9,12 +9,12 @@ export function printExpr(v: unknown, indent = ""): string {
   if (v === undefined) return "undefined";
   if (typeof v === "string") return JSON.stringify(v);
   if (typeof v === "number") {
-    if (!Number.isFinite(v)) throw new CodeCutError("invalid_value", `Cannot print ${v}`);
+    if (!Number.isFinite(v)) throw new FlomotionError("invalid_value", `Cannot print ${v}`);
     return Object.is(v, -0) ? "0" : String(v);
   }
   if (typeof v === "boolean") return String(v);
   if (typeof v === "function" || (typeof v === "object" && v && "$expr" in (v as object)))
-    throw new CodeCutError(
+    throw new FlomotionError(
       "opaque_expression",
       "Expressions cannot be written from structured edits",
       {
@@ -37,7 +37,7 @@ export function printExpr(v: unknown, indent = ""): string {
     const inner = indent + "  ";
     return `{\n${entries.map(([k, x]) => `${inner}${key(k)}: ${printExpr(x, inner)},`).join("\n")}\n${indent}}`;
   }
-  throw new CodeCutError("invalid_value", `Cannot print a value of type ${typeof v}`);
+  throw new FlomotionError("invalid_value", `Cannot print a value of type ${typeof v}`);
 }
 
 /** The text after `name` in a JSX attribute: `="str"`, `={expr}`, or empty for a bare `true`. */

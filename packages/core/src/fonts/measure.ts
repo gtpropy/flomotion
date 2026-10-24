@@ -59,7 +59,7 @@ export interface MeasureOptions {
   maxWidth?: number;
 }
 
-/** Measures laid-out text. Implemented in @codecut/render with headless Chrome. */
+/** Measures laid-out text. Implemented in @flomotion/render with headless Chrome. */
 export interface TextMeasurer {
   measureText(text: string, style: TextStyle, opts?: MeasureOptions): TextMetrics;
 }

@@ -13,13 +13,13 @@ import { basename, dirname, extname, join, relative, resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import puppeteer from "puppeteer-core";
 import {
-  CodeCutError,
+  FlomotionError,
   contrastRatio,
   parseColor,
   upsertEntry,
   type LedgerEntry,
-} from "@codecut/core";
-import { findChrome, ledgerPath, probeMedia, readLedger, requireFfmpeg } from "@codecut/render";
+} from "@flomotion/core";
+import { findChrome, ledgerPath, probeMedia, readLedger, requireFfmpeg } from "@flomotion/render";
 import {
   assertSafeSvg,
   classifyAssetLicense,
@@ -55,12 +55,12 @@ export const TEXT_EXT = [".srt", ".vtt", ".json", ".txt", ".md"];
 export function assertReadable(p: string, allowed: string[], maxBytes = 800 * 1024 * 1024): string {
   const abs = resolve(p);
   if (!existsSync(abs))
-    throw new CodeCutError("asset_missing", `No file at ${p}`, {
+    throw new FlomotionError("asset_missing", `No file at ${p}`, {
       fix: "Give the full path of a file that exists.",
     });
   const real = realpathSync(abs);
   if (DENY.test(real) || DENY.test(abs))
-    throw new CodeCutError(
+    throw new FlomotionError(
       "path_outside_project",
       `${p} looks like a credentials or key file and will not be read`,
       { fix: "Copy the media you want into a normal folder and give that path." },
@@ -68,13 +68,13 @@ export function assertReadable(p: string, allowed: string[], maxBytes = 800 * 10
   const st = statSync(real);
   if (st.isFile()) {
     if (!allowed.includes(extname(real).toLowerCase()))
-      throw new CodeCutError(
+      throw new FlomotionError(
         "invalid_edit",
         `${basename(real)} is not a file type this tool takes (${allowed.join(" ")})`,
         { fix: "Convert it, or pick another file." },
       );
     if (st.size > maxBytes)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "asset_missing",
         `${basename(real)} is larger than ${Math.round(maxBytes / 1e6)} MB`,
       );
@@ -138,7 +138,7 @@ export class AssetService {
       (p) => p.kinds.includes(a.kind) && (!a.source || p.name === a.source),
     );
     if (!chosen.length)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "missing_dependency",
         `No source for ${a.kind}${a.source ? ` named ${a.source}` : ""}`,
         {
@@ -160,7 +160,7 @@ export class AssetService {
         );
     });
     if (!hits.length && notes.length === chosen.length)
-      throw new CodeCutError("missing_dependency", notes.join("; "), {
+      throw new FlomotionError("missing_dependency", notes.join("; "), {
         fix: "Check the network, or try another kind or source.",
       });
     const allowed = this.allowedClasses();
@@ -200,21 +200,21 @@ export class AssetService {
     const prefix = a.ref.split(":")[0];
     const provider = this.providers.find((p) => p.name === prefix);
     if (!provider)
-      throw new CodeCutError("invalid_edit", `Unknown asset source in "${a.ref}"`, {
+      throw new FlomotionError("invalid_edit", `Unknown asset source in "${a.ref}"`, {
         fix: `Refs start with one of: ${this.providers.map((p) => p.name).join(", ")}. Use asset_search to get one.`,
       });
     const hit = await provider.resolve(a.ref);
     const allowed = this.allowedClasses();
     if (!allowed.includes(hit.licenseClass))
-      throw new CodeCutError(
+      throw new FlomotionError(
         "license_blocked",
         `${hit.title} is ${hit.license}, which this project does not allow`,
         {
-          fix: `Allowed: ${allowed.join(", ")} (set assetLicenses in codecut.json). Pick another asset.`,
+          fix: `Allowed: ${allowed.join(", ")} (set assetLicenses in flomotion.json). Pick another asset.`,
         },
       );
     if (hit.trademark && a.permission !== true)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "license_blocked",
         `${hit.title} is a brand logo. The artwork is openly licensed but the brand is a trademark`,
         {
@@ -222,7 +222,7 @@ export class AssetService {
         },
       );
     if (a.color && !/^#[0-9a-f]{3,8}$/i.test(a.color))
-      throw new CodeCutError("invalid_value", `color must be a hex colour like #4b5cff`, {
+      throw new FlomotionError("invalid_value", `color must be a hex colour like #4b5cff`, {
         fix: "Use the look's colour as hex.",
       });
     const dl = await provider.download(hit, { color: a.color, height: a.height });
@@ -301,7 +301,7 @@ export class AssetService {
       ? listFiles(real, [...IMAGE_EXT, ...VIDEO_EXT], false, 200)
       : [real];
     if (!files.length)
-      throw new CodeCutError("asset_missing", `No images or videos in ${a.source}`);
+      throw new FlomotionError("asset_missing", `No images or videos in ${a.source}`);
     const out: Array<{ path: string; src: string; entry: LedgerEntry }> = [];
     for (const f of files) {
       if (extname(f).toLowerCase() === ".svg") assertSafeSvg(readFileSync(f, "utf8"));
@@ -354,7 +354,7 @@ export class AssetService {
     hide?: string[];
   }) {
     if (a.permission !== true)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "license_blocked",
         "Screenshots are only for a product or page the person owns or may show",
         {
@@ -365,10 +365,10 @@ export class AssetService {
     try {
       u = new URL(a.url);
     } catch {
-      throw new CodeCutError("invalid_value", `Not a URL: ${a.url}`);
+      throw new FlomotionError("invalid_value", `Not a URL: ${a.url}`);
     }
     if (!/^https?:$/.test(u.protocol))
-      throw new CodeCutError("invalid_value", "Only http and https pages can be captured", {
+      throw new FlomotionError("invalid_value", "Only http and https pages can be captured", {
         fix: "For a local file, import it with asset_import.",
       });
     const width = a.width ?? 1440;
@@ -394,7 +394,7 @@ export class AssetService {
       try {
         await page.goto(a.url, { waitUntil: "networkidle2" });
       } catch (e) {
-        throw new CodeCutError(
+        throw new FlomotionError(
           "asset_missing",
           `Could not load ${a.url}: ${e instanceof Error ? e.message : e}`,
           {
@@ -409,7 +409,7 @@ export class AssetService {
       if (a.selector) {
         const el = await page.$(a.selector);
         if (!el)
-          throw new CodeCutError(
+          throw new FlomotionError(
             "asset_missing",
             `No element matches "${a.selector}" on ${a.url}`,
             { fix: "Check the selector, or capture the whole viewport." },
@@ -462,7 +462,7 @@ export class AssetService {
   /** Read a site's brand: name, colours, fonts and logo files. For the person's own site. */
   async brandExtract(a: { url: string; permission?: boolean; saveLogos?: boolean }) {
     if (a.permission !== true)
-      throw new CodeCutError(
+      throw new FlomotionError(
         "license_blocked",
         "Brand extraction is for the person's own site (or one they may use)",
         {
@@ -471,7 +471,7 @@ export class AssetService {
       );
     const u = new URL(a.url);
     if (!/^https?:$/.test(u.protocol))
-      throw new CodeCutError("invalid_value", "Only http and https pages");
+      throw new FlomotionError("invalid_value", "Only http and https pages");
     const browser = await puppeteer.launch({
       executablePath: findChrome(),
       headless: true,
@@ -486,7 +486,7 @@ export class AssetService {
       try {
         await page.goto(a.url, { waitUntil: "networkidle2" });
       } catch (e) {
-        throw new CodeCutError(
+        throw new FlomotionError(
           "asset_missing",
           `Could not load ${a.url}: ${e instanceof Error ? e.message : e}`,
         );

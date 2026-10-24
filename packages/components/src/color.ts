@@ -14,7 +14,7 @@ import {
   type CurvePoint,
   type RenderCtx,
   type Signal,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { effectWindow } from "./layerstyles.js";
 import { round } from "./util.js";
 
@@ -311,7 +311,7 @@ export const Grain = defineEffect("Grain", {
     const seedAt = (t: number) =>
       Math.floor(mulberry32(p.seed * 7919 + Math.floor(((t - a) * fps) / p.hold))() * 100000);
     const freq = round(0.9 / p.size, 3);
-    const html = `<svg id="${id}" class="cc-grain" width="100%" height="100%" style="position:absolute;inset:0;pointer-events:none;mix-blend-mode:${p.blend};opacity:${round(evalSignal(amount, a))}"><filter id="${id}-f" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence id="${id}-t" type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seedAt(a)}" stitchTiles="stitch"/>${p.mono ? '<feColorMatrix type="saturate" values="0"/>' : ""}</filter><rect width="100%" height="100%" filter="url(#${id}-f)"/></svg>`;
+    const html = `<svg id="${id}" class="fm-grain" width="100%" height="100%" style="position:absolute;inset:0;pointer-events:none;mix-blend-mode:${p.blend};opacity:${round(evalSignal(amount, a))}"><filter id="${id}-f" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB"><feTurbulence id="${id}-t" type="fractalNoise" baseFrequency="${freq}" numOctaves="2" seed="${seedAt(a)}" stitchTiles="stitch"/>${p.mono ? '<feColorMatrix type="saturate" values="0"/>' : ""}</filter><rect width="100%" height="100%" filter="url(#${id}-f)"/></svg>`;
     return {
       overlay: {
         html,

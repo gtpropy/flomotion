@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 import { cubicBezier, lerp, parseEase, type EaseFn } from "../values/ease.js";
 import { lerpColor, parseColor, toCss, type RGBA } from "../values/color.js";
 import { parseTimeLiteral, snapToFrame, type Time } from "../values/time.js";
@@ -62,7 +62,7 @@ export function normalizeTrack<T>(
   keys.sort((a, b) => a.t - b.t);
   for (let i = 1; i < keys.length; i++) {
     if (keys[i]!.t === keys[i - 1]!.t) {
-      throw new CodeCutError(
+      throw new FlomotionError(
         "duplicate_keyframe",
         `Two keyframes share time ${keys[i]!.t}s on one property`,
         { fix: "Give each keyframe on a property a unique time (move one by at least one frame)." },
@@ -196,7 +196,7 @@ function numSlopes(track: NormTrack<any>, comp: number, mode: InterpMode): numbe
 /** Evaluate a numeric track at local time t. */
 export function evalNumber(track: NormTrack<number>, tIn: number): number {
   const ks = track.keys;
-  if (ks.length === 0) throw new CodeCutError("invalid_value", "Keyframe track has no keys");
+  if (ks.length === 0) throw new FlomotionError("invalid_value", "Keyframe track has no keys");
   const t = loopTime(track, tIn);
   if (t <= ks[0]!.t || ks.length === 1) return ks[0]!.v;
   const last = ks[ks.length - 1]!;
@@ -218,7 +218,7 @@ export function evalNumber(track: NormTrack<number>, tIn: number): number {
 /** Evaluate a vector track (Vec2/Vec3) at local time t. */
 export function evalVec(track: NormTrack<number[]>, tIn: number): number[] {
   const ks = track.keys;
-  if (ks.length === 0) throw new CodeCutError("invalid_value", "Keyframe track has no keys");
+  if (ks.length === 0) throw new FlomotionError("invalid_value", "Keyframe track has no keys");
   const t = loopTime(track, tIn);
   if (t <= ks[0]!.t || ks.length === 1) return [...ks[0]!.v];
   const last = ks[ks.length - 1]!;

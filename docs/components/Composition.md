@@ -8,7 +8,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `id` | `string` |  | Stable unique id. Written back as cc_… when missing. |
+| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 | `size` | `number | Vec2` | `[1920,1080]` | [width, height]; unit px |
 | `fps` | `number` | `30` | range 1..240 |
 | `duration` | `Time` |  | unit s |
@@ -19,7 +19,7 @@ Children: any layers and effects.
 
 ```ts
 export interface CompositionProps {
-  /** Stable unique id. Written back as cc_… when missing. */
+  /** Stable unique id. Written back as fm_… when missing. */
   id?: string;
   /** [width, height]; unit px; default [1920,1080] */
   size?: number | Vec2;

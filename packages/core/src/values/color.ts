@@ -1,4 +1,4 @@
-import { CodeCutError } from "../errors.js";
+import { FlomotionError } from "../errors.js";
 
 /** "#ff3366", "rgb(...)", "oklch(0.7 0.2 20)", or a "$token" resolved by the theme. */
 export type Color = string;
@@ -16,7 +16,7 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 export function parseColor(input: string): RGBA {
   const s = input.trim().toLowerCase();
   if (s.startsWith("$")) {
-    throw new CodeCutError("invalid_value", `Unresolved color token ${input}`, {
+    throw new FlomotionError("invalid_value", `Unresolved color token ${input}`, {
       fix: "Define the token in the Theme/Look or resolve the project first.",
     });
   }
@@ -72,7 +72,7 @@ const NAMED: Record<string, string> = {
 };
 
 function badColor(input: string) {
-  return new CodeCutError("invalid_value", `Invalid color: ${JSON.stringify(input)}`, {
+  return new FlomotionError("invalid_value", `Invalid color: ${JSON.stringify(input)}`, {
     fix: 'Use "#rrggbb", "rgb(...)", "oklch(L C H)" or a "$token".',
   });
 }

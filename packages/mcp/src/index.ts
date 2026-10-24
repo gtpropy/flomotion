@@ -22,7 +22,7 @@ export * from "./providers/library.js";
 export * from "./providers/transcript.js";
 export { startUi, type UiOptions, type UiServer } from "./ui/server.js";
 
-/** Serve the MCP server for `root` over stdio (what `codecut mcp` and `npx codecut mcp` run). */
+/** Serve the MCP server for `root` over stdio (what `flomotion mcp` and `npx flomotion mcp` run). */
 export async function serveStdio(
   root: string,
   deps: Deps = {},

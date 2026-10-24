@@ -20,7 +20,7 @@ import {
   type RenderCtx,
   type Signal,
   type SoundCue,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { strokeControl } from "./shapes.js";
 import {
   atControl,

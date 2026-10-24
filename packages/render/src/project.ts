@@ -10,8 +10,8 @@ import {
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import {
-  CODECUT_DIR,
-  CodeCutError,
+  FLOMOTION_DIR,
+  FlomotionError,
   isNode,
   walk,
   type AudioEvent,
@@ -23,7 +23,7 @@ import {
   type ResolvedFont,
   type SoundCue,
   getLook,
-} from "@codecut/core";
+} from "@flomotion/core";
 import { fontGate } from "./fonts/gate.js";
 import { compileWithLayout } from "./fonts/measure.js";
 import { ledgerPath, readJson, readLedger, resolveFromLock } from "./fonts/lock.js";
@@ -41,7 +41,7 @@ export interface LoadedProject {
 
 export function findEntry(dir: string): string {
   const root = resolve(dir);
-  const cfg = join(root, "codecut.json");
+  const cfg = join(root, "flomotion.json");
   if (existsSync(cfg)) {
     const e = (JSON.parse(readFileSync(cfg, "utf8")) as { entry?: string }).entry;
     if (e) return join(root, e);
@@ -50,8 +50,8 @@ export function findEntry(dir: string): string {
     if (existsSync(join(root, n))) return join(root, n);
   const tsx = readdirSync(root).filter((f) => f.endsWith(".tsx"));
   if (tsx.length === 1) return join(root, tsx[0]!);
-  throw new CodeCutError("asset_missing", `No project file found in ${dir}`, {
-    fix: 'Create project.tsx (export default <Composition …/>) or set "entry" in codecut.json.',
+  throw new FlomotionError("asset_missing", `No project file found in ${dir}`, {
+    fix: 'Create project.tsx (export default <Composition …/>) or set "entry" in flomotion.json.',
   });
 }
 
@@ -66,7 +66,7 @@ export async function loadProject(dir: string): Promise<LoadedProject> {
   let node = mod.default as unknown;
   if (typeof node === "function") node = (node as () => unknown)();
   if (!isNode(node)) {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${basename(entry)} must export default a <Composition …/> element`,
       { fix: "export default (<Composition …>…</Composition>);" },
@@ -173,7 +173,7 @@ export function makeAssetResolver(root: string, ledger: Ledger) {
     const ref: AssetRef = {
       src,
       abs,
-      build: `assets/${rel.startsWith("..") ? basename(abs) : rel.replace(/^\.codecut\/assets\//, "")}`,
+      build: `assets/${rel.startsWith("..") ? basename(abs) : rel.replace(/^\.flomotion\/assets\//, "")}`,
     };
     refs.set(src, ref);
     return ref;
@@ -231,8 +231,8 @@ export async function buildLoaded(
   const ledger = readLedger(root);
   const { decls } = collectFontDecls(node);
   const lock = JSON.parse(
-    existsSync(join(root, CODECUT_DIR, "fonts.lock.json"))
-      ? readFileSync(join(root, CODECUT_DIR, "fonts.lock.json"), "utf8")
+    existsSync(join(root, FLOMOTION_DIR, "fonts.lock.json"))
+      ? readFileSync(join(root, FLOMOTION_DIR, "fonts.lock.json"), "utf8")
       : '{"version":1,"fonts":{}}',
   );
   const fontsRoot: ResolvedFont[] = decls.map((d) => resolveFromLock(root, d, lock));
@@ -244,7 +244,7 @@ export async function buildLoaded(
   const assets = makeAssetResolver(root, ledger);
   const words = loadVoiceWords(root, node);
 
-  const outDir = resolve(opts.outDir ?? join(root, CODECUT_DIR, "build"));
+  const outDir = resolve(opts.outDir ?? join(root, FLOMOTION_DIR, "build"));
   rmSync(outDir, { recursive: true, force: true });
   ensureDir(outDir);
 
@@ -267,7 +267,7 @@ export async function buildLoaded(
     compile: { assetPath: assets.assetPath, words: (id) => words.get(id) },
   });
   if (assets.missing.length) {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "asset_missing",
       `Missing assets: ${[...new Set(assets.missing)].join(", ")}`,
       { fix: "Add the files to the project, or fetch sounds with `sound_get`." },
@@ -275,7 +275,7 @@ export async function buildLoaded(
   }
   const errors = compiled.issues.filter((i) => i.severity === "error");
   if (errors.length) {
-    throw new CodeCutError(
+    throw new FlomotionError(
       "schema_violation",
       `${errors.length} error(s): ${errors
         .slice(0, 3)
@@ -317,8 +317,8 @@ export async function buildLoaded(
     });
     // re-embed with the mix as one <audio>
     html = html.replace(
-      "</div>\n<script>\nwindow.__ccId",
-      `<audio id="cc-mix" src="assets/mix.wav" data-start="0" data-duration="${compiled.ir.end}" data-volume="1"></audio>\n</div>\n<script>\nwindow.__ccId`,
+      "</div>\n<script>\nwindow.__fmId",
+      `<audio id="fm-mix" src="assets/mix.wav" data-start="0" data-duration="${compiled.ir.end}" data-volume="1"></audio>\n</div>\n<script>\nwindow.__fmId`,
     );
   }
   materialize(outDir, { html }, { id: node.props.id as string, extraFiles: extra });

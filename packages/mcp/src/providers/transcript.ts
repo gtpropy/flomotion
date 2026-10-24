@@ -1,4 +1,4 @@
-import { CodeCutError } from "@codecut/core";
+import { FlomotionError } from "@flomotion/core";
 import { normalizeWords } from "./transcribe.js";
 import { wordsFromCharacters, type Word } from "./voice.js";
 
@@ -88,9 +88,13 @@ export function parseTranscript(
     try {
       j = JSON.parse(trimmed);
     } catch {
-      throw new CodeCutError("invalid_value", "The transcript looks like JSON but does not parse", {
-        fix: "Check the file, or pass it as text.",
-      });
+      throw new FlomotionError(
+        "invalid_value",
+        "The transcript looks like JSON but does not parse",
+        {
+          fix: "Check the file, or pass it as text.",
+        },
+      );
     }
     // ElevenLabs alignment: { characters, character_start_times_seconds, character_end_times_seconds }
     const al = (j as { alignment?: unknown }).alignment ?? j;
@@ -130,7 +134,7 @@ export function parseTranscript(
         return { words: spread, precision: "cue", format: "json-segments", warnings };
       }
     }
-    throw new CodeCutError("invalid_value", "No words with times found in that JSON", {
+    throw new FlomotionError("invalid_value", "No words with times found in that JSON", {
       fix: "Expected [{ w|text|word, start, end }], { words: [...] }, { segments: [...] } or an ElevenLabs alignment.",
     });
   }
@@ -142,7 +146,7 @@ export function parseTranscript(
   ) {
     const cues = parseCues(text);
     if (!cues.length)
-      throw new CodeCutError("invalid_value", "No cues found in the captions file", {
+      throw new FlomotionError("invalid_value", "No cues found in the captions file", {
         fix: "Check it is SRT or VTT.",
       });
     const words = cues.flatMap((c) => spreadWords(c.text, c.start, c.end));
@@ -175,9 +179,9 @@ export function parseTranscript(
 
   // plain text: spread over the audio
   const plain = trimmed.replace(/\s+/g, " ");
-  if (!plain) throw new CodeCutError("invalid_value", "The transcript is empty");
+  if (!plain) throw new FlomotionError("invalid_value", "The transcript is empty");
   if (!opts.duration || opts.duration <= 0)
-    throw new CodeCutError(
+    throw new FlomotionError(
       "invalid_time",
       "Plain text has no times, so the audio length is needed to spread it",
       {
