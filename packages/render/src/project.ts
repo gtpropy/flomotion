@@ -161,6 +161,12 @@ export function makeAssetResolver(root: string, ledger: Ledger) {
     if (m) {
       const e = ledger.entries.find((x) => x.source === m[1] && x.id === m[2]);
       abs = e ? join(root, e.file) : undefined;
+      // `sounds/` is where the person's own sounds live; `.flomotion/assets/local/` is only a cache of it,
+      // so a fresh checkout (cache not committed) still resolves.
+      if (e && m[1] === "local" && abs && !existsSync(abs)) {
+        const own = join(root, "sounds", basename(e.file));
+        if (existsSync(own)) abs = own;
+      }
     } else if (/^[a-z]+:/i.test(src)) {
       missing.push(`${src} (remote or unsupported asset; download it first)`);
       return undefined;

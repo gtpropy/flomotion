@@ -22,6 +22,34 @@ export interface VoiceRequest {
   voice?: string;
   /** elevenlabs model id (default eleven_multilingual_v2). */
   model?: string;
+  /** elevenlabs delivery: lower stability and higher style are more expressive. Omitted fields use the voice's own defaults. */
+  voiceSettings?: VoiceSettings;
+}
+
+export interface VoiceSettings {
+  /** 0..1. Lower = more varied and energetic, higher = steadier. */
+  stability?: number;
+  /** 0..1. How closely it keeps to the original voice. */
+  similarity?: number;
+  /** 0..1. Style exaggeration (eleven_multilingual_v2 and later; costs a little latency). */
+  style?: number;
+  /** 0.7..1.2. */
+  speed?: number;
+  speakerBoost?: boolean;
+}
+
+/** The ElevenLabs request field names for `VoiceSettings`; undefined fields are left out. */
+export function elevenVoiceSettings(
+  v?: VoiceSettings,
+): Record<string, number | boolean> | undefined {
+  if (!v) return undefined;
+  const out: Record<string, number | boolean> = {};
+  if (v.stability !== undefined) out.stability = v.stability;
+  if (v.similarity !== undefined) out.similarity_boost = v.similarity;
+  if (v.style !== undefined) out.style = v.style;
+  if (v.speed !== undefined) out.speed = v.speed;
+  if (v.speakerBoost !== undefined) out.use_speaker_boost = v.speakerBoost;
+  return Object.keys(out).length ? out : undefined;
 }
 
 export interface VoiceQuote {
@@ -203,7 +231,13 @@ export class ElevenLabsProvider implements VoiceProvider {
       {
         method: "POST",
         headers: { "xi-api-key": key, "Content-Type": "application/json" },
-        body: JSON.stringify({ text: req.text, model_id: req.model ?? "eleven_multilingual_v2" }),
+        body: JSON.stringify({
+          text: req.text,
+          model_id: req.model ?? "eleven_multilingual_v2",
+          ...(elevenVoiceSettings(req.voiceSettings)
+            ? { voice_settings: elevenVoiceSettings(req.voiceSettings) }
+            : {}),
+        }),
       },
     );
     if (!res.ok)

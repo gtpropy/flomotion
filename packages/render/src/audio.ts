@@ -52,7 +52,10 @@ export interface MixResult {
 export function peakOffsetOf(ev: AudioEvent, ledger: Ledger, file: string): number {
   if (ev.peak === undefined) return 0;
   if (typeof ev.peak === "number") return ev.peak;
-  const entry = ledger.entries.find((e) => e.file && file.endsWith(e.file));
+  const ref = /^(freesound|local):([\w.-]+)$/.exec(ev.src);
+  const entry =
+    (ref && ledger.entries.find((e) => e.source === ref[1] && e.id === ref[2])) ||
+    ledger.entries.find((e) => e.file && file.endsWith(e.file));
   if (entry && typeof entry.peak === "object" && entry.peak && ev.peak in entry.peak)
     return entry.peak[ev.peak]!;
   if (entry && typeof entry.peak === "number") return entry.peak;
@@ -184,10 +187,14 @@ export async function mixAudio(o: MixOptions): Promise<MixResult> {
   let musicLabel = "b_music";
   let voiceMix = "b_voice";
   if (buses.includes("music") && buses.includes("voice")) {
-    chains.push(`[b_voice]asplit=2[v_key][v_mix]`);
+    // Both sidechain inputs get fixed frame sizes: without them ffmpeg pairs frames in whatever order the
+    // threads deliver them, and two renders of the same project differ in the last samples.
+    chains.push(`[b_voice]asplit=2[v_key0][v_mix]`);
+    chains.push(`[v_key0]asetnsamples=n=1024:p=0[v_key]`);
+    chains.push(`[b_music]asetnsamples=n=1024:p=0[b_music_f]`);
     const ratio = Math.max(2, Math.min(20, 1 + duck));
     chains.push(
-      `[b_music][v_key]sidechaincompress=threshold=0.02:ratio=${f(ratio)}:attack=15:release=450:makeup=1[music_ducked]`,
+      `[b_music_f][v_key]sidechaincompress=threshold=0.02:ratio=${f(ratio)}:attack=15:release=450:makeup=1[music_ducked]`,
     );
     musicLabel = "music_ducked";
     voiceMix = "v_mix";

@@ -56,6 +56,18 @@ export const voiceQuote = tool({
       .optional()
       .describe("recording: file path. local-tts: voice name. elevenlabs: voice id."),
     model: z.string().optional(),
+    voiceSettings: z
+      .object({
+        stability: z.number().min(0).max(1).optional(),
+        similarity: z.number().min(0).max(1).optional(),
+        style: z.number().min(0).max(1).optional(),
+        speed: z.number().min(0.7).max(1.2).optional(),
+        speakerBoost: z.boolean().optional(),
+      })
+      .optional()
+      .describe(
+        "elevenlabs delivery. For an energetic ad on eleven_multilingual_v2: stability 0.3, similarity 0.8, style 0.55, speed 1.1, speakerBoost true. Higher stability is steadier.",
+      ),
   },
   readOnly: true,
   async run(a, ctx) {
@@ -65,6 +77,7 @@ export const voiceQuote = tool({
       text: a.text,
       voice: a.voice,
       model: a.model,
+      voiceSettings: a.voiceSettings,
     });
     const account = q.spends ? await ctx.voice.account(a.provider) : undefined;
     return {
