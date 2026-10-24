@@ -1,40 +1,20 @@
 # Looks
 
-A **look** is a data file that fixes every visual decision so scenes cannot drift. Files live in `looks/<name>.json`. Never use colors, fonts or easings that are not in the active look.
+A **look** is a data file that fixes every visual decision so scenes cannot drift. Files live in `looks/<name>.md`. Never use colors, fonts or easings that are not in the active look.
 
 ## Token spec
 
-```jsonc
-{
-  "name": "clean-light",
-  "mood": ["calm", "credible"],
-  "palette": {
-    "bg": "#F6F7FB", "surface": "#FFFFFF", "text": "#0F1222",
-    "textMuted": "#5B6075", "accent": "#4B5CFF", "signal": "#FF7A45",
-    "positive": "#2FBF71", "negative": "#E5484D",
-    "blocks": ["#4B5CFF", "#FF7A45", "#2FBF71", "#FFC933"]   // flat scene colors
-  },
-  "type": {
-    "display": { "family": "Inter Tight", "weights": [700, 800], "tracking": -0.02, "lineHeight": 1.02 },
-    "body":    { "family": "Inter", "weights": [400, 500, 600], "tracking": 0, "lineHeight": 1.3 },
-    "mono":    { "family": "JetBrains Mono", "weights": [500] },
-    "scale":   { "hero": 1.0, "title": 0.62, "body": 0.36, "caption": 0.3 },
-    "case": "sentence"
-  },
-  "motion": {
-    "easing": { "enter": "expo.out", "exit": "power3.in", "move": "power3.inOut", "spring": { "stiffness": 220, "damping": 24 } },
-    "speed": "medium",              // slow | medium | fast
-    "staggerMs": 70,
-    "blurOnMotion": true,
-    "signatureTransition": "card-slide"
-  },
-  "surface": { "radius": 28, "shadow": "soft", "glass": { "blur": 24, "opacity": 0.6 } },
-  "texture": { "grain": 0.04, "gradient": ["#E9ECFF", "#FFFFFF"] },
-  "sound": { "palette": ["soft-click", "air-whoosh", "gentle-pad"], "musicMood": "warm-minimal", "impactStyle": "light" },
-  "do": ["Use one accent per scene", "Keep margins >= 6% of width"],
-  "dont": ["No drop shadows on text", "No more than 2 type families"]
-}
-```
+Each look file (`looks/<name>.md`) is a set of tables with these sections. Example values are from `clean-light`:
+
+| Section | What it fixes | Example |
+|---|---|---|
+| Palette | `bg`, `surface`, `text`, `textMuted`, `accent`, `signal`, `positive`, `negative`, `blocks` (flat scene colours) | bg #F6F7FB, accent #4B5CFF |
+| Type | `display`, `body`, `mono` (family, weights, tracking, line height), scale (hero, title, body, caption), case | Inter Tight 700-800, tracking -0.02 |
+| Motion | easing (enter, exit, move, spring), speed, stagger, blur on motion, signature transition | enter expo.out, card-slide |
+| Surface | radius, shadow, glass | radius 28, soft shadow |
+| Texture | grain, gradient | grain 0.04 |
+| Sound | palette, music mood, impact style | soft-click, air-whoosh |
+| Do / Don't | the look's rules in plain words | one accent per scene |
 
 Rules:
 - Font families must be from the font ledger (Google Fonts/Fontsource or user-supplied). Check glyph coverage for every character used.
@@ -58,7 +38,7 @@ Do **not** do this unless the person provides direction notes. Ask for:
 4. Light or dark, calm or loud.
 5. One reference video they like (for pattern analysis, not copying).
 
-Then: propose palette (with contrast checks), font pairing (from ledger), easing set, signature transition, sound palette. Render 3 style frames (G3). Save as `looks/<name>.json`. Log in `CHANGELOG.md`.
+Then: propose palette (with contrast checks), font pairing (from ledger), easing set, signature transition, sound palette. Render 3 style frames (G3). Save as `looks/<name>.md`. Log in `CHANGELOG.md`.
 
 ## Brand override
 

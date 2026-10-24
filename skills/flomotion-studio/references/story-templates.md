@@ -1,6 +1,6 @@
 # Story templates
 
-Durations are proposals. Totals must land within tolerance of the target (`config/thresholds.json`).
+Durations are proposals. Totals must land within tolerance of the target (`config/thresholds.md`).
 
 ## 15 s (4-5 beats): hook-led
 | # | Role | Block | Seconds | Voice/text role |

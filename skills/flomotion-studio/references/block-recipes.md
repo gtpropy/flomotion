@@ -83,7 +83,7 @@ Use a real screenshot or skeleton UI inside the screen (`Image` or a few `RoundR
 </Scene>
 ```
 
-The card zooms around `anchor` (a point in the card, in %), so put the target region there. After the zoom, check the target text is still above the minimum size (`config/thresholds.json`).
+The card zooms around `anchor` (a point in the card, in %), so put the target region there. After the zoom, check the target text is still above the minimum size (`config/thresholds.md`).
 
 ## 5 FeatureCallout
 

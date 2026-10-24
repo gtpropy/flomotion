@@ -2,7 +2,7 @@
 
 You cannot hear audio. You can search, transcribe, measure levels, and place sounds on frames. Every sound choice is a **needs-your-review** item. Never write "sounds good".
 
-## Buses and targets (config/thresholds.json)
+## Buses and targets (config/thresholds.md)
 - Buses: `voice`, `music`, `sfx`, `master`.
 - Loudness: master -14 LUFS (+/- 1), true peak <= -1 dBTP.
 - Voice stays >= 12 dB above music during speech (duck music; attack 80 ms, release 400 ms).

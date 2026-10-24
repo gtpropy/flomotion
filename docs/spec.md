@@ -160,7 +160,7 @@ localhost (no DNS rebinding); the page loads nothing from the network.
   arguments, ok, duration, one-line summary, undo token). The page lists them newest first.
 - **State:** `GET /api/state` gives the outline and timeline (from evaluating the TSX; a file that fails to load
   keeps the last good picture and shows the error), history, activity, the ledger, the last `review` result
-  (`.flomotion/review/last.json`), gate files (`interview.md brief.json script.json storyboard.json LOG.md`), renders
+  (`.flomotion/review/last.json`), gate files (`interview.md brief.md script.md storyboard.md LOG.md`), renders
   and frames. Changes reach the page over Server-Sent Events (`/events`), which polls the files twice a second.
 - **Preview:** `GET /api/frame?t=` builds the project in its own folder (`.flomotion/ui-build`, never the agent's)
   and snapshots one frame, one build at a time, cached while the files are unchanged.

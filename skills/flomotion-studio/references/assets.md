@@ -18,16 +18,15 @@ A SaaS video needs a lot of pictures: logos, icons, product screenshots, a few p
 | Charts and numbers | The person's data | `Chart`, `Counter`, `ProgressRing` | Data comes only from them, with a source. |
 | Voice, transcript, sounds | Their own files, or a service | `voice_import`, `transcript_import`, `sound_import`, `sound_search` | See `sound.md`. |
 
-## The asset plan (write it into `storyboard.json` at G4)
+## The asset plan (write it into `storyboard.md` at G4)
 
 For every beat list: the graphics it needs, the source from the table, who must supply it, and whether it needs permission. Example:
 
-```json
-{ "beat": 3, "assets": [
-  { "need": "product dashboard shot", "source": "asset_capture", "url": "https://app.example.com/board", "permission": "asked at G0", "status": "to capture" },
-  { "need": "calendar icon", "source": "asset_get iconify:lucide/calendar", "color": "$brand.accent", "status": "pulled" },
-  { "need": "customer logos x3", "source": "asset_import", "status": "waiting for the person" }
-]}
+```
+### Beat 3: assets
+- product dashboard shot: asset_capture of https://app.example.com/board (permission: asked at G0) · status: to capture
+- calendar icon: asset_get iconify:lucide/calendar, colour $brand.accent · status: pulled
+- customer logos x3: asset_import · status: waiting for the person
 ```
 
 Never ship a placeholder as if it were final: a missing logo is a visible "LOGO" box and a line in "Needs your review".

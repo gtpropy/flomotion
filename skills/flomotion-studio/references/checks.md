@@ -33,7 +33,7 @@ Engine checks the skill did not list but you should report: `review` #6 (numbers
 
 ## The checks
 
-Every check returns `{ id, severity: "hard"|"warn"|"info", pass, evidence, time?, bbox?, fix_hint }`. HARD failures block a draft from being shown as passing. All thresholds come from `config/thresholds.json`.
+Every check returns `{ id, severity: "hard"|"warn"|"info", pass, evidence, time?, bbox?, fix_hint }`. HARD failures block a draft from being shown as passing. All thresholds come from `config/thresholds.md`.
 
 | Id | Check | How computed | Sev |
 |---|---|---|---|

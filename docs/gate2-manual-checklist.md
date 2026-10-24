@@ -73,7 +73,7 @@ Watch for each item. Write "pass", "fail" or "n/a" and a note.
 4. **Check `renders/<id>-final.licenses.json`** for `problems`. A generated ElevenLabs voice shows "not cleared for commercial use" unless you set `ELEVENLABS_COMMERCIAL_OK=1`; confirm your plan before publishing.
 5. **Open `project.tsx`.** Is it readable? Would it diff cleanly in git? Run `git init && git add . && git commit` and make a one-line change by hand; render again.
 6. **Undo works:** ask Claude to undo its last change (it uses `history_restore`), check the file went back.
-7. **The live view tells the truth.** While Claude works, the activity list should show each tool call within about a second, with the same description Claude reports; the progress list should follow the gate files Claude writes (`brief.json`, `script.json`, `storyboard.json`); the preview scrubber should render the current file; the Restore button on the History tab should put an earlier version back. Note anything that lags, shows stale data, or disagrees with what Claude says it did.
+7. **The live view tells the truth.** While Claude works, the activity list should show each tool call within about a second, with the same description Claude reports; the progress list should follow the gate files Claude writes (`brief.md`, `script.md`, `storyboard.md`); the preview scrubber should render the current file; the Restore button on the History tab should put an earlier version back. Note anything that lags, shows stale data, or disagrees with what Claude says it did.
 
 ## 4. Live services: what each test double hides
 

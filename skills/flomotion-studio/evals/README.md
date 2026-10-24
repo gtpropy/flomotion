@@ -5,7 +5,7 @@ Purpose: make quality measurable and make every change to the skill prove itself
 ## Run
 1. For each brief in `briefs/briefs.md`, start a fresh Claude session with the skill and the brief as the intake answers (G0 prefilled).
 2. Let it run through gates with approvals auto-given at G1-G4 (to measure the machine), or manually (to measure the whole loop).
-3. Save to `evals/runs/<YYYY-MM-DD>/<brief-id>/`: `brief.json`, `storyboard.json`, draft video, contact sheet, `review` output, timing, token/cost notes.
+3. Save to `evals/runs/<YYYY-MM-DD>/<brief-id>/`: `brief.md`, `storyboard.md`, draft video, contact sheet, `review` output, timing, token/cost notes.
 4. Paid or network services (voice generation, sound search) run with test doubles in automated runs; list which steps were doubled.
 
 ## Metrics

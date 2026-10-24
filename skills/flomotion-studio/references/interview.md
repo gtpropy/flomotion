@@ -7,7 +7,7 @@ Do not start designing until the interview is complete. A video built on guesses
 2. **Adapt.** Each answer decides the next questions. Skip what is already known. Dig where answers are vague ("modern", "clean", "powerful" are not answers: ask "like what? show me one you like").
 3. **Follow up on every vague or surprising answer** at least once. Ask for an example, a number, a source, or a screenshot.
 4. **Quote their own words back** when you summarize. Their phrases become the copy raw material.
-5. **Track state.** Maintain `interview.json` in the project: for every field a `value`, a `source` (`user`, `asset`, `assumption`), and a `status` (`confirmed`, `assumed`, `unknown`). Show the clarity score after each round.
+5. **Track state.** Maintain `interview.md` in the project: for every field a `value`, a `source` (`user`, `asset`, `assumption`), and a `status` (`confirmed`, `assumed`, `unknown`). Show the clarity score after each round.
 6. **Never invent.** If they do not know a fact, record `unknown`, never fill it. Claims need sources.
 7. **Offer a way out.** For any question the person can say "skip", "you decide", or "I don't know". Record `assumed` with your proposed default and ask them to confirm it at the read-back.
 8. **Detect contradictions** (e.g. "calm and premium" + "fast cuts, loud") and ask which wins.
@@ -28,7 +28,7 @@ Call `setup_status`. Tell the person, in plain words, what this machine can do a
 2. **Word timings:** a transcript or captions file they already have (SRT, VTT or JSON), or Whisper on this computer, or ElevenLabs returns them with the voice.
 3. **Sound effects:** their own sound files (a folder or a few files), Freesound, or both.
 4. **Graphics:** their logo and brand files, screenshots of their product (or a public URL we can capture, with their permission), their website for brand colours and fonts; icons and stock photos can be pulled from open sources.
-If they want a service, tell them to run `flomotion setup` in a terminal (keys are saved on their computer and never pass through the chat). Never ask them to paste a key here. Record the answers in `interview.json`.
+If they want a service, tell them to run `flomotion setup` in a terminal (keys are saved on their computer and never pass through the chat). Never ask them to paste a key here. Record the answers in `interview.md`.
 
 ### Round 1: The product, in their words
 Ask:
@@ -117,7 +117,7 @@ Write a one-page summary in their words and show it:
 9. **Assumptions I am making** (each with a default you can accept or change)
 10. **Open items** (what I still do not know and how I will handle it)
 
-Ask: "Is anything wrong, missing, or something you would never say?" Fix and re-confirm. Save as `brief.json` (schema: `dataset/brief.schema.json`) and `interview.md` (full log).
+Ask: "Is anything wrong, missing, or something you would never say?" Fix and re-confirm. Save as `brief.md` (schema: `dataset/brief-template.md`) and `interview.md` (full log).
 
 ## Question quality bank (use these probes when an answer is thin)
 - "Can you give me a concrete example?"

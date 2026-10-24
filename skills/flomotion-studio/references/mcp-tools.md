@@ -11,7 +11,7 @@ Every write returns `{ description, patches, undoToken }`. The undo token is a h
 | Setup | `setup_status` | First call of every video. Says which keys are set (never the keys), what is installed, what each job can use, and what is missing. The person adds keys with `flomotion setup` in a terminal; you never ask for a key in the chat. |
 | Project | `project_create {name, size:"1080x1920", fps, template:"blank"\|"saas-promo", look, duration}`, `project_read {path?, depth?}` | `look` is a look id: `clean-light`, `dark-product`, `bold-kinetic` (the skill's looks) or the engine's `kinetic`, `minimal`, `sketch`. `saas-promo` scaffolds six empty beat scenes (30 s); for other lengths use `blank` and write the scenes from the storyboard. `project_read` shows the outline and the `ui` address when the live view is on. |
 | Look and fonts | `font_list`, `font_get {id}` for each look font, `font_check {text, fontId}`, `font_preview {fontId, text, size}`, `font_search` | `font_get` downloads, locks the hash and writes the ledger; a new family name is added as a `<Font>`. Renders never use the network. `font_search` needs `GOOGLE_FONTS_API_KEY`. |
-| Script | (no tool) | Write `brief.json`, `script.json`, `storyboard.json`, `LOG.md` with your normal file tools in the project folder. The live view reads them. |
+| Script | (no tool) | Write `brief.md`, `script.md`, `storyboard.md`, `LOG.md` with your normal file tools in the project folder. The live view reads them. |
 | Style frames | `scene_write` (key scenes), `lint`, `frame_render {time, scale?}`, `contact_sheet {times?\|count?}` | G3. Read the PNGs: describe what you see. |
 | Build | `scene_write` per scene (or `element_add` / `element_set` / `element_remove` / `element_move` / `effect_add` / `keyframe_set` / `edit`) | `lint` after each scene. `references/block-recipes.md` has the 13 core blocks as TSX. |
 | Own material | `voice_import {source, transcript?}`, `transcript_import {audio, source\|text}`, `sound_import {source, rights, tag?}`, `asset_import {source, rights}` | The person's own recording, transcript or captions, sound files, logos, images and video, from anywhere on their computer. They state their rights; the tools record them in the ledger. |
@@ -31,7 +31,7 @@ Resources: `flomotion://schema/{component}` (props, ranges, docs), `flomotion://
 1. `lint` after every `scene_write`; fix errors before moving on.
 2. Prefer `scene_write` with a block recipe over many small edits; use `element_set` and `keyframe_set` for single changes. A prop written as an expression in the file cannot be changed by `element_set` (`opaque_expression`): rewrite that element with `scene_write`.
 3. Name every element (`hero-line`, `title-1`) so checks and notes can reference them. Ids are stable; `element_set` refuses to rename.
-4. Declare the hero and the turn: put the hero's id in `storyboard.json`, and add `<Marker id="turn" at="..." label="Turn" />` where the story turns. `review` item 2 finds a hero that spans four scenes; the rest of the hero and turn checks are yours.
+4. Declare the hero and the turn: put the hero's id in `storyboard.md`, and add `<Marker id="turn" at="..." label="Turn" />` where the story turns. `review` item 2 finds a hero that spans four scenes; the rest of the hero and turn checks are yours.
 5. Render drafts with `preset:"draft"`; use `frame_render` for checking.
 6. Never call `voice_generate` outside the quote and confirm gate, and never `render` with `preset:"final"` before G5 is approved.
 7. When a tool fails: read the code and the fix; retry once with the fix; if it still fails, report the exact error and what you tried. Do not edit thresholds or skip a check to get around it.
@@ -52,20 +52,19 @@ Resources: `flomotion://schema/{component}` (props, ranges, docs), `flomotion://
 
 ## Files you write (with your own file tools)
 
-`brief.json` (interview), `script.json` (beats), `storyboard.json` (block, params, durations, hero, turn, sound tags), `LOG.md` (decisions, gate approvals with snapshot ids, anything not run), `review/` (reports).
+`brief.md` (interview), `script.md` (beats), `storyboard.md` (block, params, durations, hero, turn, sound tags), `LOG.md` (decisions, gate approvals with snapshot ids, anything not run), `review/` (reports).
 
-Storyboard entry shape:
+Storyboard beat shape (`storyboard.md`, one `##` heading per beat; the live view's Storyboard tab reads it):
 
-```json
-{
-  "beat": 3,
-  "role": "turn",
-  "block": "ProductReveal",
-  "params": { "device": "phone", "caption": "Meet Pulse." },
-  "start": 7.1, "duration": 3.2,
-  "hero": "hero",
-  "motion": { "in": "slide-s", "out": "cut" },
-  "sound": [{ "tag": "move/whip", "peakAt": 7.1 }],
-  "notes": "Look stays clean-light; the hero grows here"
-}
 ```
+## 3. Turn · 7.1-10.3 s
+- Block: ProductReveal
+- Scene: reveal
+- Voice: "Meet Pulse."
+- On screen: Meet Pulse.
+- Motion: slide in from the south, the hero grows
+- Sound: move/whip peaking at 7.1 s
+- Why it works: the look stays clean-light; one hero carried across the cut
+```
+
+See `references/storyboard.md` for the full format, `ideas.md` and how the board shows what is built.

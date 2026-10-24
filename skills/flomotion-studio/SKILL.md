@@ -22,12 +22,13 @@ You turn a brief into a finished, professional video through the flomotion MCP t
 8. **Stop at every gate** (see `references/workflow.md`) and wait for approval. In unattended runs, state the reading you took and continue; stop only at irreversible or paid steps (voice generation, final render to a shared location).
 9. **Licensing.** Every sound, font and asset must be in the ledger with license data. No unlicensed assets. Required attributions go in the license report.
 10. **Determinism.** No `Math.random`, `Date.now`, or unseeded noise. All motion is a function of time.
+11. **Claims you can back.** Every number and promise on screen or in the voice is checked first (a count from `tools/list` or `review`, a figure the person gave with a source). If it cannot be checked, cut it or rewrite it as something that can; say what you checked in `LOG.md`. See `references/script-craft.md`.
 
 ## Workflow (summary — full detail in `references/workflow.md`)
 
 | Gate | You produce | Person approves |
 |---|---|---|
-| G0 Interview | Multi-round interview (`references/interview.md`), `interview.md` log, `brief.json`, clarity score, read-back | The read-back (brief) |
+| G0 Interview | Multi-round interview (`references/interview.md`), `interview.md` log, `brief.md`, clarity score, read-back | The read-back (brief) |
 | G1 Direction | Style family, look, story template, one-line concept, hook options (3) | Direction |
 | G2 Script | Script with beat list, on-screen text per beat, voiceover | Script |
 | G3 Style frames | 3 to 5 key frames rendered in the chosen look | Look |
@@ -37,12 +38,13 @@ You turn a brief into a finished, professional video through the flomotion MCP t
 
 ## How to choose (decision order)
 
+0. Read `ideas.md` if it exists (the person's brainstorm notes, see `references/storyboard.md`) and the quality bar in `references/clean-styles.md`.
 1. `references/decision-tables.md` → style family and story template from the brief.
 2. `references/styles.md` → the family's recipe (structure, design, motion, sound).
-3. `references/looks.md` + `looks/*.json` → pick a look. Do not build a new look unless the person supplied direction notes.
+3. `references/looks.md` + `looks/*.md` → pick a look. Do not build a new look unless the person supplied direction notes.
 4. `references/story-templates.md` → beat sheet with duration ranges.
 5. `references/blocks.md` → block per beat with parameters.
-6. `references/copywriting.md` → write hook, pain, turn, promise, proof, CTA.
+6. `references/script-craft.md` + `references/copywriting.md` → write hook, pain, turn, promise, proof, reveal, CTA.
 7. `references/motion.md`, `references/typography.md`, `references/sound.md` → motion, type and sound rules.
 8. `references/checks.md` + `references/review.md` → run and report quality checks.
 9. `references/anti-patterns.md` → scan before every draft.
@@ -61,7 +63,11 @@ You turn a brief into a finished, professional video through the flomotion MCP t
 | `references/story-templates.md` | 15 s, 30 s, 45 s beat sheets and variants |
 | `references/decision-tables.md` | Brief → style, look, template, blocks |
 | `references/copywriting.md` | Hook types, word limits, sentence-splitting, proof, CTA |
+| `references/script-craft.md` | The engineered script: hook, pain, turn, promise, proof, reveal, CTA, timing, audit |
+| `references/clean-styles.md` | What clean, catchy motion looks like (from three reference pieces) and how to apply it |
+| `references/storyboard.md` | The Storyboard tab: `ideas.md`, `storyboard.md`, how the board shows what is built |
 | `references/motion.md` | Easing, timing, blur, impacts, 8-direction, transitions |
+| `references/transitions.md` | Signature transitions with TSX: slab, iris, stripes, halves, the two-dots turn, the vault door, the mascot |
 | `references/typography.md` | Scale, emphasis methods, format minimums |
 | `references/sound.md` | Sound palettes, impact placement, mix targets, licensing |
 | `references/checks.md` | The 23 automatic checks |
@@ -71,13 +77,13 @@ You turn a brief into a finished, professional video through the flomotion MCP t
 | `references/assets.md` | Where every graphic comes from (icons, logos, screenshots, photos), the asset plan, permission rules |
 | `references/block-recipes.md` | TSX recipes for the 13 core blocks, built from real components |
 | `references/components.md` | Every component and effect with its props (generated from the schemas: do not edit) |
-| `config/thresholds.json` | All numeric defaults (tunable) |
+| `config/thresholds.md` | All numeric defaults (tunable) |
 | `dataset/` | Annotation schema, reference annotations, rating sheet |
 | `evals/` | 10 test briefs and the evaluation procedure |
 
 ## Live view
 
-The person can watch your progress in a browser: `flomotion ui` in the project folder (or the `ui` address `project_read` returns when the server was started with `--ui`). It shows each tool call as you make it, the scene outline and timeline, the latest frames, review results, and the gate files you write (`brief.json`, `script.json`, `storyboard.json`, `LOG.md`). Tell them once at G0 that it exists. Keep those files current: the page shows gate progress from them.
+The person can watch your progress in a browser: `flomotion ui` in the project folder (or the `ui` address `project_read` returns when the server was started with `--ui`). It opens on the **Storyboard** tab: the person's ideas (`ideas.md`) and your plan (`storyboard.md`) as a timeline that turns green as you build. It shows each tool call as you make it, the scene outline and timeline, the latest frames, review results, and the gate files you write (`brief.md`, `script.md`, `storyboard.md`, `LOG.md`). Tell them once at G0 that it exists. Keep those files current: the page shows gate progress from them.
 
 ## Output style
 

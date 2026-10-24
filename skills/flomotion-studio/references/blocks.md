@@ -1,6 +1,6 @@
 # Scene blocks
 
-A block is a parameterized scene with look-driven defaults. Fill parameters; do not hand-write scene code unless no block fits. Durations are ranges (tune in `config/thresholds.json` and from ratings). Every block lists: purpose, params, default timing, motion, sound tags, failure modes (feed `checks.md`).
+A block is a parameterized scene with look-driven defaults. Fill parameters; do not hand-write scene code unless no block fits. Durations are ranges (tune in `config/thresholds.md` and from ratings). Every block lists: purpose, params, default timing, motion, sound tags, failure modes (feed `checks.md`).
 
 **Recipes:** `block-recipes.md` has real TSX for the 13 core blocks (A), built from the engine's components and tested. The pattern blocks (B) are descriptions: build them as custom scenes from the same components and record why (block rule 5).
 

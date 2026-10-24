@@ -3579,6 +3579,7 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `font` | `string` |  |  |
 | `weight` | `number` |  | range 1..1000 |
 | `color` | `Color` |  |  |
@@ -3586,10 +3587,11 @@ Children: any layers and effects.
 | `tracking` | `number` |  | unit ‰em |
 | `features` | `string[]` |  |  |
 | `style` | `normal` \| `italic` \| `oblique` |  |  |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface SpanProps {
+  /** Stable unique id. */
+  id?: string;
   font?: string;
   /** range 1..1000 */
   weight?: number;
@@ -3600,8 +3602,6 @@ export interface SpanProps {
   tracking?: number;
   features?: string[];
   style?: "normal" | "italic" | "oblique";
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```
@@ -3618,15 +3618,15 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `weight` | `number` | `700` | range 1..1000 |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface BProps {
+  /** Stable unique id. */
+  id?: string;
   /** range 1..1000; default 700 */
   weight?: number;
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```
@@ -3643,15 +3643,15 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `skew` | `number` | `0` |  |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface IProps {
+  /** Stable unique id. */
+  id?: string;
   /** default 0 */
   skew?: number;
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```
@@ -3668,14 +3668,16 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `color` | `Color` | `"#ffe14d"` |  |
 | `padding` | `number` | `6` | range 0..∞; unit px |
 | `radius` | `number` | `6` | range 0..∞; unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface HighlightProps {
+  /** Stable unique id. */
+  id?: string;
   /** default "#ffe14d" */
   color?: Color;
   /** range 0..∞; unit px; default 6 */
@@ -3684,8 +3686,6 @@ export interface HighlightProps {
   radius?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```
@@ -3702,14 +3702,16 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `color` | `Color` | `"#ffffff"` |  |
 | `thickness` | `number` | `4` | range 0..∞; unit px |
 | `offset` | `number` | `4` | unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface UnderlineProps {
+  /** Stable unique id. */
+  id?: string;
   /** default "#ffffff" */
   color?: Color;
   /** range 0..∞; unit px; default 4 */
@@ -3718,8 +3720,6 @@ export interface UnderlineProps {
   offset?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```
@@ -3736,14 +3736,16 @@ Children: any layers and effects.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
+| `id` | `string` |  | Stable unique id. |
 | `color` | `Color` | `"#ffffff"` |  |
 | `thickness` | `number` | `4` | range 0..∞; unit px |
 | `offset` | `number` | `4` | unit px |
 | `progress` | `number` | `1` | animatable; range 0..1; step 0.01 |
-| `id` | `string` |  | Stable unique id. Written back as fm_… when missing. |
 
 ```ts
 export interface StrikeProps {
+  /** Stable unique id. */
+  id?: string;
   /** default "#ffffff" */
   color?: Color;
   /** range 0..∞; unit px; default 4 */
@@ -3752,8 +3754,6 @@ export interface StrikeProps {
   offset?: number;
   /** range 0..1; default 1 */
   progress?: Animatable<number>;
-  /** Stable unique id. Written back as fm_… when missing. */
-  id?: string;
   children?: unknown;
 }
 ```

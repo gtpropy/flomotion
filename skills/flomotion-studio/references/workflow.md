@@ -15,7 +15,7 @@ Never skip a gate. At each gate, present the artifact, list what you verified, l
 7. **Voice**: voiceover (own recording, generated voice, none) and language. Generated voice is a paid step and needs confirmation.
 8. **Constraints**: words to avoid, legal lines, things to show or never show.
 
-Output: `brief.json` saved to the project. If a field is missing and the person cannot answer, write `"TBD"` and show a visible placeholder in drafts.
+Output: `brief.md` saved to the project. If a field is missing and the person cannot answer, write `"TBD"` and show a visible placeholder in drafts.
 
 ## Materials check (part of G0, before G1)
 

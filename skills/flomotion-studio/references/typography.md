@@ -4,7 +4,7 @@ Fonts come from the active look and the font ledger. Load and verify before fram
 
 ## Scale and sizes
 - Use look scale tokens (`hero`, `title`, `body`, `caption`) relative to frame width.
-- Minimum sizes per format are in `config/thresholds.json` (`text.min_px`). Below minimum = HARD fail for headlines, WARN for captions.
+- Minimum sizes per format are in `config/thresholds.md` (`text.min_px`). Below minimum = HARD fail for headlines, WARN for captions.
 - Hero text should fill 50-90% of the frame width in S2/S7 and may be cropped at an edge for scale; in S1/S4/S5 keep 35-60% width with generous space.
 
 ## Pairing and families

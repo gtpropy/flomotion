@@ -130,7 +130,7 @@ from Google Fonts`). This is network use at render, so flomotion always emits it
   about a minute on this machine. The `lint` block warns `nested_structure_needs_subcomposition` for flomotion's
   track wrappers; flomotion ignores it (renders are correct).
 - `hyperframes transcribe <audio|transcript> -d <dir> --json [--no-runtime-install] [-l lang] [-m model]` writes
-  `transcript.json` in `<dir>`; with `--json` it prints `{ ok, engine, wordCount, transcriptPath, … }` or
+  `transcript.md` in `<dir>`; with `--json` it prints `{ ok, engine, wordCount, transcriptPath, … }` or
   `{ ok:false, error }` (`--optional` returns `{ skipped, reason:"whisper_unavailable", install }`). Engines: Parakeet
   if installed, else whisper.cpp. Not run here (no whisper-cpp installed); the word shape is read tolerantly
   (`text|word|w`, `start`, `end`).
